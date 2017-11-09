@@ -256,7 +256,7 @@ class UserController extends Controller
                 $modelSip->accountcode = $model->username;
                 if ($this->isNewRecord) {
                     $modelSip->name         = $model->username;
-                    $modelSip->allow        = 'g729,gsm,alaw,ulaw';
+                    $modelSip->allow        = 'gsm,alaw,ulaw';
                     $modelSip->host         = 'dynamic';
                     $modelSip->insecure     = 'no';
                     $modelSip->defaultuser  = $model->username;
