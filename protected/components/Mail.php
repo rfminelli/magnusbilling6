@@ -213,18 +213,18 @@ class Mail
 
             $modelUser->id                  = isset($modelUser->id) ? $modelUser->id : null;
             $modelUser->username            = isset($modelUser->username) ? $modelUser->username : null;
-            $modelUser->username            = isset($modelUser->username) ? $modelUser->username : null;
+            $modelUser->email               = isset($modelUser->email) ? $modelUser->email : null;
             $modelUser->firstname           = isset($modelUser->firstname) ? $modelUser->firstname : null;
             $modelUser->lastname            = isset($modelUser->lastname) ? $modelUser->lastname : null;
             $modelUser->loginkey            = isset($modelUser->loginkey) ? $modelUser->loginkey : null;
             $modelUser->password            = isset($modelUser->password) ? $modelUser->password : null;
             $modelUser->credit_notification = isset($modelUser->credit_notification) ? $modelUser->credit_notification : null;
 
-            $this->to_email = isset($modelUser->username) ? $modelUser->username : null;
+            $this->to_email = isset($modelUser->email) ? $modelUser->email : null;
             $this->replaceInEmail(self::$CUSTOMER_ID, $modelUser->id);
             $this->replaceInEmail(self::$USER_ID, $modelUser->id);
             $this->replaceInEmail(self::$CUSTOMER_CARDNUMBER_KEY, $modelUser->username);
-            $this->replaceInEmail(self::$CUSTOMER_EMAIL_KEY, $modelUser->username);
+            $this->replaceInEmail(self::$CUSTOMER_EMAIL_KEY, $modelUser->email);
             $this->replaceInEmail(self::$CUSTOMER_FIRSTNAME_KEY, $modelUser->firstname);
             $this->replaceInEmail(self::$CUSTOMER_LASTNAME_KEY, $modelUser->lastname);
             $this->replaceInEmail(self::$CUSTOMER_LOGIN, $modelUser->username);
