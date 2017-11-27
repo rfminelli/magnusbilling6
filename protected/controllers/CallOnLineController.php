@@ -137,7 +137,7 @@ class CallOnLineController extends Controller
 
                 $status = $call[4];
                 if (preg_match("/Congestion/", $status) || preg_match("/Busy/", $status)) {
-                    $asmanager->Command("hangup request $channel");
+                    AsteriskAccess::instance()->hangupRequest($channel);
                     if (isset($_GET['log'])) {
                         echo '145';
                     }
