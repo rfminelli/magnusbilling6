@@ -52,6 +52,11 @@ class CampaignController extends Controller
     public function beforeSave($values)
     {
 
+        if (Yii::app()->session['isClient'] && $this->isNewRecord) {
+            $modelUser         = User::model()->findByPk((int) Yii::app()->session['id_user']);
+            $values['id_plan'] = $modelUser->id_plan;
+        }
+
         if (isset($values['type_0'])) {
 
             if ($values['type_0'] == 'undefined' || $values['type_0'] == '') {

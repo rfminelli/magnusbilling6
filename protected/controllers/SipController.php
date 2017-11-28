@@ -89,6 +89,11 @@ class SipController extends Controller
 
         }
 
+        if (isset($values['id_user'])) {
+            $modelUser             = User::model()->findByPk((int) $values['id_user']);
+            $values['accountcode'] = $modelUser->username;
+        }
+
         if (isset($values['defaultuser'])) {
             $values['name'] = $values['defaultuser'] == '' ? $values['accountcode'] : $values['defaultuser'];
         }

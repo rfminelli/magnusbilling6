@@ -60,9 +60,8 @@ class Prefix extends Model
 
     public function afterSave()
     {
-        if ($this->getIsNewRecord()) {
-            $this->prefixLength();
-        }
+        $this->prefixLength();
+
         return parent::afterSave();
     }
 
@@ -70,7 +69,7 @@ class Prefix extends Model
     {
         $this->prefixLength();
         $sqlInsertPrefix = 'INSERT IGNORE INTO pkg_prefix (prefix, destination)
-							VALUES ' . implode(',', $sqlPrefix) . ';';
+                            VALUES ' . implode(',', $sqlPrefix) . ';';
         try {
             Yii::app()->db->createCommand($sqlInsertPrefix)->execute();
             return true;
@@ -120,6 +119,8 @@ class Prefix extends Model
         foreach ($modelPrefix as $key => $value) {
             $insert[] = '(' . $value->destination . ',' . $value->prefix . ')';
         }
+
+        PrefixLength::model()->deleteAll();
 
         $sql = 'INSERT IGNORE INTO pkg_prefix_length (code,length) VALUES ' . implode(',', $insert) . ';';
         try {

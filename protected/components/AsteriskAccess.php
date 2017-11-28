@@ -394,98 +394,98 @@ class AsteriskAccess
 
     public function generateSipPeers()
     {
-
-        $select = 'id, accountcode, name, defaultuser, secret, regexten, amaflags, callerid, language, cid_number, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, calllimit'; // add
-
-        $list_friend = Sip::model()->findAll();
+        $modelSip = Sip::model()->findAll();
 
         $buddyfile = '/etc/asterisk/sip_magnus_user.conf';
 
-        if (is_array($list_friend)) {
+        $subscriberfile = '/etc/asterisk/sip_magnus_subscriber.conf';
+        $subscriber     = '[subscribe]';
+
+        if (count($modelSip)) {
 
             $fd = fopen($buddyfile, "w");
 
             if ($fd) {
-                foreach ($list_friend as $key => $data) {
-                    $line = "\n\n[" . $data['name'] . "]\n";
+                foreach ($modelSip as $key => $sip) {
+                    $line = "\n\n[" . $sip->name . "]\n";
                     if (fwrite($fd, $line) === false) {
                         echo "Impossible to write to the file ($buddyfile)";
                         break;
                     } else {
                         $line = '';
 
-                        $line .= 'host=' . $data['host'] . "\n";
+                        $line .= 'host=' . $sip->host . "\n";
 
-                        $line .= 'fromdomain=' . $data['host'] . "\n";
-                        $line .= 'accountcode=' . $data['accountcode'] . "\n";
-                        $line .= 'disallow=' . $data['disallow'] . "\n";
+                        $line .= 'fromdomain=' . $sip->host . "\n";
+                        $line .= 'accountcode=' . $sip->idUser->username . "\n";
+                        $line .= 'disallow=' . $sip->disallow . "\n";
 
-                        $codecs = explode(",", $data['allow']);
+                        $codecs = explode(",", $sip->allow);
                         foreach ($codecs as $codec) {
                             $line .= 'allow=' . $codec . "\n";
                         }
 
-                        if (strlen($data['directmedia']) > 1) {
-                            $line .= 'directmedia=' . $data['directmedia'] . "\n";
+                        if (strlen($sip->directmedia) > 1) {
+                            $line .= 'directmedia=' . $sip->directmedia . "\n";
                         }
 
-                        if (strlen($data['context']) > 1) {
-                            $line .= 'context=' . $data['context'] . "\n";
+                        if (strlen($sip->context) > 1) {
+                            $line .= 'context=' . $sip->context . "\n";
                         }
 
-                        if (strlen($data['dtmfmode']) > 1) {
-                            $line .= 'dtmfmode=' . $data['dtmfmode'] . "\n";
+                        if (strlen($sip->dtmfmode) > 1) {
+                            $line .= 'dtmfmode=' . $sip->dtmfmode . "\n";
                         }
 
-                        if (strlen($data['insecure']) > 1) {
-                            $line .= 'insecure=' . $data['insecure'] . "\n";
+                        if (strlen($sip->insecure) > 1) {
+                            $line .= 'insecure=' . $sip->insecure . "\n";
                         }
 
-                        if (strlen($data['nat']) > 1) {
-                            $line .= 'nat=' . $data['nat'] . "\n";
+                        if (strlen($sip->nat) > 1) {
+                            $line .= 'nat=' . $sip->nat . "\n";
                         }
 
-                        if (strlen($data['qualify']) > 1) {
-                            $line .= 'qualify=' . $data['qualify'] . "\n";
+                        if (strlen($sip->qualify) > 1) {
+                            $line .= 'qualify=' . $sip->qualify . "\n";
                         }
 
-                        if (strlen($data['type']) > 1) {
-                            $line .= 'type=' . $data['type'] . "\n";
+                        if (strlen($sip->type) > 1) {
+                            $line .= 'type=' . $sip->type . "\n";
                         }
 
-                        if (strlen($data['regexten']) > 1) {
-                            $line .= 'regexten=' . $data['regexten'] . "\n";
+                        if (strlen($sip->regexten) > 1) {
+                            $line .= 'regexten=' . $sip->regexten . "\n";
                         }
 
-                        if (strlen($data['amaflags']) > 1) {
-                            $line .= 'amaflags=' . $data['amaflags'] . "\n";
+                        if (strlen($sip->amaflags) > 1) {
+                            $line .= 'amaflags=' . $sip->amaflags . "\n";
                         }
 
-                        if (strlen($data['cid_number']) > 1) {
-                            $line .= 'cid_number=' . $data['cid_number'] . "\n";
+                        if (strlen($sip->cid_number) > 1) {
+                            $line .= 'cid_number=' . $sip->cid_number . "\n";
                         }
 
-                        if (strlen($data['language']) > 1) {
-                            $line .= 'language=' . $data['language'] . "\n";
+                        if (strlen($sip->language) > 1) {
+                            $line .= 'language=' . $sip->language . "\n";
                         }
 
-                        if (strlen($data['defaultuser']) > 1) {
-                            $line .= 'defaultuser=' . $data['defaultuser'] . "\n";
+                        if (strlen($sip->defaultuser) > 1) {
+                            $line .= 'defaultuser=' . $sip->defaultuser . "\n";
                         }
 
-                        if (strlen($data['fromuser']) > 1) {
-                            $line .= 'fromuser=' . $data['fromuser'] . "\n";
+                        if (strlen($sip->fromuser) > 1) {
+                            $line .= 'fromuser=' . $sip->fromuser . "\n";
                         }
 
-                        if (strlen($data['secret']) > 1) {
-                            $line .= 'secret=' . $data['secret'] . "\n";
+                        if (strlen($sip->secret) > 1) {
+                            $line .= 'secret=' . $sip->secret . "\n";
                         }
 
-                        if ($data['calllimit'] > 0) {
-                            $line .= 'call-limit=' . $data['calllimit'] . "\n";
+                        if ($sip->calllimit > 0) {
+                            $line .= 'call-limit=' . $sip->calllimit . "\n";
                         }
 
-                        if ($data['context'] == 'encryption') {
+                        if ($sip->context == 'encryption') {
                             $line .= "encryption=yes\n";
                             $line .= "avpf=yes\n";
                             $line .= "force_avp=yes\n";
@@ -502,29 +502,19 @@ class AsteriskAccess
                             echo gettext("Impossible to write to the file") . " ($buddyfile)";
                             break;
                         }
+
+                        if (strlen($sip->defaultuser) > 1) {
+                            $subscriber .= 'exten => ' . $sip->defaultuser . ',hint,SIP/' . $sip->defaultuser . "\n";
+                        }
                     }
                 }
 
                 fclose($fd);
             }
 
-        }
-
-        $list_friend = Sip::model()->findAll(array(
-            'select' => $select,
-        ));
-        $subscriberfile = '/etc/asterisk/sip_magnus_subscriber.conf';
-        $subscriber     = '[subscribe]';
-        if (is_array($list_friend)) {
-            $fsubs = fopen($subscriberfile, "w");
-            foreach ($list_friend as $key => $data) {
-                if (strlen($data['defaultuser']) > 1) {
-                    $subscriber .= 'exten => ' . $data['defaultuser'] . ',hint,SIP/' . $data['defaultuser'] . "\n";
-                }
-
-            }
             fwrite($fsubs, $subscriber);
             fclose($fsubs);
+
         }
 
         AsteriskAccess::instance()->sipReload();
@@ -533,92 +523,88 @@ class AsteriskAccess
     public function generateIaxPeers()
     {
 
-        $select = 'id, accountcode, name, defaultuser, secret, regexten, amaflags, callerid, language, cid_number, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, calllimit'; // add
-
-        $list_friend = Iax::model()->findAll();
+        $modelIax = Iax::model()->findAll();
 
         $buddyfile = '/etc/asterisk/iax_magnus_user.conf';
 
-        Yii::log($buddyfile, 'error');
-
-        if (is_array($list_friend)) {
+        if (count($modelIax)) {
 
             $fd = fopen($buddyfile, "w");
 
             if ($fd) {
-                foreach ($list_friend as $key => $data) {
-                    $line = "\n\n[" . $data['name'] . "]\n";
+                foreach ($modelIax as $key => $iax) {
+                    $line = "\n\n[" . $iax->name . "]\n";
                     if (fwrite($fd, $line) === false) {
                         echo "Impossible to write to the file ($buddyfile)";
                         break;
                     } else {
                         $line = '';
 
-                        $line .= 'host=' . $data['host'] . "\n";
+                        $line .= 'host=' . $iax->host . "\n";
 
-                        $line .= 'fromdomain=' . $data['host'] . "\n";
-                        $line .= 'accountcode=' . $data['accountcode'] . "\n";
-                        $line .= 'disallow=' . $data['disallow'] . "\n";
+                        $line .= 'fromdomain=' . $iax->host . "\n";
+                        $line .= 'accountcode=' . $iax->idUser->username . "\n";
+                        $line .= 'disallow=' . $iax->disallow . "\n";
 
-                        $codecs = explode(",", $data['allow']);
+                        $codecs = explode(",", $iax->allow);
                         foreach ($codecs as $codec) {
                             $line .= 'allow=' . $codec . "\n";
                         }
 
-                        if (strlen($data['context']) > 1) {
-                            $line .= 'context=' . $data['context'] . "\n";
+                        if (strlen($iax->context) > 1) {
+                            $line .= 'context=' . $iax->context . "\n";
                         }
 
-                        if (strlen($data['dtmfmode']) > 1) {
-                            $line .= 'dtmfmode=' . $data['dtmfmode'] . "\n";
+                        if (strlen($iax->dtmfmode) > 1) {
+                            $line .= 'dtmfmode=' . $iax->dtmfmode . "\n";
                         }
 
-                        if (strlen($data['insecure']) > 1) {
-                            $line .= 'insecure=' . $data['insecure'] . "\n";
+                        if (strlen($iax->insecure) > 1) {
+                            $line .= 'insecure=' . $iax->insecure . "\n";
                         }
 
-                        if (strlen($data['nat']) > 1) {
-                            $line .= 'nat=' . $data['nat'] . "\n";
+                        if (strlen($iax->nat) > 1) {
+                            $line .= 'nat=' . $iax->nat . "\n";
                         }
 
-                        if (strlen($data['qualify']) > 1) {
-                            $line .= 'qualify=' . $data['qualify'] . "\n";
+                        if (strlen($iax->qualify) > 1) {
+                            $line .= 'qualify=' . $iax->qualify . "\n";
                         }
 
-                        if (strlen($data['type']) > 1) {
-                            $line .= 'type=' . $data['type'] . "\n";
+                        if (strlen($iax->type) > 1) {
+                            $line .= 'type=' . $iax->type . "\n";
                         }
 
-                        if (strlen($data['regexten']) > 1) {
-                            $line .= 'regexten=' . $data['regexten'] . "\n";
+                        if (strlen($iax->regexten) > 1) {
+                            $line .= 'regexten=' . $iax->regexten . "\n";
                         }
 
-                        if (strlen($data['amaflags']) > 1) {
-                            $line .= 'amaflags=' . $data['amaflags'] . "\n";
+                        if (strlen($iax->amaflags) > 1) {
+                            $line .= 'amaflags=' . $iax->amaflags . "\n";
                         }
 
-                        if (strlen($data['language']) > 1) {
-                            $line .= 'language=' . $data['language'] . "\n";
+                        if (strlen($iax->language) > 1) {
+                            $line .= 'language=' . $iax->language . "\n";
                         }
 
-                        if (strlen($data['username']) > 1) {
-                            $line .= 'username=' . $data['username'] . "\n";
+                        if (strlen($iax->username) > 1) {
+                            $line .= 'username=' . $iax->username . "\n";
                         }
 
-                        if (strlen($data['fromuser']) > 1) {
-                            $line .= 'fromuser=' . $data['fromuser'] . "\n";
+                        if (strlen($iax->fromuser) > 1) {
+                            $line .= 'fromuser=' . $iax->fromuser . "\n";
                         }
 
-                        if (strlen($data['callerid']) > 1) {
-                            $line .= 'callerid=' . $data['callerid'] . "\n";
+                        if (strlen($iax->callerid) > 1) {
+                            $line .= 'callerid=' . $iax->callerid . "\n";
                         }
 
-                        if (strlen($data['secret']) > 1) {
-                            $line .= 'secret=' . $data['secret'] . "\n";
+                        if (strlen($iax->secret) > 1) {
+                            $line .= 'secret=' . $iax->secret . "\n";
                         }
 
-                        if ($data['calllimit'] > 0) {
-                            $line .= 'call-limit=' . $data['calllimit'] . "\n";
+                        if ($iax->calllimit > 0) {
+                            $line .= 'call-limit=' . $sip->calllimit . "\n";
                         }
 
                         if (fwrite($fd, $line) === false) {
