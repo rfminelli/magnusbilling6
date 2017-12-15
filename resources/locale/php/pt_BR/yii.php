@@ -1,6 +1,8 @@
 <?php
 return array(
     /*new '' => '', */
+    'Terms'                                                                                                                                                                            => 'Termos',
+    'No space allow in name'                                                                                                                                                           => 'Não usar espaçoes no nome',
     'You cannot EDIT your account.'                                                                                                                                                    => 'Você não pode editar sua propria conta de revenda',
     'company_name'                                                                                                                                                                     => 'Empresa',
     'Invalid register string. Only use register option to Trunk authentication via user and password.'                                                                                 => 'Somente use a opção Registrar Tronco se o tronco tiver usuário e senha',

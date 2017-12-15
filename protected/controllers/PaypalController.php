@@ -113,7 +113,8 @@ class PaypalController extends Controller
                         Yii::log('PAYMENT VERIFIED', 'info');
                         $modelUser = User::model()->findByPk((int) $id_user);
 
-                        if (count($modelUser)) {
+                        if (count($modelUser) && Refill::model()->countRefill($txn_id, $modelUser->id) == 0) {
+
                             //checa se o usaurio ja fez pagamentos
                             if ($this->config['global']['paypal_new_user'] == 0) {
                                 $modelRefillCount = Refill::model()->count('id_user = :key', array(':key' => $modelUser->id));
@@ -128,6 +129,7 @@ class PaypalController extends Controller
                                     $mail = new Mail(null, $modelUser->id, null, $mail_content, $mail_subject);
                                     $mail->send($this->config['global']['admin_email']);
                                     fclose($fp);
+                                    header("HTTP/1.1 200 OK");
                                     exit;
                                 } else {
                                     Yii::log($modelUser->id . ' ' . $amount . ' ' . $description . ' ' . $txn_id, 'error');
@@ -148,6 +150,7 @@ class PaypalController extends Controller
                 }
             }
             fclose($fp);
+            header("HTTP/1.1 200 OK");
         }
     }
 }

@@ -182,17 +182,17 @@ class MassiveCall
                 }
             } elseif ($forwardOptionType == 'queue') {
 
-                $modelDestination           = new modelDestination();
-                $modelDestination->id_queue = $forwardOption[1];
-                $modelDestination->did      = $destination;
+                $modelDiddestination             = new Diddestination();
+                $modelDiddestination->id_queue   = $forwardOption[1];
+                $modelDiddestination->idDid->did = $destination;
                 $agi->set_variable("CALLERID(num)", $destination);
                 $agi->set_callerid($destination);
-                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDestination, 'torpedo');
+                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
             } elseif ($forwardOptionType == 'ivr') {
-                $modelDestination         = new modelDestination();
-                $modelDestination->id_ivr = $forwardOption[1];
-                $modelDestination->did    = $destination;
-                Ivr::callIvr($agi, $MAGNUS, $Calc, $modelDestination, 'torpedo');
+                $modelDiddestination             = new Diddestination();
+                $modelDiddestination->id_ivr     = $forwardOption[1];
+                $modelDiddestination->idDid->did = $destination;
+                Ivr::callIvr($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
             } elseif ($forwardOptionType == 'group') {
 
                 $agi->verbose("Call group $group ", 25);
@@ -517,9 +517,6 @@ class MassiveCall
                 $modelUser->save();
             }
 
-            $modelPhoneNumber->status = 3;
-            $modelPhoneNumber->save();
-
             $modelTrunk = Trunk::model()->findByPk((int) $id_trunk);
             $modelTrunk->secondusedreal += $duration;
             $modelTrunk->save();
@@ -527,9 +524,11 @@ class MassiveCall
             $modelProvider = Provider::model()->findByPk((int) $modelTrunk->id_provider);
             $modelProvider->credit -= $buyratecost;
             $modelProvider->save();
-
-            $MAGNUS->hangup($agi);
         }
+
+        $modelPhoneNumber->status = 3;
+        $modelPhoneNumber->save();
+        $MAGNUS->hangup($agi);
     }
 
     private function make_token($line)

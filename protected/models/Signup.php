@@ -51,7 +51,7 @@ class Signup extends Model
             array('state', 'length', 'min' => 2),
             array('zipcode', 'length', 'min' => 5),
             array('doc', 'length', 'min' => 11),
-            array('username', 'length', 'min' => 6),
+            array('username', 'length', 'min' => 5),
             array('username', 'checkusername'),
             array('password', 'checksecret'),
             array('doc', 'checkdoc'),

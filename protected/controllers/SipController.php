@@ -39,7 +39,9 @@ class SipController extends Controller
 
     public function actionRead($asJson = true, $condition = null)
     {
+
         $this->sipShowPeers = AsteriskAccess::getSipShowPeers();
+
         parent::actionRead($asJson = true, $condition = null);
     }
 
@@ -111,8 +113,8 @@ class SipController extends Controller
 
     public function afterSave($model, $values)
     {
-
         AsteriskAccess::instance()->generateSipPeers();
+
         $this->siproxyServer($model, 'save');
 
         return;

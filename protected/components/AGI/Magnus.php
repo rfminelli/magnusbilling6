@@ -29,7 +29,6 @@ class Magnus
     public $accountcode;
     public $dnid;
     public $extension;
-    public $statchannel;
     public $destination;
     public $credit;
     public $id_plan;
@@ -112,14 +111,10 @@ class Magnus
 
         $this->lastapp = isset($agi->request['agi_lastapp']) ? $agi->request['agi_lastapp'] : null;
 
-        $stat_channel      = $agi->channel_status($this->channel);
-        $this->statchannel = $stat_channel["data"];
-
         if (preg_match('/Local/', $this->channel) && strlen($this->accountcode) < 4) {
             $modelSip          = Sip::model()->find('name = :dnid', array(':dnid' => $this->dnid));
             $this->accountcode = $modelSip->accountcode;
         }
-
         $ramal             = explode("-", $this->channel);
         $ramal             = explode("/", $ramal[0]);
         $this->sip_account = $ramal[1];
@@ -130,10 +125,6 @@ class Magnus
             $len_gt         = $pos_gt - $pos_lt - 1;
             $this->CallerID = substr($this->CallerID, $pos_lt + 1, $len_gt);
         }
-        $msg = ' get_agi_request_parameter = ' . $this->statchannel . ' ; ' . $this->CallerID
-        . ' ; ' . $this->channel . ' ; ' . $this->uniqueid . ' ; '
-        . $this->accountcode . ' ; ' . $this->dnid;
-        $agi->verbose($msg, 15);
     }
 
     public function calculation_price($buyrate, $duration, $initblock, $increment)
@@ -251,8 +242,6 @@ class Magnus
 
         $this->checkRestrictPhoneNumber($agi);
 
-        $this->save_redial_number($agi, $this->destination);
-        $data = date("d-m-y");
         $agi->verbose("USERNAME=" . $this->username . " DESTINATION=" . $this->destination . " PLAN=" . $this->id_plan . " CREDIT=" . $this->credit, 6);
 
         if ($this->play_audio == 0) {
@@ -582,16 +571,6 @@ class Magnus
 
         }
         return $prompt;
-    }
-
-    public function save_redial_number($agi, $number)
-    {
-        if (($this->mode == 'did') || ($this->mode == 'callback')) {
-            return;
-        }
-        $agi->verbose($number);
-        $this->modelUser->redial = $number;
-        $this->modelUser->save();
     }
 
     public function run_dial($agi, $dialstr, $dialparams, $trunk_directmedia = 'no', $timeout = 3600, $max_long = 2147483647)

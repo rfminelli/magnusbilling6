@@ -159,7 +159,7 @@ class MassiveCallCommand extends ConsoleCommand
                 $searchTariff = $searchTariff[1];
 
                 if ($searchTariff[0]['status'] == 0 || $phone->try > 0 || ($searchTariff[0]['inuse'] >= $searchTariff[0]['maxuse'] && $searchTariff[0]['maxuse'] != -1)) {
-                    $modelTrunk = Trunk::model()->find((int) $searchTariff[0]['rt_failover_trunk']);
+                    $modelTrunk = Trunk::model()->findByPk((int) $searchTariff[0]['rt_failover_trunk']);
 
                     if (count($modelTrunk) > 0) {
                         $idTrunk        = $modelTrunk->id;

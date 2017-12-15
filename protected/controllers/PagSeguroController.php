@@ -78,7 +78,7 @@ class PagSeguroController extends Controller
 
                     $modelUser = User::model()->findByPk((int) $id_user);
 
-                    if (count($modelUser)) {
+                    if (count($modelUser) && Refill::model()->countRefill($transacaoID, $modelUser->id) == 0) {
                         Yii::log($modelUser->id . ' ' . $monto . ' ' . $description . ' ' . $transacaoID, 'error');
                         UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $transacaoID);
                     }

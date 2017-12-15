@@ -52,5 +52,6 @@ chown -R asterisk:asterisk /var/www/tmpmagnus
 chmod -R 777 /var/www/tmpmagnus
 chmod 774 /var/www/html/mbilling/resources/ip.blacklist
 chmod -R 655 /var/www/html/mbilling/tmp
+chmod -R 750 /var/www/html/mbilling/assets
 chmod -R 750 /var/www/html/mbilling/resources/sounds
 chmod -R 770 /var/www/html/mbilling/resources/images

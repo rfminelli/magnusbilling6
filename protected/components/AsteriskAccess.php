@@ -68,7 +68,12 @@ class AsteriskAccess
 
     public function hangupRequest($channel)
     {
-        return $this->asmanager->Command("hangup request " . $channel);
+        $modelServers = Servers::model()->getAllAsteriskServers();
+        $channels     = array();
+        foreach ($modelServers as $key => $server) {
+            AsteriskAccess::instance($server['host'], $server['username'], $server['password']);
+            $this->asmanager->Command("hangup request " . $channel);
+        }
     }
 
     public function sipReload()
@@ -156,7 +161,7 @@ class AsteriskAccess
                     }
 
                     //registrar tronco
-                    if ($key == 'register_string' && preg_match("/^.{3}.*:.{3}.*@.{5}.*\/.{3}.*/", $data['register_string'])) {
+                    if ($key == 'register_string' && preg_match("/^.{3}.*:.{3}.*@.{5}.*/", $data['register_string'])) {
                         $registerLine .= 'register=>' . $data['register_string'] . "\n";
                     } elseif ($key == 'encryption' && $option == 'no') {
                         continue;

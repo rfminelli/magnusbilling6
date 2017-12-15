@@ -103,7 +103,7 @@ class PagHiperController extends Controller
                             ':key'     => $id_user)
                     );
 
-                    if (count($modelUser)) {
+                    if (count($modelUser) && Refill::model()->countRefill($transacaoID, $modelUser->id) == 0) {
                         UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $transacaoID);
                     }
                 }

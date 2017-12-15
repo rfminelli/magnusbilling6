@@ -234,7 +234,7 @@ class Mail
             $this->replaceInEmail(self::$CUSTOMER_CREDIT_BASE_CURRENCY_KEY, $credit);
             $this->replaceInEmail(self::$CUSTOMER_CURRENCY, $currency);
             $this->replaceInEmail(self::$CUSTOMER_CREDIT_NOTIFICATION, $modelUser->credit_notification);
-
+            $this->replaceInEmail(self::$TIME_KEY, date('Y-m-d H:i:s'));
             $OBS = !isset($OBS) ? $this->replaceInEmail(self::$OBS, '') : $OBS;
 
             $this->replaceInEmail(self::$SYSTEM_CURRENCY, $currency);

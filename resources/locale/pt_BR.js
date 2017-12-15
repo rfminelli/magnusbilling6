@@ -1,4 +1,5 @@
 Locale.load({
+    'Terms': 'Termos',
     'Confirm Release Did': 'Você realmente deseja liberar o Did',
     'This option is exclusive to users': 'Esta opção é exclusiva para usuários',
     'Insert the space available to record in GB. Use -1 to unlimit': 'Espaco em GB para espaço disponivel para gravaçōes. Use -1 para ilimitado',

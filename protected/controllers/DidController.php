@@ -212,7 +212,7 @@ class DidController extends Controller
                     'id_user'  => null,
                 ));
 
-            DidDestination::model()->deleteAll("id_did = :key", array(':key' => $id));
+            Diddestination::model()->deleteAll("id_did = :key", array(':key' => $id));
 
             DidUse::model()->updateAll(
                 array(

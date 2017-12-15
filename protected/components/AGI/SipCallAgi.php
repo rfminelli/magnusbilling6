@@ -20,8 +20,6 @@ class SipCallAgi
 
         $MAGNUS->startRecordCall($agi);
 
-        $MAGNUS->save_redial_number($agi, $MAGNUS->destination);
-
         $dialstr = "SIP/" . $MAGNUS->destination;
         //check if user are registered in a asterisk slave
         $modelServers = Servers::model()->find("status = 1 AND type = 'asterisk'");

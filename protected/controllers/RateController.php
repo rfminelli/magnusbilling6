@@ -135,8 +135,14 @@ class RateController extends Controller
     public function extraFilterCustomAgent($filter)
     {
         //se é agente filtrar pelo user.id_user
-        $this->join = 'JOIN pkg_plan ON pkg_plan.id = id_plan';
-        $filter .= ' AND pkg_plan.id_user = :agfby';
+
+        if (array_key_exists('idPlan', $this->relationFilter)) {
+            $this->relationFilter['idPlan']['condition'] .= " AND idPlan.id_user LIKE :agfby";
+        } else {
+            $this->relationFilter['idPlan'] = array(
+                'condition' => "idPlan.id_user LIKE :agfby",
+            );
+        }
         $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
 
         return $filter;
@@ -198,7 +204,7 @@ class RateController extends Controller
         ));
     }
 
-    private function importPrefixs($handle, $values)
+    public function importPrefixs($handle, $values)
     {
         $sqlPrefix = array();
         while (($row = fgetcsv($handle, 32768, $values['delimiter'])) !== false) {
@@ -246,7 +252,7 @@ class RateController extends Controller
         }
     }
 
-    private function importRates($handle, $values)
+    public function importRates($handle, $values)
     {
         $sqlRate = array();
         $idPlan  = $values['id_plan'];

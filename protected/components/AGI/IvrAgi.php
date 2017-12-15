@@ -20,7 +20,7 @@
 
 class IvrAgi
 {
-    public function callIvr(&$agi, &$MAGNUS, &$Calc, $modelDestination, &$DidAgi = null, $type = 'ivr')
+    public function callIvr(&$agi, &$MAGNUS, &$Calc, $modelDestination, $DidAgi = null, $type = 'ivr')
     {
 
         $agi->verbose("Ivr module", 5);
@@ -185,12 +185,12 @@ class IvrAgi
             } else if ($optionType == 'ivr') // QUEUE
             {
                 $modelDestination->id_ivr = $optionValue;
-                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDestination, $type);
+                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDestination, null, $type);
             } else if ($optionType == 'queue') // QUEUE
             {
                 $insertCDR                  = false;
                 $modelDestination->id_queue = $optionValue;
-                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDestination, $type);
+                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDestination, null, $type);
             } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
             {
                 $insertCDR = false;

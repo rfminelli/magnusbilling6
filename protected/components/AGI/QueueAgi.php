@@ -20,7 +20,7 @@
 
 class QueueAgi
 {
-    public function callQueue(&$agi, &$MAGNUS, &$Calc, $modelDestination, &$DidAgi = null, $type = 'queue')
+    public function callQueue(&$agi, &$MAGNUS, &$Calc, $modelDestination, $DidAgi = null, $type = 'queue')
     {
         $agi->verbose("Queue module", 5);
 
@@ -65,7 +65,7 @@ class QueueAgi
         } else {
             $terminatecauseid = 1;
         }
-
+        $DidAgi->billDidCall($agi, $MAGNUS, $answeredtime);
         $agi->verbose('$siptransfer => ' . $siptransfer['data'], 5);
         if ($siptransfer['data'] != 'yes' && $type == 'queue') {
             $modelPrefix = Prefix::model()->find("prefix = SUBSTRING(:key,1,length(prefix))",
@@ -81,7 +81,7 @@ class QueueAgi
             $modelCall->calledstation    = $MAGNUS->destination;
             $modelCall->terminatecauseid = $terminatecauseid;
             $modelCall->stoptime         = date('Y-m-d H:i:s');
-            $modelCall->sessionbill      = $sell_price;
+            $modelCall->sessionbill      = $DidAgi->sell_price;
             $modelCall->id_plan          = $modelQueue->idUser->id_plan;
             $modelCall->id_trunk         = null;
             $modelCall->src              = $MAGNUS->CallerID;

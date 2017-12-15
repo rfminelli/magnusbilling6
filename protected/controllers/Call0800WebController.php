@@ -20,8 +20,14 @@
  * 19/09/2012
  */
 
-class Call0800WebController extends Controller
+class Call0800WebController extends BaseController
 {
+
+    public function verbose($val = null, $val1 = null)
+    {
+        // echo $val . "<br>";
+        return;
+    }
 
     public function actionIndex()
     {
@@ -111,8 +117,6 @@ class Call0800WebController extends Controller
                     }
                 }
 
-                $prefix_local = $modelSip->idUser->prefix_local;
-
                 if (isset($modelSip->idUser->credit) && $modelSip->idUser->credit <= 0.5) {
                     echo 'You don t have enough credit to call';
                     exit;
@@ -131,17 +135,20 @@ class Call0800WebController extends Controller
                     Yii::log(print_r($destination, true), 'error');
                 }
 
-                $MAGNUS      = new Magnus();
-                $yournumber  = $MAGNUS->number_translation($prefix_local, $yournumber);
-                $destination = $MAGNUS->number_translation($prefix_local, $destination);
+                $MAGNUS               = new Magnus();
+                $MAGNUS->prefix_local = $modelSip->idUser->prefix_local;
+                $MAGNUS->id_plan      = $modelSip->idUser->id_plan;
+                $MAGNUS->number_translation($this, $yournumber);
+                $yournumber = $MAGNUS->destination;
+                $MAGNUS->number_translation($this, $destination);
+                $destination = $MAGNUS->destination;
 
                 /*protabilidade*/
-                $yournumber = Portabilidade::getDestination($yournumber, $modelSip->idUser->id_plan);
 
                 $SearchTariff = new SearchTariff();
                 $callTrunk    = $SearchTariff->find($yournumber, $modelSip->idUser->id_plan, $modelSip->idUser->id);
 
-                if (count($callTrunk) == 0) {
+                if (!count($callTrunk)) {
                     echo Yii::t('yii', 'Prefix not found to you number');
 
                     exit;
@@ -195,10 +202,7 @@ class Call0800WebController extends Controller
                 $call .= "Set:IDPLAN=" . $result[0]['id_plan'] . "\n";
 
                 $call .= "Set:SECCALL=" . $destination . "\n";
-
-                //Yii::log(print_r($call,true), 'error');
                 AsteriskAccess::generateCallFile($call, 5);
-
                 echo Yii::t('yii', 'CallBack Success');
             }
 

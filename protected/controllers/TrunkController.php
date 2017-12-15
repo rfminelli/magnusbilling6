@@ -124,6 +124,7 @@ class TrunkController extends Controller
 
     public function generateSipFile()
     {
+
         $select = 'trunkcode, user, secret, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, fromdomain,fromuser, register_string,port,transport,encryption';
         $model  = Trunk::model()->findAll(
             array(

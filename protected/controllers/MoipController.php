@@ -23,7 +23,7 @@ class MoipController extends Controller
             if ($status_pagamento == 1) {
                 $modelUser = User::model()->find('username = :usuario', array(':usuario' => $usuario));
 
-                if (count($modelUser)) {
+                if (count($modelUser) && Refill::model()->countRefill($codigo, $modelUser->id) == 0) {
                     UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $codigo);
                 }
             }

@@ -147,13 +147,13 @@ class CallController extends Controller
 
         $ids = json_decode($_GET['ids']);
 
-        $criteria = new CDbCriteria();
-        $criteria->addInCondition('id', $ids);
-        $criteria->addCondition($this->filter);
-        if (count($this->paramsFilter)) {
-            foreach ($this->paramsFilter as $key => $value) {
-                $criteria->params[$key] = $value;
-            }
+        $criteria = new CDbCriteria(array(
+            'condition' => $this->filter,
+            'params'    => $this->paramsFilter,
+            'with'      => $this->relationFilter,
+        ));
+        if (count($ids)) {
+            $criteria->addInCondition('t.id', $ids);
         }
         $modelCdr = Call::model()->findAll($criteria);
 

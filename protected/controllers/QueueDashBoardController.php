@@ -19,10 +19,10 @@ class QueueDashBoardController extends Controller
 {
 
     public $attributeOrder = 'callId';
-
-    private $host     = 'localhost';
-    private $user     = 'magnus';
-    private $password = 'magnussolution';
+    public $extraValues    = array('idQueue' => 'name');
+    private $host          = 'localhost';
+    private $user          = 'magnus';
+    private $password      = 'magnussolution';
 
     public function init()
     {
@@ -39,14 +39,30 @@ class QueueDashBoardController extends Controller
         parent::actionRead($asJson = true, $condition = null);
     }
 
+    public function extraFilterCustomClient($filter)
+    {
+
+        //se for cliente filtrar pelo queue.id_id_user
+        if (array_key_exists('idQueue', $this->relationFilter)) {
+            $this->relationFilter['idQueue']['condition'] .= " AND idQueue.id_user LIKE :agfby";
+        } else {
+            $this->relationFilter['idQueue'] = array(
+                'condition' => "idQueue.id_user LIKE :agfby",
+            );
+        }
+        $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
+
+        return $filter;
+    }
+
     public function applyFilterToLimitedAdmin()
     {
         if (Yii::app()->session['user_type'] == 1 && Yii::app()->session['adminLimitUsers'] == true) {
             $this->join .= ' JOIN pkg_queue q ON t.id_queue = q.id
-							JOIN pkg_user u ON u.id = q.id_user';
+                            JOIN pkg_user u ON u.id = q.id_user';
             $this->filter .= " AND u.id_group IN (SELECT gug.id_group F
-								ROM pkg_group_user_group gug
-								WHERE gug.id_group_user = :idgA0)";
+                                ROM pkg_group_user_group gug
+                                WHERE gug.id_group_user = :idgA0)";
             $this->paramsFilter['idgA0'] = Yii::app()->session['id_group'];
         }
     }
@@ -76,8 +92,8 @@ class QueueDashBoardController extends Controller
                     $totalCalls    = $this->get_string_between($line, 'C:', ',');
                     $answeredCalls = $this->get_string_between($line, 'A:', ',');
                     $sql           = "UPDATE pkg_queue SET var_holdtime = $holdtime, var_talktime = $talktime
-									, var_totalCalls = $totalCalls, var_answeredCalls = $answeredCalls
-									WHERE id = :id";
+                                    , var_totalCalls = $totalCalls, var_answeredCalls = $answeredCalls
+                                    WHERE id = :id";
                     $command = Yii::app()->db->createCommand($sql);
                     $command->bindValue(":id", $queue->id, PDO::PARAM_STR);
                     $command->execute();
@@ -101,8 +117,8 @@ class QueueDashBoardController extends Controller
                     echo $username."\n";*/
                     $valuesInsert = ":id_user, :username, :agentStatus, :totalCalls, :last_call, :queueId";
                     $sql          = "INSERT INTO pkg_queue_agent_status
-								(id_user, agentName, agentStatus, totalCalls, last_call, id_queue)
-								VALUES ($valuesInsert) ";
+                                (id_user, agentName, agentStatus, totalCalls, last_call, id_queue)
+                                VALUES ($valuesInsert) ";
                     $command = Yii::app()->db->createCommand($sql);
                     $command->bindValue(":id_user", $id_user, PDO::PARAM_INT);
                     $command->bindValue(":username", $username, PDO::PARAM_STR);

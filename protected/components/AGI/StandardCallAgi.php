@@ -5,13 +5,6 @@ class StandardCallAgi
 
     public function processCall(&$MAGNUS, &$agi, &$Calc)
     {
-        if ($MAGNUS->agiconfig['answer_call'] == 1) {
-            $agi->answer();
-            $status_channel = 6;
-        } else {
-            $status_channel = 4;
-        }
-
         //Play intro message
         if (strlen($MAGNUS->agiconfig['intro_prompt']) > 0) {
             $agi->stream_file($MAGNUS->agiconfig['intro_prompt'], '#');
@@ -21,13 +14,6 @@ class StandardCallAgi
         if (AuthenticateAgi::authenticateUser($agi, $MAGNUS) == 1) {
 
             for ($i = 0; $i < $MAGNUS->agiconfig['number_try']; $i++) {
-
-                $stat_channel = $agi->channel_status($MAGNUS->channel);
-
-                // CHECK IF THE CHANNEL IS UP
-                if (($MAGNUS->agiconfig['answer_call'] == 1) && ($stat_channel["result"] != $status_channel)) {
-                    $MAGNUS->hangup($agi);
-                }
 
                 // CREATE A DIFFERENT UNIQUEID FOR EACH TRY
                 if ($i > 0) {

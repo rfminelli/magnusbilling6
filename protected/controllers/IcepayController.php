@@ -53,7 +53,7 @@ class IcepayController extends Controller
 
                 RefillIcepay::model()->deleteByPk((int) (int) $data->orderID);
 
-                if (isset($modelRefillIcepay->credit)) {
+                if (isset($modelRefillIcepay->credit) && Refill::model()->countRefill($data->paymentID, $modelRefillIcepay->id_user) == 0) {
 
                     $description = 'Ycepay No.' . $data->paymentID;
                     UserCreditManager::releaseUserCredit($modelRefillIcepay->id_user, $modelRefillIcepay->credit, $description, 1, $data->paymentID);

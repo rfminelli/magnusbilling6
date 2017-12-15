@@ -43,19 +43,6 @@ class PlanController extends Controller
         parent::init();
     }
 
-    public function actionDestroy()
-    {
-        # recebe os parametros da exclusao
-        $values = $this->getAttributesRequest();
-
-        if (Yii::app()->session['isAgent']) {
-            $sql = "DELETE FROM pkg_rate_agent WHERE id_plan = '" . $values['id'] . "'";
-            Yii::app()->db->createCommand($sql)->execute();
-        }
-
-        parent::actionDestroy();
-    }
-
     public function beforeSave($values)
     {
 

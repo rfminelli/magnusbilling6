@@ -88,7 +88,7 @@ class MolPayController extends Controller
                 Yii::log('username=' . $username . ', amount = ' . $amount, 'error');
                 $modelUser = User::model()->findByPk((int) $id_user);
 
-                if (count($modelUser)) {
+                if (count($modelUser) && Refill::model()->countRefill($tranID, $modelUser->id) == 0) {
                     UserCreditManager::releaseUserCredit($modelUser->id, $amount, $description, 1, $tranID);
                     echo "<p align='center'> <font color=red font face='verdana' size='5pt'>Your payment was completed.</font> </p>";
                     echo "<p align='center'> <font color=red font face='verdana' size='5pt'>You may close this window and get back to your account.</font> </p>";

@@ -33,7 +33,7 @@ class Start0800CallBackCommand extends ConsoleCommand
 
             $voltarChamar = time() - 1800;
             $voltarChamar = date('Y-m-d H:i:s', $voltarChamar);
-            CallBack::model()->updateAll(array('status' => '1'), 'status = 2 AND last_attempt_time < :key', array(':key' => $voltarChamar));
+            CallBack::model()->updateAll(array('status' => '1'), 'status = 2 AND num_attempt < 4 AND last_attempt_time < :key', array(':key' => $voltarChamar));
 
             //esperar 60 segundos antes de tentar ligar para o cliente.
             $timeToNewCallback = date('Y-m-d H:i:s', time() - 60);
@@ -86,10 +86,14 @@ class Start0800CallBackCommand extends ConsoleCommand
 
                 AsteriskAccess::generateCallFile($call, 1);
 
-                $modelCallBack->num_attempt++;
-                $modelCallBack->last_attempt_time = date('Y-m-d H:i:s');
-                $modelCallBack->status            = 2;
-                $modelCallBack->save();
+                $callback->num_attempt++;
+                $callback->last_attempt_time = date('Y-m-d H:i:s');
+                $callback->status            = 2;
+                $callback->save();
+                $modelError = $callback->getErrors();
+                if (count($modelError)) {
+                    print_r($modelError);
+                }
 
             }
         }

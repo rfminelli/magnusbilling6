@@ -34,6 +34,11 @@ class PrefixController extends Controller
         parent::init();
     }
 
+    public function extraFilterCustomAgent($filter)
+    {
+        return $filter;
+    }
+
     public function actionImportFromCsv()
     {
 

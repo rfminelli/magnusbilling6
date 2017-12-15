@@ -28,13 +28,16 @@ class Calc
     public $usedtrunk           = 0;
     public $freetimetocall_used = 0;
     public $dialstatus_rev_list;
-    public $tariffObj           = array();
-    public $freetimetocall_left = array();
-    public $freecall            = array();
-    public $offerToApply        = array();
-    public $number_trunk        = 0;
-    public $idCallCallBack      = 0;
-    public $agent_bill          = 0;
+    public $tariffObj                 = array();
+    public $freetimetocall_left       = array();
+    public $freecall                  = array();
+    public $offerToApply              = array();
+    public $number_trunk              = 0;
+    public $idCallCallBack            = 0;
+    public $agent_bill                = 0;
+    public $did_charge_of_id_user     = 0;
+    public $did_charge_of_answer_time = 0;
+    public $didAgi                    = array();
 
     public function __construct()
     {
@@ -67,11 +70,9 @@ class Calc
             } else {
                 return true;
             }
-
         }
 
         return true;
-
     }
 
     public function calculateTimeout(&$MAGNUS, $credit, $K = 0, $agi)
@@ -487,6 +488,50 @@ class Calc
 
         }
 
+        if ($this->did_charge_of_id_user > 0) {
+
+            $agi->verbose('Did_charge_of_id_user = ' . $this->did_charge_of_id_user, 15);
+
+            $didDuration = time() - $this->did_charge_of_answer_time;
+
+            $agi->verbose('DidDuration = ' . $didDuration);
+            $this->didAgi->sell_price = $MAGNUS->roudRatePrice($didDuration, $this->didAgi->sell_price,
+                $this->didAgi->initblock,
+                $this->didAgi->increment);
+
+            User::model()->updateByPk($this->did_charge_of_id_user,
+                array(
+                    'credit' => new CDbExpression('credit - ' . $MAGNUS->round_precision(abs($MAGNUS->did_charge_of_cost))),
+                )
+            );
+
+            $agi->verbose('Add CDR the DID cost to CallerID. Cost =' . $MAGNUS->did_charge_of_cost . ', duration' . $didDuration);
+            $modelCall                   = new Call();
+            $modelCall->uniqueid         = $MAGNUS->uniqueid;
+            $modelCall->sessionid        = $MAGNUS->channel;
+            $modelCall->id_user          = $this->did_charge_of_id_user;
+            $modelCall->starttime        = date("Y-m-d H:i:s", $this->did_charge_of_answer_time);
+            $modelCall->sessiontime      = $didDuration;
+            $modelCall->real_sessiontime = $didDuration;
+            $modelCall->calledstation    = $this->didAgi->did;
+            $modelCall->terminatecauseid = $terminatecauseid;
+            $modelCall->stoptime         = date('Y-m-d H:i:s');
+            $modelCall->sessionbill      = $this->didAgi->sell_price;
+            $modelCall->id_plan          = $MAGNUS->id_plan;
+            $modelCall->id_trunk         = null;
+            $modelCall->src              = $MAGNUS->CallerID;
+            $modelCall->sipiax           = 3;
+            $modelCall->buycost          = 0;
+            $modelCall->id_prefix        = $id_prefix;
+            $modelCall->save();
+
+            $modelError = $modelCall->getErrors();
+            if (count($modelError)) {
+                $agi->verbose(print_r($modelError, true), 25);
+            }
+
+        }
+
         if ($terminatecauseid == 1) {
 
             if ($agi->get_variable("IDCALLBACK", true)) {
@@ -495,7 +540,7 @@ class Calc
                 $modelCallBack->status            = 3;
                 $modelCallBack->save();
             }
-            $agi->verbose('Insert call on CDR');
+            $agi->verbose('Insert call on CDR', 10);
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
             $modelCall->sessionid        = $MAGNUS->channel;
@@ -521,7 +566,7 @@ class Calc
             }
 
         } else {
-            $agi->verbose('Insert failed call');
+            $agi->verbose('Insert failed call', 10);
             $modelCallFailed                   = new CallFailed();
             $modelCallFailed->uniqueid         = $MAGNUS->uniqueid;
             $modelCallFailed->sessionid        = $MAGNUS->channel;

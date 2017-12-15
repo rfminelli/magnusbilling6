@@ -57,6 +57,12 @@ class MagnusCommand extends CConsoleCommand
             $MAGNUS->hangup($agi);
         }
 
+        if ($agi->get_variable("IDCALLBACK", true)) {
+            $modelSip = Sip::model()->find('id_user = :key',
+                array(':key' => $agi->get_variable("IDUSER", true)));
+            $agi->set_callerid($modelSip->callerid);
+        }
+
         if ($agi->get_variable("CIDCALLBACK", true)) {
 
             CallbackAgi::chargeFistCall($agi, $MAGNUS, $Calc, 0);
@@ -64,6 +70,12 @@ class MagnusCommand extends CConsoleCommand
             $MAGNUS->agiconfig['cid_enable'] = 1;
             $MAGNUS->agiconfig['use_dnid']   = 0;
             $MAGNUS->agiconfig['number_try'] = 3;
+        }
+
+        if ($agi->get_variable("MEMBERNAME", true) || $agi->get_variable("QUEUEPOSITION", true)) {
+            $agi->answer();
+            $Calc->init();
+            QueueAgi::recIvrQueue($agi, $MAGNUS, $Calc, $result_did);
         }
 
         if ($agi->get_variable("PHONENUMBER_ID", true) > 0 && $agi->get_variable("CAMPAIGN_ID", true) > 0) {
@@ -79,12 +91,6 @@ class MagnusCommand extends CConsoleCommand
             $agi->stream_file('prepaid-final', '#');
             $MAGNUS->hangup($agi);
             exit;
-        }
-
-        if ($agi->get_variable("MEMBERNAME", true) || $agi->get_variable("QUEUEPOSITION", true)) {
-            $agi->answer();
-            $Calc->init();
-            QueueAgi::recIvrQueue($agi, $MAGNUS, $Calc, $result_did);
         }
 
         $didAgi = new DidAgi();
@@ -119,13 +125,8 @@ class MagnusCommand extends CConsoleCommand
                     $standardCall->processCall($MAGNUS, $agi, $Calc);
                 }
             }
-
         }
-
         SipTransferAgi::billing($MAGNUS, $agi, $Calc);
-
-        Yii::log("End AGI script ", 'error');
         $MAGNUS->hangup($agi);
-
     }
 }
