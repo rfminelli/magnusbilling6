@@ -606,6 +606,10 @@ class AsteriskAccess
                             $line .= 'callerid=' . $iax->callerid . "\n";
                         }
 
+                        if (strlen($iax->callerid) > 1) {
+                            $line .= 'cid_number=' . $iax->callerid . "\n";
+                        }
+
                         if (strlen($iax->secret) > 1) {
                             $line .= 'secret=' . $iax->secret . "\n";
                         }
