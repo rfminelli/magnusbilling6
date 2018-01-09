@@ -36,7 +36,6 @@ class JoomlaController extends Controller
 
             if (empty($value['id_module'])) {
                 array_push($menu, array(
-                    'teste'   => 'teste',
                     'text'    => preg_replace("/ Module/", "", $value['text']),
                     'iconCls' => $value['icon_cls'],
                     'rows'    => $this->getSubMenu($modules, $value['id']),
@@ -82,51 +81,18 @@ class JoomlaController extends Controller
         return $subMenu;
     }
 
-    public function actionEdit()
-    {
-
-        $sql     = "SELECT * FROM pkg_user WHERE email = :email";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":email", $_POST['email'], PDO::PARAM_STR);
-        $resultEmail = $command->queryAll();
-
-        if (count($resultEmail) > 0) {
-            exit('COM_USERS_PROFILE_EMAIL1_MESSAGE');
-        }
-
-        $set = '';
-        if ($_POST['password'] != '') {
-            $set .= "password = '" . $_POST['password'] . "',";
-        }
-
-        if ($_POST['firstname'] != '') {
-            $set .= "firstname = '" . $_POST['firstname'] . "',";
-        }
-
-        $set .= "email = '" . $_POST['email'] . "'";
-
-        $sql     = "UPDATE pkg_user SET " . $set . " WHERE username = :user";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":user", $_POST['user'], PDO::PARAM_STR);
-        $command->execute();
-
-    }
-
     public function actionSignup()
     {
 
         if (isset($_GET['user']) && $_GET['user'] == 'roud') {
             $is_android           = true;
             $_REQUEST['user']     = Util::getNewUsername();
-            $_REQUEST['password'] = Util::generatePassword(8, true, true, true, false);
+            $_REQUEST['password'] = trim(Util::generatePassword(20, true, true, true, false));
             $_REQUEST['active']   = 0;
         }
+        $modelUser = User::model()->find('email = :key', array(':key' => $_REQUEST['email']));
 
-        $sql     = "SELECT * FROM pkg_user WHERE email = :email";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":email", $_REQUEST['email'], PDO::PARAM_STR);
-        $resultEmail = $command->queryAll();
-        if (count($resultEmail) > 0) {
+        if (count($modelUser)) {
             if (isset($is_android)) {
                 exit(Yii::t('yii', 'Email already in use'));
             } else {
@@ -134,92 +100,88 @@ class JoomlaController extends Controller
             }
 
         }
+        $modelUser = User::model()->find('username = :key', array(':key' => $_REQUEST['user']));
 
-        $sql     = "SELECT * FROM pkg_user WHERE username = :username";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":username", $_REQUEST['user'], PDO::PARAM_STR);
-        $resultUser = $command->queryAll();
-
-        if (count($resultUser) > 0) {
+        if (count($modelUser)) {
             exit('COM_USERS_PROFILE_USERNAME_MESSAGE');
         }
 
-        $sql        = "SELECT * FROM pkg_plan WHERE signup = 1";
-        $resultPlan = Yii::app()->db->createCommand($sql)->queryAll();
-        if (isset($resultPlan[0]['id']) && $resultPlan[0]['id'] > 0) {
-            $id_plan = $resultPlan[0]['id'];
+        $modelPlan = Plan::model()->find('signup = 1');
+
+        if (count($modelPlan)) {
+            $id_plan = $modelPlan->id;
         } else {
             exit('No plan active');
         }
 
-        $credit = $resultPlan[0]['ini_credit'];
+        $credit = $modelPlan->ini_credit;
 
         if (isset($_REQUEST['id_group'])) {
             $id_group = $_REQUEST['id_group'];
 
         } else {
-            $sql         = "SELECT * FROM pkg_group_user WHERE id_user_type = 3";
-            $resultGroup = Yii::app()->db->createCommand($sql)->queryAll();
-            if (isset($resultGroup[0]['id']) && $resultGroup[0]['id'] > 0) {
-                $id_group = $resultGroup[0]['id'];
+
+            $modelGroupUser = GroupUser::model()->findAllByAttributes(array("id_user_type" => 3));
+            if (count($modelGroupUser)) {
+                $id_group = $modelGroupUser[0]['id'];
             } else {
                 exit('No plan group for user');
             }
         }
 
-        $callingcard_pin = Util::generatePassword(6, false, false, true, false) . "\n";
+        $callingcard_pin = Util::getNewLock_pin();
 
-        $sql = "INSERT INTO pkg_user (username, password, email, firstname, id_group, id_plan, active, callingcard_pin,id_user, credit)
-                    VALUES (:user, :password , :email , :firstname ,  :id_group , :id_plan , :active , :callingcard_pin, 1, :credit)";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":user", $_REQUEST['user'], PDO::PARAM_STR);
-        $command->bindValue(":password", $_REQUEST['password'], PDO::PARAM_STR);
-        $command->bindValue(":email", $_REQUEST['email'], PDO::PARAM_STR);
-        $command->bindValue(":firstname", $_REQUEST['firstname'], PDO::PARAM_STR);
-        $command->bindValue(":id_group", $id_group, PDO::PARAM_STR);
-        $command->bindValue(":id_plan", $id_plan, PDO::PARAM_STR);
-        $command->bindValue(":active", $_REQUEST['active'], PDO::PARAM_STR);
-        $command->bindValue(":callingcard_pin", $callingcard_pin, PDO::PARAM_STR);
-        $command->bindValue(":credit", $credit, PDO::PARAM_STR);
-        $command->execute();
+        $modelUser                  = new User();
+        $modelUser->username        = $_REQUEST['user'];
+        $modelUser->password        = $_REQUEST['password'];
+        $modelUser->email           = $_REQUEST['email'];
+        $modelUser->firstname       = $_REQUEST['firstname'];
+        $modelUser->id_group        = $id_group;
+        $modelUser->id_plan         = $id_plan;
+        $modelUser->active          = $_REQUEST['active'];
+        $modelUser->callingcard_pin = $callingcard_pin;
+        $modelUser->id_user         = 1;
+        $modelUser->credit          = $credit;
+        if (isset($_REQUEST['phone']) && strlen($_REQUEST['phone']) > 5) {
+            $modelUser->phone = $_REQUEST['phone'];
+        }
+        $success = $modelUser->save();
 
-        $idUser = Yii::app()->db->getLastInsertID();
+        if ($success) {
 
-        $allow    = 'g729,gsm,alaw,ulaw';
-        $host     = 'dynamic';
-        $insecure = 'no';
+            $modelSip              = new Sip();
+            $modelSip->id_user     = $modelUser->id;
+            $modelSip->accountcode = $modelUser->username;
+            $modelSip->name        = $modelUser->username;
+            $modelSip->allow       = 'g729,gsm,alaw,ulaw';
+            $modelSip->host        = 'dynamic';
+            $modelSip->insecure    = 'no';
+            $modelSip->defaultuser = $modelUser->username;
+            $modelSip->secret      = $modelUser->password;
+            if (strlen($modelUser->phone) > 5) {
+                $modelSip->callerid   = $modelUser->phone;
+                $modelSip->cid_number = $modelUser->phone;
+            }
+            $modelSip->save();
 
-        $sql = "INSERT INTO pkg_sip (id_user, name, accountcode, allow, host, insecure, defaultuser, secret,
-                        directmedia, regexten, callerid, cid_number, context) VALUES (:id_user, :user ,
-                        :user ,  :allow , :host , :insecure , :user , :password, 'no' , :user, :user, :user,'billing')";
-
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":id_user", $idUser, PDO::PARAM_INT);
-        $command->bindValue(":user", $_REQUEST['user'], PDO::PARAM_STR);
-        $command->bindValue(":password", $_REQUEST['password'], PDO::PARAM_STR);
-        $command->bindValue(":host", $host, PDO::PARAM_STR);
-        $command->bindValue(":allow", $allow, PDO::PARAM_STR);
-        $command->bindValue(":insecure", $insecure, PDO::PARAM_STR);
-        $command->execute();
+        }
 
         if (isset($is_android)) {
-            //echo $idUser;
-            $mail = new Mail(Mail::$TYPE_SIGNUP, $idUser);
-            $mail->send();
-            include "protected/commands/AGI.Class.php";
-            $asmanager       = new AGI_AsteriskManager;
-            $conectaServidor = $conectaServidor = $asmanager->connect('localhost', 'magnus', 'magnussolution');
-            $server          = $asmanager->Command("sip reload");
 
-            exit('Success:' . $_REQUEST['user'] . ":" . $_REQUEST['password']);
+            AsteriskAccess::instance()->generateSipPeers();
+
+            $mail = new Mail(Mail::$TYPE_SIGNUP, $modelUser->id);
+            $mail->send();
+
+            exit('Success:' . $modelUser->username . ":" . $modelUser->password);
         }
     }
 
     public function actionJoomlaMenu()
     {
 
-        $user      = $_POST['user'];
-        $password  = $_POST['password'];
+        $user      = trim($_POST['user']);
+        $password  = trim($_POST['password']);
         $condition = "(username LIKE :user OR email LIKE :user)";
 
         $sql     = "SELECT * FROM pkg_user WHERE $condition";
