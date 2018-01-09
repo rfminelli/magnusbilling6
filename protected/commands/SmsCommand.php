@@ -99,7 +99,7 @@ class SmsCommand extends ConsoleCommand
                 if (date("s") > 55) {
                     exit;
                 }
-                $sms->idPhonebook->idUser->id_plan = $campaign->id_plan > 0 ? $campaign->id_plan : $phone->idPhonebook->idUser->id_plan;
+                $sms->idPhonebook->idUser->id_plan = $campaign->id_plan > 0 ? $campaign->id_plan : $sms->idPhonebook->idUser->id_plan;
 
                 $id_user  = $sms->idPhonebook->idUser->id;
                 $username = $sms->idPhonebook->idUser->username;

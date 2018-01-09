@@ -490,6 +490,8 @@ class AsteriskAccess
                             $line .= 'call-limit=' . $sip->calllimit . "\n";
                         }
 
+                        $line .= 'allowtransfer=' . $sip->allowtransfer . "\n";
+
                         if ($sip->context == 'encryption') {
                             $line .= "encryption=yes\n";
                             $line .= "avpf=yes\n";

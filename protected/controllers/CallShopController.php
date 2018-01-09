@@ -74,11 +74,8 @@ class CallShopController extends Controller
         $modelSip->callshoptime   = 0;
         $modelSip->save();
 
-        $modelCallShopCdr = CallShopCdr::model()->find("cabina = :name ", array(':name' => $filter[0]['value']));
-        if (count($modelCallShopCdr)) {
-            $modelCallShopCdr->status = 1;
-            $modelCallShopCdr->save();
-        }
+        CallShopCdr::model()->updateAll(array('status' => '1'), 'cabina = :key', array(':key' => $filter[0]['value']));
+
         echo json_encode(array(
             $this->nameSuccess => true,
             $this->nameMsg     => $this->msgSuccess,

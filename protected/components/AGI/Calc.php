@@ -475,14 +475,18 @@ class Calc
                 $agi->verbose("Update credit username $MAGNUS->username, " . $MAGNUS->round_precision(abs($cost)), 6);
             }
 
-            $modelTrunk = Trunk::model()->findByPk((int) $this->usedtrunk);
-            $modelTrunk->secondusedreal += $sessiontime;
-            $modelTrunk->call_answered++;
-            $modelTrunk->save();
+            Trunk::model()->updateByPk($this->usedtrunk,
+                array(
+                    'call_answered'  => new CDbExpression('call_answered + 1'),
+                    'secondusedreal' => new CDbExpression('secondusedreal + ' . $sessiontime),
+                )
+            );
 
-            $modelProvider = Provider::model()->findByPk((int) $this->tariffObj[$K]['id_provider']);
-            $modelProvider->credit -= $buycost;
-            $modelProvider->save();
+            Provider::model()->updateByPk($this->tariffObj[$K]['id_provider'],
+                array(
+                    'credit' => new CDbExpression('credit - ' . $buycost),
+                )
+            );
 
             $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix);
 
@@ -566,28 +570,31 @@ class Calc
             }
 
         } else {
-            $agi->verbose('Insert failed call', 10);
-            $modelCallFailed                   = new CallFailed();
-            $modelCallFailed->uniqueid         = $MAGNUS->uniqueid;
-            $modelCallFailed->sessionid        = $MAGNUS->channel;
-            $modelCallFailed->id_user          = $MAGNUS->id_user;
-            $modelCallFailed->starttime        = date('Y-m-d H:i:s');
-            $modelCallFailed->calledstation    = $MAGNUS->destination;
-            $modelCallFailed->terminatecauseid = $terminatecauseid;
-            $modelCallFailed->id_plan          = $MAGNUS->id_plan;
-            $modelCallFailed->id_trunk         = $this->usedtrunk;
-            $modelCallFailed->src              = $MAGNUS->CallerID;
-            $modelCallFailed->sipiax           = $calltype;
-            $modelCallFailed->id_prefix        = $id_prefix;
-            $modelCallFailed->save();
-            $modelError = $modelCallFailed->getErrors();
-            if (count($modelError)) {
-                $agi->verbose($modelError, 25);
+            if (file_exists(dirname(__FILE__) . '/CallCache.php')) {
+                include dirname(__FILE__) . '/CallCache.php';
+            } else {
+                $agi->verbose('Insert failed call', 1);
+                $modelCallFailed                   = new CallFailed();
+                $modelCallFailed->uniqueid         = $MAGNUS->uniqueid;
+                $modelCallFailed->sessionid        = $MAGNUS->channel;
+                $modelCallFailed->id_user          = $MAGNUS->id_user;
+                $modelCallFailed->starttime        = date('Y-m-d H:i:s');
+                $modelCallFailed->calledstation    = $MAGNUS->destination;
+                $modelCallFailed->terminatecauseid = $terminatecauseid;
+                $modelCallFailed->id_plan          = $MAGNUS->id_plan;
+                $modelCallFailed->id_trunk         = $this->usedtrunk;
+                $modelCallFailed->src              = $MAGNUS->CallerID;
+                $modelCallFailed->sipiax           = $calltype;
+                $modelCallFailed->id_prefix        = $id_prefix;
+                $modelCallFailed->save();
+                $modelError = $modelCallFailed->getErrors();
+                if (count($modelError)) {
+                    $agi->verbose($modelError, 25);
+                }
             }
-
         }
-
     }
+
     public function updateSystemAgent($agi, $MAGNUS, $calledstation, $cost, $sessiontime)
     {
 

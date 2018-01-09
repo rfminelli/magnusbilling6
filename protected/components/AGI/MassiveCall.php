@@ -465,15 +465,17 @@ class MassiveCall
         $MAGNUS->id_plan = $modelRate->id_plan;
         if ($duration > 1) {
 
-            if (count($modelCampaignPoll) && $modelCampaignPoll->enable_max_call == 1) {
+            if (count($modelCampaign) && $modelCampaign->enable_max_call == 1 && $duration >= $modelCampaign->nb_callmade) {
                 //desativa a campanha se o limite de chamadas foi alcançado
-                $setStatus = $modelCampaignPoll->secondusedreal < 1 ? ",status = 0" : '';
-
                 //diminui 1 do total de chamadas permitidas completas , se o tempo da chamada for superior ao tempo do audio
-                if ($duration >= $modelCampaignPoll->nb_callmade) {
-                    $modelCampaignPoll->secondusedreal -= $setStatus;
-                    $modelCampaignPoll->save();
-                }
+
+                Campaign::model()->updateByPk($modelCampaign->id,
+                    array(
+                        'status'         => $modelCampaign->secondusedreal < 1 ? 0 : 1,
+                        'secondusedreal' => new CDbExpression('secondusedreal - 1'),
+                    )
+                );
+
             }
 
             $modelCall                   = new Call();

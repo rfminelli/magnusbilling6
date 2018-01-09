@@ -71,7 +71,6 @@ class CallSummaryCallShopController extends Controller
 
     public function init()
     {
-        ini_set('memory_limit', '-1');
         $this->instanceModel = new CallSummaryCallShop;
         $this->abstractModel = CallSummaryCallShop::model();
         $this->titleReport   = Yii::t('yii', 'Calls Summary Callshop');

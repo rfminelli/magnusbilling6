@@ -479,6 +479,17 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.0.7') {
+            $sql = "ALTER TABLE  `pkg_iax`
+            CHANGE  `mask`  `mask` VARCHAR( 95 ) NULL DEFAULT NULL,
+            CHANGE  `musiconhold`  `musiconhold` VARCHAR( 100 ) NULL DEFAULT NULL ;";
+            $this->executeDB($sql);
+
+            $version = '6.0.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

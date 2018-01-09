@@ -68,7 +68,6 @@ class CallFailedController extends Controller
 
     public function init()
     {
-        ini_set('memory_limit', '-1');
         $this->instanceModel = new CallFailed;
         $this->abstractModel = CallFailed::model();
         $this->titleReport   = Yii::t('yii', 'Call Failed');

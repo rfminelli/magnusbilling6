@@ -357,14 +357,8 @@ class Mail
         $mail->CharSet = 'utf-8';
         ob_start();
         @$mail->Send();
-        $output = ob_get_contents();
         ob_end_clean();
-
-        if (preg_match("/Erro/", $output)) {
-            throw new Exception($output);
-        }
         return true;
-
     }
 
 }

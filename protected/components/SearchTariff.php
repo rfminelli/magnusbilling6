@@ -27,6 +27,10 @@ class SearchTariff
             $agi = $this;
         }
 
+        if (file_exists(dirname(__FILE__) . '/beforeSearchTariff.php')) {
+            include dirname(__FILE__) . '/beforeSearchTariff.php';
+        }
+
         $result = Plan::model()->searchTariff($id_plan, $destination);
         $agi->verbose($result[0], 25);
         $result = $result[1];

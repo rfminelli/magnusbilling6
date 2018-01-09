@@ -302,12 +302,11 @@ class DidAgi
                         /* INSERT CDR  & UPDATE SYSTEM*/
                         $Calc->updateSystem($MAGNUS, $agi, 1, 1);
 
-                        $this->modelDestination[0]->secondusedreal += $Calc->answeredtime;
-                        $this->modelDestination[0]->save();
-                        $modelError = $this->modelDestination->getErrors();
-                        if (count($modelError)) {
-                            $agi->verbose(print_r($modelError, true), 25);
-                        }
+                        Diddestination::model()->updateByPk($this->modelDestination[0]->id,
+                            array(
+                                'secondusedreal' => new CDbExpression('secondusedreal + ' . $Calc->answeredtime),
+                            )
+                        );
 
                         /* THEN STATUS IS ANSWER*/
                         break;

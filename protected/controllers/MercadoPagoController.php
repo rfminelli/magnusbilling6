@@ -64,6 +64,7 @@ class MercadoPagoController extends CController
                 if (count($resultUser)) {
                     Yii::log($modelUser->id . ' ' . $amount . ' ' . $description . ' ' . $txn_id, 'error');
                     UserCreditManager::releaseUserCredit($modelUser->id, $amount, $description, 1, $code);
+                    header("HTTP/1.1 200 OK");
                 }
 
             }

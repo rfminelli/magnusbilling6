@@ -24,9 +24,6 @@ class PhoneNumberController extends Controller
 {
     public $attributeOrder = 't.id';
     public $extraValues    = array('idPhonebook' => 'name');
-    public $filterByUser   = 'g.id_user';
-    public $join           = 'JOIN pkg_phonebook g ON g.id = id_phonebook';
-    public $select         = 't.id, id_phonebook, number, t.name, t.status, t.info, t.city';
 
     public $fieldsFkReport = array(
         'id_phonebook' => array(
@@ -55,15 +52,33 @@ class PhoneNumberController extends Controller
         }
     }
 
-    public function extraFilterCustom($filter)
+    public function extraFilterCustomAgent($filter)
     {
-        if (Yii::app()->session['user_type'] == 2) {
-            $filter .= ' AND g.id_user IN  (SELECT id FROM pkg_user WHERE id_user = :dfby0 ) ';
-            $this->paramsFilter[':dfby0'] = Yii::app()->session['id_user'];
-        } else if (Yii::app()->session['user_type'] > 1 && $this->filterByUser) {
-            $filter .= ' AND ' . $this->defaultFilterByUser . ' = :dfby';
-            $this->paramsFilter[':dfby'] = Yii::app()->session['id_user'];
+        //se é agente filtrar pelo user.id_user
+        if (array_key_exists('idPhonebook', $this->relationFilter)) {
+            $this->relationFilter['idPhonebook']['condition'] .= " AND idPhonebook.id_user IN (SELECT id FROM pkg_user WHERE id_user = :agfby )";
+        } else {
+            $this->relationFilter['idPhonebook'] = array(
+                'condition' => "idPhonebook.id_user IN (SELECT id FROM pkg_user WHERE id_user = :agfby )",
+            );
         }
+        $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
+
+        return $filter;
+    }
+
+    public function extraFilterCustomClient($filter)
+    {
+
+        if (array_key_exists('idPhonebook', $this->relationFilter)) {
+            $this->relationFilter['idPhonebook']['condition'] .= " AND idPhonebook.id_user LIKE :agfby";
+        } else {
+            $this->relationFilter['idPhonebook'] = array(
+                'condition' => "idPhonebook.id_user LIKE :agfby",
+            );
+        }
+
+        $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
 
         return $filter;
     }
@@ -133,7 +148,7 @@ class PhoneNumberController extends Controller
             exit;
         }
 
-        $this->abstractModel->reprocess($this->relationFilter,$this->paramsFilter);
+        $this->abstractModel->reprocess($this->relationFilter, $this->paramsFilter);
 
         echo json_encode(array(
             $this->nameSuccess => true,

@@ -83,7 +83,6 @@ class CallController extends Controller
 
     public function init()
     {
-        ini_set('memory_limit', '-1');
         $this->instanceModel = new Call;
         $this->abstractModel = Call::model();
         $this->titleReport   = Yii::t('yii', 'Calls');
@@ -138,7 +137,6 @@ class CallController extends Controller
 
     public function actionDownloadRecord()
     {
-        ini_set('memory_limit', '-1');
 
         $filter = isset($_GET['filter']) ? $_GET['filter'] : null;
         $filter = $this->createCondition(json_decode($filter));
@@ -254,7 +252,7 @@ class CallController extends Controller
                     'condition' => $this->filter,
                     'params'    => $this->paramsFilter,
                 ));
-
+                $this->limit          = 1;
                 $this->titleReport    = "Estatistica da campanha $nameCampaign";
                 $this->subTitleReport = "Total de chamadas $count";
 

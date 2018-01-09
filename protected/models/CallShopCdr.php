@@ -56,9 +56,9 @@ class CallShopCdr extends Model
         return array(
             array('id_user', 'required'),
             array('id_user, id_prefix, status, sessiontime', 'numerical', 'integerOnly' => true),
-            array('sessionid, price, buycost, markup', 'length', 'max' => 20),
+            array('price, buycost, markup', 'length', 'max' => 20),
             array('cabina', 'length', 'max' => 30),
-            array('calledstation', 'length', 'max' => 50),
+            array('calledstation, sessionid', 'length', 'max' => 50),
         );
     }
 

@@ -706,6 +706,7 @@ class BaseController extends CController
             'with'      => $this->relationFilter,
             'params'    => $this->paramsFilter,
             'order'     => $this->order,
+            'limit'     => $this->limit == 1 ? $this->limit : -1,
         ));
     }
 
@@ -722,8 +723,6 @@ class BaseController extends CController
             die("Access denied to read in module:" . $this->instanceModel->getModule());
         }
 
-        ini_set("memory_limit", "1024M");
-
         $orientation = $_GET['orientation'];
 
         $columns = json_decode($_GET['columns'], true);
@@ -733,8 +732,6 @@ class BaseController extends CController
         $columns = $this->removeColumns($columns);
 
         $columns = $this->subscribeColunms($columns);
-
-        //Yii::log(print_r($columns,true), 'info');
 
         $this->setfilter($_GET);
 
@@ -776,7 +773,7 @@ class BaseController extends CController
 
     public function actionCsv()
     {
-        ini_set("memory_limit", "1024M");
+
         if (!AccessManager::getInstance($this->instanceModel->getModule())->canRead()) {
             header('HTTP/1.0 401 Unauthorized');
             die("Access denied to read in module:" . $this->instanceModel->getModule());
@@ -805,7 +802,7 @@ class BaseController extends CController
 
         $this->order = 't.id ASC';
 
-        $this->filter = isset($_GET['filter']) ? $this->createCondition(json_decode($_GET['filter'])) : null;
+        $this->setfilter($_GET);
 
         $this->applyFilterToLimitedAdmin();
         $this->showAdminLog();
@@ -828,7 +825,7 @@ class BaseController extends CController
             header('HTTP/1.0 401 Unauthorized');
             die("Access denied to delete in module:" . $this->instanceModel->getModule());
         }
-        ini_set("memory_limit", "1024M");
+
         # recebe os parametros da exclusao
         $values       = $this->getAttributesRequest();
         $namePk       = $this->abstractModel->primaryKey();
@@ -840,25 +837,53 @@ class BaseController extends CController
             $filter = $filter ? $this->createCondition(json_decode($filter)) : $this->defaultFilter;
 
             $this->filter = $filter = $this->extraFilter($filter);
+            //if have related filter
+            if (count($this->relationFilter)) {
 
-            $criteria = new CDbCriteria(array(
-                'condition' => $this->filter,
-                'with'      => $this->relationFilter,
-                'params'    => $this->paramsFilter,
-                'with'      => $this->relationFilter,
-            ));
+                foreach ($this->relationFilter as $key => $relationFilter) {
+                    //convert $this->relationFilter to DELETE SQL;
+                    $table     = strtolower(preg_replace("/id/", 'pkg_', $key));
+                    $joinField = strtolower(preg_replace("/id/", 'id_', $key));
+                    $this->join .= ' JOIN ' . $table . ' ' . $key . ' ON t.' . $joinField . ' = ' . $key . '.id';
+                    $this->filter .= ' AND ' . $relationFilter['condition'];
+                }
 
-            # retorna o resultado da execucao
-            try {
-                $this->success = $this->abstractModel->deleteAll($criteria);
-                $errors        = true;
+                $sql     = 'DELETE t FROM ' . $this->abstractModel->tableName() . ' t ' . $this->join . ' WHERE ' . $this->filter;
+                $command = Yii::app()->db->createCommand($sql);
+                foreach ($this->paramsFilter as $key => $value) {
+                    $command->bindValue(':' . $key, $value, PDO::PARAM_STR);
+                }
 
-                $info = 'Module ' . $this->instanceModel->getModule() . '  ' . json_encode($values);
-                MagnusLog::insertLOG(3, $info);
+                try {
+                    $this->success = $command->execute();
+                    $errors        = true;
 
-            } catch (Exception $e) {
-                $this->success = false;
-                $errors        = $this->getErrorMySql($e);
+                    $info = 'Module ' . $this->instanceModel->getModule() . '  ' . json_encode($values);
+                    MagnusLog::insertLOG(3, $info);
+
+                } catch (Exception $e) {
+                    $this->success = false;
+                    $errors        = $this->getErrorMySql($e);
+                }
+
+            } else {
+                $criteria = new CDbCriteria(array(
+                    'condition' => $this->filter,
+                    'params'    => $this->paramsFilter,
+                ));
+
+                # retorna o resultado da execucao
+                try {
+                    $this->success = $this->abstractModel->deleteAll($criteria);
+                    $errors        = true;
+
+                    $info = 'Module ' . $this->instanceModel->getModule() . '  ' . json_encode($values);
+                    MagnusLog::insertLOG(3, $info);
+
+                } catch (Exception $e) {
+                    $this->success = false;
+                    $errors        = $this->getErrorMySql($e);
+                }
             }
 
             $this->msg = $this->success ? $this->msgSuccess : $errors;

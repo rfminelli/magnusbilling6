@@ -78,9 +78,6 @@ class CallSummaryPerAgentController extends Controller
 
     public function init()
     {
-
-        ini_set('memory_limit', '-1');
-
         if (!Yii::app()->session['isAdmin']) {
             exit();
         }

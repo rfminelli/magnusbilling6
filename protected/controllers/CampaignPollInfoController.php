@@ -53,7 +53,6 @@ class CampaignPollInfoController extends Controller
 
     public function actionCsv()
     {
-        ini_set("memory_limit", "1024M");
 
         $_GET['columns'] = preg_replace('/idUserusername/', 'id_user', $_GET['columns']);
         $_GET['columns'] = preg_replace('/idPrefixdestination/', 'id', $_GET['columns']);
