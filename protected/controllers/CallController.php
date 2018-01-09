@@ -212,14 +212,18 @@ class CallController extends Controller
         if (preg_match("/id_campaign/", $this->filter)) {
 
             $filterCampaign = 1;
+            //get the campaign filter
             foreach (explode("AND", $this->filter) as $key => $value) {
-
                 if (preg_match('/id_campaign/', $value)) {
+                    $getCampaignIdParams = explode("IN(", $value);
+                    $getCampaignIdParams = substr($getCampaignIdParams[1], 1, -1);
+
                     $filterCampaign = preg_replace("/id_campaign/", "id", $value);
                     break;
                 }
             }
-            $modelCampaign = Campaign::model()->find("$filterCampaign", $this->paramsFilter);
+
+            $modelCampaign = Campaign::model()->find($filterCampaign, array($getCampaignIdParams => $this->paramsFilter[$getCampaignIdParams]));
             $nameCampaign  = $modelCampaign->name;
             $timeCampaign  = $modelCampaign->nb_callmade;
 
