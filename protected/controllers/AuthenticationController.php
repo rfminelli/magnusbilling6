@@ -115,8 +115,8 @@ class AuthenticationController extends Controller
         Yii::app()->session['id_group']      = $modelUser->id_group;
         Yii::app()->session['user_type']     = $idUserType;
         Yii::app()->session['systemName']    = $_SERVER['SCRIPT_FILENAME'];
-
-        Yii::app()->session['userCount'] = User::model()->count("credit != 0");
+        Yii::app()->session['session_start'] = time();
+        Yii::app()->session['userCount']     = User::model()->count("credit != 0");
 
         if ($modelUser->googleAuthenticator_enable > 0) {
 
@@ -349,9 +349,7 @@ class AuthenticationController extends Controller
             $newGoogleAuthenticator         = false;
             $showGoogleCode                 = false;
             $social_media_network           = false;
-
         }
-
         $language = isset(Yii::app()->session['language']) ? Yii::app()->session['language'] : Yii::app()->sourceLanguage;
         $theme    = isset(Yii::app()->session['theme']) ? Yii::app()->session['theme'] : 'blue-neptune';
 
@@ -506,5 +504,46 @@ class AuthenticationController extends Controller
             'success' => true,
             'msg'     => $msg,
         ));
+    }
+
+    public function actionForgetPassword()
+    {
+        if (filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+
+            $modelUser = User::model()->findAll('email =:key', array(':key' => $_POST['email']));
+            if (count($modelUser) > 1) {
+                $success = false;
+                $msg     = "Email in use more than 1 account, contact administrator";
+            } else if (count($modelUser)) {
+
+                if ($modelUser[0]->idGroup->idUserType->id == 1) {
+
+                    $success = false;
+                    $msg     = "You can't request admin password";
+                } else {
+
+                    $mail = new Mail(Mail::$TYPE_FORGETPASSWORD, $modelUser[0]->id);
+                    try {
+                        $mail->send();
+                    } catch (Exception $e) {
+                        //
+                    }
+                    $success = true;
+                    $msg     = "Your password was sent to your email";
+                }
+            } else {
+                $success = false;
+                $msg     = "Email not found";
+            }
+        } else {
+            $success = false;
+            $msg     = "Email not found";
+        }
+
+        echo json_encode(array(
+            'success' => $success,
+            'msg'     => $msg,
+        ));
+
     }
 }

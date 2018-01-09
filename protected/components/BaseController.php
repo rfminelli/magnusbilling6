@@ -120,6 +120,7 @@ class BaseController extends CController
 
         if (!Yii::app()->session['id_user']) {
             if (!$this->authorizedNoSession()) {
+                die("Access denied to All action in All modules");
                 exit('');
             }
 
@@ -158,6 +159,12 @@ class BaseController extends CController
         $startSession = strlen(session_id()) < 1 ? session_start() : null;
 
         Yii::app()->language = Yii::app()->sourceLanguage = $this->config['global']['base_language'];
+
+        if (isset(Yii::app()->session['session_start']) && time() > Yii::app()->session['session_start'] + 3600) {
+            Yii::app()->session->clear();
+            Yii::app()->session->destroy();
+            exit("Access denied to All action in All modules");
+        }
 
         parent::init();
     }
@@ -1700,6 +1707,7 @@ class BaseController extends CController
         if (!AccessManager::getInstance($module)->canCreate()) {
             header('HTTP/1.0 401 Unauthorized');
             die("Access denied to save in module: $module");
+            exit;
         }
 
         if (!Yii::app()->session['id_user']) {

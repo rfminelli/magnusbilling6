@@ -355,7 +355,8 @@ class UserController extends Controller
     public function actionCredit()
     {
         if (!Yii::app()->session['id_user']) {
-            exit();
+            die("Access denied to save in module: $module");
+            exit;
         }
 
         $modelUser = $this->abstractModel->findByPk((int) $_POST['id']);
