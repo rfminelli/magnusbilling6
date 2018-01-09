@@ -21,7 +21,7 @@
 class PortabilidadeAgi
 {
 
-    public function consulta($agi, $MAGNUS, $number)
+    public function getDestination($agi, $MAGNUS, $number)
     {
         $agi->verbose("consulta portabilidade numero " . $number, 25);
 
@@ -56,7 +56,7 @@ class PortabilidadeAgi
                     $ddd = substr($number, 2);
                     //verifico se é radio
                     if (strlen($number) == 10 && $mobile == true) {
-                        $resultNextel = Portabilidade::model()->findPrefix(substr($ddd, 0, 6));
+                        $resultNextel = Portability::model()->findPrefix(substr($ddd, 0, 6));
                         if (count($resultNextel) && ($resultNextel[0]['company'] == '55377' || $resultNextel[0]['company'] == '55390' || $resultNextel[0]['company'] == '55391')) {
                             $agi->verbose("é Nextel", 15);
                         } else {
@@ -67,7 +67,7 @@ class PortabilidadeAgi
 
                         }
                     }
-                    $modelPortabilidade = Portabilidade::model()->find('number = :key', array(':key' => $ddd));
+                    $modelPortabilidade = Portability::model()->find('number = :key', array(':key' => $ddd));
 
                     if (count($modelPortabilidade)) {
                         $company = str_replace("55", "", $modelPortabilidade->company);
@@ -75,15 +75,15 @@ class PortabilidadeAgi
                         $agi->verbose("CONSULTA DA PORTABILIDADE ->" . $modelPortabilidade->company, 25);
                     } else {
                         if (strlen($ddd) == 11) {
-                            $modelPortabilidade = Portabilidade::model()->findPrefix(substr($ddd, 0, 7));
+                            $modelPortabilidade = Portability::model()->findPrefix(substr($ddd, 0, 7));
                         } else {
                             $modelPortabilidade = $resultNextel;
                         }
 
                         if (count($modelPortabilidade)) {
-                            $company = str_replace("55", "", $modelPortabilidade->company);
+                            $company = str_replace("55", "", $modelPortabilidade[0]['company']);
                             $number  = "1111" . $company . $number;
-                            $agi->verbose("CONSULTA DA PORTABILIDADE ->NUMERO NAO FOI PORTADO->" . $modelPortabilidade->company, 25);
+                            $agi->verbose("CONSULTA DA PORTABILIDADE ->NUMERO NAO FOI PORTADO->" . $modelPortabilidade[0]['company'], 25);
                         } else {
                             $company = 399;
                             $number  = "1111" . $company . $number;

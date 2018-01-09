@@ -644,7 +644,7 @@ class Magnus
         }
 
         $agi->verbose("Phone After translation: $destination", 10);
-        $this->destination = Portabilidade::getDestination($destination, $this->id_plan);
+        $this->destination = PortabilidadeAgi::getDestination($agi, $this, $destination);
     }
 
     public function round_precision($number)
