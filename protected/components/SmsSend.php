@@ -196,7 +196,7 @@ class SmsSend
             $modelCall->src              = $modelUser->username;
             $modelCall->buycost          = $buyRate;
             $modelCall->terminatecauseid = $terminateCauseid;
-            $modelCall->id_trunk         = $id_prefix;
+            $modelCall->id_prefix        = $id_prefix;
             $modelCall->sipiax           = 6;
             $modelCall->agent_bill       = $rateInitialClientAgent;
             $modelCall->save();

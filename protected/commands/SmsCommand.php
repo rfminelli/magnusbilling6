@@ -122,12 +122,11 @@ class SmsCommand extends ConsoleCommand
                     PhoneNumber::model()->deleteByPk((int) $sms->id);
                     continue;
                 }
-                echo $sms->idPhonebook->idUser->username . " - " . $sms->idPhonebook->idUser->password . " - " . $sms->number . " -" . $text . "\n";
+                echo $sms->idPhonebook->idUser->username . " - " . $sms->number . " -" . $text . "\n";
 
                 $res = SmsSend::send($sms->idPhonebook->idUser, $sms->number, $text);
-
                 $sms->try++;
-                $sms->status = isset($res['success']) ? 3 : 2;
+                $sms->status = isset($res['success']) && $res['success'] == true ? 3 : 2;
                 $sms->save();
                 $modelError = $sms->getErrors();
                 if (count($modelError)) {
