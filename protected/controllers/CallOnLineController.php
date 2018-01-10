@@ -60,7 +60,6 @@ class CallOnLineController extends Controller
 
     public function actionGetChannelDetails()
     {
-        //$_POST['channel'] = 'SIP/77825-00000019';
         $channel = AsteriskAccess::getCoreShowChannel($_POST['channel']);
 
         $sipcallid = explode("\n", $channel['SIPCALLID']['data']);
@@ -81,6 +80,7 @@ class CallOnLineController extends Controller
             'msg'         => 'success',
             'description' => print_r($channel, true),
             'codec'       => $channel['WriteFormat'],
+            'billsec'     => $channel['billsec'],
             'from_ip'     => $from_ip,
             'reinvite'    => preg_match("/local/", $reinvite) ? 'no' : 'yes',
             'ndiscado'    => $channel['dnid'],
