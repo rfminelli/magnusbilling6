@@ -1,6 +1,9 @@
 <?php
 return array(
     /*new '' => '', */
+    'Limit refill exceeded, your limit is'                                                                                                                                             => 'Limite de recarga excedido, seu limite é',
+    'You have'                                                                                                                                                                         => 'Você tem',
+    'to refill'                                                                                                                                                                        => 'para recargar',
     'Terms'                                                                                                                                                                            => 'Termos',
     'No space allow in name'                                                                                                                                                           => 'Não usar espaçoes no nome',
     'You cannot EDIT your account.'                                                                                                                                                    => 'Você não pode editar sua propria conta de revenda',

@@ -74,7 +74,7 @@ class RefillController extends Controller
                 echo json_encode(array(
                     'success' => false,
                     'rows'    => array(),
-                    'errors'  => Yii::t('yii', 'Limit refill exceeded, your limit is ' . $maximunCredit . '. You have ' . $limite . 'to refill'),
+                    'errors'  => Yii::t('yii', 'Limit refill exceeded, your limit is') . ' ' . $maximunCredit . '. ' . Yii::t('yii', 'You have') . ' ' . $limite . ' ' . Yii::t('yii', 'to refill'),
                 ));
                 exit;
             }
