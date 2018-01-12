@@ -101,6 +101,11 @@ class AsteriskAccess
         return @$this->asmanager->Command("core show channels concise");
     }
 
+    public function groupShowChannels()
+    {
+        return $this->asmanager->Command("group show channels");
+    }
+
     public function coreShowChannel($channel)
     {
         return @$this->asmanager->Command("core show channel " . $channel);
@@ -248,7 +253,7 @@ class AsteriskAccess
             //Set group to count the trunk call use
             $agi->set_variable("GROUP()", $ipaddress);
 
-            $groupData = @$this->asmanager->Command("group show channels");
+            $groupData = AsteriskAccess::instance()->groupShowChannels();
 
             $arr   = explode("\n", $groupData["data"]);
             $count = 0;
