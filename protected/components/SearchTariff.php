@@ -93,6 +93,11 @@ class SearchTariff
         $number_trunk = count($distinct_result); //total de troncos
 
         $agi->verbose("NUMBER TRUNK FOUND" . $number_trunk, 10);
+
+        if (file_exists(dirname(__FILE__) . '/AfterSearchTariff.php')) {
+            include dirname(__FILE__) . '/AfterSearchTariff.php';
+        }
+
         return $distinct_result;
 
     }

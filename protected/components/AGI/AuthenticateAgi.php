@@ -345,7 +345,7 @@ class AuthenticateAgi
 
     public static function checkUserCallLimit(&$MAGNUS, &$agi)
     {
-        if ($MAGNUS->user_calllimit >= 0) {
+        if ($MAGNUS->mode == 'standard' && $MAGNUS->user_calllimit >= 0) {
             //check user call limit
             $agi->verbose('check user call limit', 15);
             $calls = AsteriskAccess::getCallsPerUser($MAGNUS->accountcode);

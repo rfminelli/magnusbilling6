@@ -114,6 +114,7 @@ class MagnusCommand extends CConsoleCommand
                 $MAGNUS->modelSip = Sip::model()->find('name = :key', array(':key' => $MAGNUS->dnid));
 
                 if (count($MAGNUS->modelSip) && strlen($MAGNUS->modelSip->name) > 3) {
+                    $MAGNUS->mode      = 'call-sip';
                     $MAGNUS->voicemail = $MAGNUS->modelSip->voicemail;
                     $agi->verbose("CALL TO SIP", 15);
                     $sipCallAgi = new SipCallAgi();
