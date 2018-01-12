@@ -184,7 +184,7 @@ class Mail
                 $this->language   = isset($modelTemplate->language) ? $modelTemplate->language : null;
             } else {
                 Yii::log("Template Type '$type' cannot be found into the database!", 'info');
-                exit("Template Type '$type' cannot be found into the database!");
+                return true;
             }
 
         } elseif (!empty($msg) || !empty($title)) {
@@ -192,7 +192,7 @@ class Mail
             $this->title   = $title;
         } else {
             Yii::log("Error : no Type defined and neither message or subject is provided!", 'info');
-            exit("Error : no Type defined and neither message or subject is provided!");
+            return true;
         }
 
         if ($id_agent > 1) {
@@ -318,9 +318,6 @@ class Mail
         }
 
         $modelSmtps = Smtps::model()->find('id_user = :key', array(':key' => $this->id_agent));
-
-        $sql        = "SELECT * FROM pkg_smtp WHERE id_user = " . $this->id_agent;
-        $smtpResult = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!count($modelSmtps)) {
             return;
