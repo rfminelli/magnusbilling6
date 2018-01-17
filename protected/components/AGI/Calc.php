@@ -81,8 +81,6 @@ class Calc
         $initblock                     = $this->tariffObj[$K]['initblock'];
         $billingblock                  = $this->tariffObj[$K]['billingblock'];
         $connectcharge                 = $MAGNUS->round_precision(abs($this->tariffObj[$K]['connectcharge']));
-        $disconnectcharge              = $MAGNUS->round_precision(abs($this->tariffObj[$K]['disconnectcharge']));
-        $minimal_time_charge           = $this->tariffObj[$K]['minimal_time_charge'];
         $id_offer                      = $package_offer                      = $this->tariffObj[$K]['package_offer'];
         $id_rate                       = $this->tariffObj[$K]['id_rate'];
         $initial_credit                = $credit;
@@ -384,11 +382,16 @@ class Calc
         $id_prefix = $this->tariffObj[0]['id_prefix'];
         $id_plan   = $this->tariffObj[$K]['id_plan'];
         $buycost   = 0;
+
         if ($doibill == 0 || $sessiontime < $this->tariffObj[$K]['minimal_time_charge']) {
-            $cost    = 0;
-            $buycost = abs($this->lastbuycost);
+            $cost = 0;
         } else {
-            $cost    = $this->lastcost;
+            $cost = $this->lastcost;
+        }
+
+        if ($doibill == 0 || $sessiontime < $this->tariffObj[$K]['minimal_time_buy']) {
+            $buycost = 0;
+        } else {
             $buycost = abs($this->lastbuycost);
         }
 

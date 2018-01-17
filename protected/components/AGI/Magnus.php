@@ -289,7 +289,6 @@ class Magnus
         $this->timeout = $Calc->tariffObj[0]['timeout'];
         $timeout       = $this->timeout;
         $agi->verbose("timeout ->> $timeout", 15);
-        $minimal_time_charge = $Calc->tariffObj[0]['minimal_time_charge'];
         $this->say_time_call($agi, $timeout, $Calc->tariffObj[0]['rateinitial']);
 
         return true;
