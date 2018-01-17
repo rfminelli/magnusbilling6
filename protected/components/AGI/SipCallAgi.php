@@ -41,6 +41,38 @@ class SipCallAgi
 
         $agi->verbose("[" . $MAGNUS->username . " Friend]:[ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus . "]", 6);
 
+        $modelSipForward = Sip::model()->find('name = :key', array(':key' => $MAGNUS->destination));
+        if (strlen($modelSipForward->forward) > 3) {
+            $credit = $modelSipForward->idUser->typepaid == 1
+            ? $modelSipForward->idUser->credit + $modelSipForward->idUser->creditlimit
+            : $modelSipForward->idUser->credit;
+
+            if (Sip::model()->find('name = :key', array(':key' => $modelSipForward->forward))) {
+                $agi->verbose('Forward to sipaccount ' . $modelSipForward->forward, 5);
+                $MAGNUS->dnid = $MAGNUS->destination = $modelSipForward->forward;
+                $this->processCall($MAGNUS, $agi, $Calc);
+                return;
+            } elseif ($credit > 1) {
+                $agi->verbose('Forward to PSTN network. Number ' . $modelSipForward->forward, 5);
+                $MAGNUS->dnid        = $MAGNUS->destination        = $MAGNUS->extension        = $modelSipForward->forward;
+                $MAGNUS->accountcode = $modelSipForward->accountcode;
+
+                if (AuthenticateAgi::authenticateUser($agi, $MAGNUS)) {
+                    if ($MAGNUS->checkNumber($agi, $Calc, 0, true) == 1) {
+                        $standardCall = new StandardCallAgi();
+                        $standardCall->processCall($MAGNUS, $agi, $Calc);
+
+                        $dialstatus   = $Calc->dialstatus;
+                        $answeredtime = $Calc->answeredtime;
+                        /* INSERT CDR  & UPDATE SYSTEM*/
+                        $Calc->updateSystem($this, $agi, $this->destination, 1, 1);
+                    }
+
+                }
+                return;
+            }
+        }
+
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);
 
         if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {

@@ -442,6 +442,7 @@ Locale.load({
     'formatRecordsSelected': '{0} registro{1} selecionado{1}',
     'fors': 'para',
     'forward_number': 'Reenviar para SIP',
+    'Forward': 'Reenviar',
     'free': 'Livre',
     'freeseconds': 'Segundos Gratis',
     'freetimetocall': 'Gratis',
