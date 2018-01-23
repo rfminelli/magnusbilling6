@@ -67,7 +67,7 @@ class Prefix extends Model
 
     public function insertPrefixs($sqlPrefix)
     {
-        $this->prefixLength();
+
         $sqlInsertPrefix = 'INSERT IGNORE INTO pkg_prefix (prefix, destination)
                             VALUES ' . implode(',', $sqlPrefix) . ';';
         try {
@@ -76,7 +76,7 @@ class Prefix extends Model
         } catch (Exception $e) {
             return $e;
         }
-
+        $this->prefixLength();
     }
 
     public function getPrefix($prefix)
