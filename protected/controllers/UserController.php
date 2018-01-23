@@ -289,9 +289,9 @@ class UserController extends Controller
         if ($model->id_offer > 0) {
             //if exists a offer to this user, disable that to add the new.
             if (count($modelOfferUse) > 0) {
-                $modelOfferUse->releasedate = date('Y-m-d H:i:s');
-                $modelOfferUse->status      = 0;
-                $modelOfferUse->save();
+                $modelOfferUse[0]->releasedate = date('Y-m-d H:i:s');
+                $modelOfferUse[0]->status      = 0;
+                $modelOfferUse[0]->save();
             }
 
             $modelOfferUse              = new OfferUse();
@@ -302,9 +302,9 @@ class UserController extends Controller
             $modelOfferUse->save();
         } else if ($model->id_offer == 0 and count($modelOfferUse)) {
 
-            $modelOfferUse->releasedate = date('Y-m-d H:i:s');
-            $modelOfferUse->status      = 0;
-            $modelOfferUse->save();
+            $modelOfferUse[0]->releasedate = date('Y-m-d H:i:s');
+            $modelOfferUse[0]->status      = 0;
+            $modelOfferUse[0]->save();
         }
 
         if ($model->idGroup->idUserType->id == 3) {
