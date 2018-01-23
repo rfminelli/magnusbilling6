@@ -63,8 +63,11 @@ class IaxController extends Controller
             $values['cid_number'] = $values['callerid'];
         }
 
-        $values['allow'] = preg_replace("/,0/", "", $values['allow']);
-        $values['allow'] = preg_replace("/0,/", "", $values['allow']);
+        if (isset($value['allow'])) {
+            $values['allow'] = preg_replace("/,0/", "", $values['allow']);
+            $values['allow'] = preg_replace("/0,/", "", $values['allow']);
+        }
+
         return $values;
     }
 
