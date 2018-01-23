@@ -668,10 +668,6 @@ class Calc
             $maxuse         = $this->tariffObj[$k]['maxuse'];
             $allow_error    = $this->tariffObj[$k]['allow_error'];
 
-            if (strncmp($destination, $removeprefix, strlen($removeprefix)) == 0) {
-                $destination = substr($destination, strlen($removeprefix));
-            }
-
             if ($typecall == 1) {
                 $timeout = 3600;
             }
