@@ -172,13 +172,16 @@ class IvrAgi
 
                 $dialstr = substr($group, 0, -1) . $dialparams;
 
+                $MAGNUS->startRecordCall($agi);
+
                 $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
                 $dialstatus = $agi->get_variable("DIALSTATUS");
                 $dialstatus = $dialstatus['data'];
                 $insertCDR  = true;
             } else if (preg_match("/custom/", $optionType)) // CUSTOM
             {
-                $insertCDR  = true;
+                $insertCDR = true;
+                $MAGNUS->startRecordCall($agi);
                 $myres      = $MAGNUS->run_dial($agi, $optionValue);
                 $dialstatus = $agi->get_variable("DIALSTATUS");
                 $dialstatus = $dialstatus['data'];

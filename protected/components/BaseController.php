@@ -120,8 +120,7 @@ class BaseController extends CController
 
         if (!Yii::app()->session['id_user']) {
             if (!$this->authorizedNoSession()) {
-                die("Access denied to All action in All modules");
-                exit('');
+                exit();
             }
 
         }

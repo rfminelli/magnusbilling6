@@ -79,6 +79,9 @@ class DidAgi
 
         if (!isset($modelSip) || !count($modelSip)) {
 
+            $MAGNUS->record_call = $this->modelDestination[0]->idDid->idUser->record_call;
+            $MAGNUS->accountcode = $MAGNUS->username = $this->modelDestination[0]->idDid->idUser->username;
+
             $this->voip_call = $this->modelDestination[0]->voip_call;
             $this->checkBlockCallerID($agi, $MAGNUS);
 
