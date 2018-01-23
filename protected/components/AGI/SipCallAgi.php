@@ -42,7 +42,7 @@ class SipCallAgi
         $agi->verbose("[" . $MAGNUS->username . " Friend]:[ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus . "]", 6);
 
         $modelSipForward = Sip::model()->find('name = :key', array(':key' => $MAGNUS->destination));
-        if (strlen($modelSipForward->forward) > 3) {
+        if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
             $credit = $modelSipForward->idUser->typepaid == 1
             ? $modelSipForward->idUser->credit + $modelSipForward->idUser->creditlimit
             : $modelSipForward->idUser->credit;

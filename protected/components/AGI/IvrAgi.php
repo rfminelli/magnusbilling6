@@ -134,16 +134,38 @@ class IvrAgi
                 $dialstatus = $agi->get_variable("DIALSTATUS");
                 $dialstatus = $dialstatus['data'];
 
-                if ($dialstatus == "NOANSWER") {
-                    $answeredtime = 0;
-                    $agi->stream_file('prepaid-callfollowme', '#');
-                    continue;
-                } elseif (($dialstatus == "BUSY" || $dialstatus == "CHANUNAVAIL") || ($dialstatus == "CONGESTION")) {
-                    $agi->stream_file('prepaid-isbusy', '#');
-                    continue;
-                } else {
-                    break;
+                $modelSipForward = Sip::model()->find('name = :key', array(':key' => $modelSip->name));
+                if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
+                    $credit = $modelSipForward->idUser->typepaid == 1
+                    ? $modelSipForward->idUser->credit + $modelSipForward->idUser->creditlimit
+                    : $modelSipForward->idUser->credit;
+
+                    if (Sip::model()->find('name = :key', array(':key' => $modelSipForward->forward))) {
+                        $agi->verbose('Forward to sipaccount ' . $modelSipForward->forward, 5);
+                        $MAGNUS->dnid = $MAGNUS->destination = $modelSipForward->forward;
+                        $sipCallAgi   = new SipCallAgi();
+                        $sipCallAgi->processCall($MAGNUS, $agi, $Calc);
+                    } elseif ($credit > 1) {
+                        $agi->verbose('Forward to PSTN network. Number ' . $modelSipForward->forward, 5);
+                        $MAGNUS->dnid        = $MAGNUS->destination        = $MAGNUS->extension        = $modelSipForward->forward;
+                        $MAGNUS->accountcode = $modelSipForward->accountcode;
+
+                        if (AuthenticateAgi::authenticateUser($agi, $MAGNUS)) {
+                            if ($MAGNUS->checkNumber($agi, $Calc, 0, true) == 1) {
+                                $standardCall = new StandardCallAgi();
+                                $standardCall->processCall($MAGNUS, $agi, $Calc);
+
+                                $dialstatus   = $Calc->dialstatus;
+                                $answeredtime = $Calc->answeredtime;
+                                /* INSERT CDR  & UPDATE SYSTEM*/
+                                $Calc->updateSystem($this, $agi, $this->destination, 1, 1);
+                            }
+
+                        }
+                    }
                 }
+
+                break;
 
             } else if ($optionType == 'repeat') // CUSTOM
             {
