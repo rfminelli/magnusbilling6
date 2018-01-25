@@ -165,6 +165,12 @@ class BaseController extends CController
             exit("Access denied to All action in All modules");
         }
 
+        if (isset($_GET['display_errors'])) {
+            ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            error_reporting(E_ALL);
+        }
+
         parent::init();
     }
 
