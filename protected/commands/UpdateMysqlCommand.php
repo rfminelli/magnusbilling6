@@ -501,6 +501,24 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.0.9') {
+            $sql = "INSERT INTO `pkg_configuration`  VALUES
+				(NULL, 'reCaptchaKey sitekey', 'reCaptchaKey', '', 'Generate your sitekey in https://www.google.com/recaptcha/admin#list', 'global', '1');
+			";
+            $this->executeDB($sql);
+
+            $sql = 'INSERT INTO pkg_templatemail VALUES
+				(NULL, 1, \'forgetpassword\', \'usuário\', \'VoIP\', \'Recuperação de senha\', \'<p>Olá $firstname$ $lastname$, </p>\r\n<p>Você solicitou sua senha por email. </p>\r\nSua senha é: $password$<br>\r\n \r\n<p>Atenciosamente,<br>\r\n \', \'br\'),
+				(NULL, 1, \'forgetpassword\', \'usuario\', \'VoIP\', \'Recuperacion de contraseña\', \'<p>Hola $firstname$ $lastname$, </p>\r\n<p>Usted solicito su contraseña por email. </p>\r\nSu contraseña es: $password$<br>\r\n \r\n<p>Saludos,<br>\r\n \', \'es\'),
+				(NULL, 1, \'forgetpassword\', \'username\', \'VoIP\', \'Password recovery\', \'<p>Hello $firstname$ $lastname$, </p>\r\n<p>You request your password. </p>\r\nYour password is: $password$<br>\r\n \r\n<p>Best Regards,<br>\r\n \', \'en\')';
+
+            $this->executeDB($sql);
+
+            $version = '6.1.0';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

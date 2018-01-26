@@ -84,7 +84,6 @@
                 document.getElementById('loading-msg').innerHTML = t('Starting...');       
             };
         </script>
-        <!-- The line below must be kept intact for Sencha Cmd to build your application -->
         <script id="microloader" data-app="66fb43d2-c53a-4317-ab77-8188ac019a5b" type="text/javascript">var Ext=Ext||{};Ext.manifest=Ext.manifest||"blue-neptune.json";Ext=Ext||{};
 Ext.Boot=Ext.Boot||function(f){function l(b){if(b.$isRequest)return b;b=b.url?b:{url:b};var e=b.url,e=e.charAt?[e]:e,a=b.charset||d.config.charset;x(this,b);delete this.url;this.urls=e;this.charset=a}function r(b){if(b.$isEntry)return b;var e=b.charset||d.config.charset,a=Ext.manifest,a=a&&a.loader,k=void 0!==b.cache?b.cache:a&&a.cache,c;d.config.disableCaching&&(void 0===k&&(k=!d.config.disableCaching),!1===k?c=+new Date:!0!==k&&(c=k),c&&(a=a&&a.cacheParam||d.config.disableCachingParam,c=a+"\x3d"+
 c));x(this,b);this.charset=e;this.buster=c;this.requests=[]}var n=document,q=[],t={disableCaching:/[?&](?:cache|disableCacheBuster)\b/i.test(location.search)||!/http[s]?\:/i.test(location.href)||/(^|[ ;])ext-cache=1/.test(n.cookie)?!1:!0,disableCachingParam:"_dc",loadDelay:!1,preserveScripts:!0,charset:"UTF-8"},u=/\.css(?:\?|$)/i,w=n.createElement("a"),y="undefined"!==typeof window,v={browser:y,node:!y&&"function"===typeof require,phantom:window&&(window._phantom||window.callPhantom)||/PhantomJS/.test(window.navigator.userAgent)},
