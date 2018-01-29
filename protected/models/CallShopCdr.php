@@ -55,23 +55,11 @@ class CallShopCdr extends Model
     {
         return array(
             array('id_user', 'required'),
-            array('id_user, id_prefix, status, sessiontime', 'numerical', 'integerOnly' => true),
-            array('price, buycost, markup', 'length', 'max' => 20),
+            array('id_user, status, sessiontime', 'numerical', 'integerOnly' => true),
+            array('price, buycost, markup,price_min', 'length', 'max' => 20),
             array('cabina', 'length', 'max' => 30),
             array('calledstation, sessionid', 'length', 'max' => 50),
-        );
-    }
-
-    /**
-     * @return array relational rules.
-     */
-    public function relations()
-    {
-        // NOTE: you may need to adjust the relation name and the related
-        // class name for the relations automatically generated below.
-        return array(
-            'idUser'   => array(self::BELONGS_TO, 'User', 'id_user'),
-            'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
+            array('destination, sessionid', 'length', 'max' => 100),
         );
     }
 }

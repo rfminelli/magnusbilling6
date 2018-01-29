@@ -23,25 +23,18 @@
 class CallShopCdrController extends Controller
 {
     public $attributeOrder = 't.date DESC';
-    public $select         = 't.id, t.sessionid, t.id_user, t.id_prefix, t.status, buycost, price, calledstation,
+    public $select         = 't.id, t.price_min, t.sessionid, t.destination, t.status, buycost, price, calledstation,
                     t.date, sessiontime, cabina, (((t.price - t.buycost) / t.buycost) * 100) markup';
-    public $extraValues = array('idUser' => 'username', 'idPrefix' => 'destination');
+
     public $config;
-    public $fieldsFkReport = array(
-        'id_user'   => array(
-            'table'       => 'pkg_user',
-            'pk'          => 'id',
-            'fieldReport' => 'username',
-        ),
-        'id_prefix' => array(
-            'table'       => 'pkg_prefix',
-            'pk'          => 'id',
-            'fieldReport' => 'destination',
-        ),
-    );
 
     public function init()
     {
+
+        if (isset($_GET['filters'])) {
+            $_GET['filter'] = $_GET['filters'];
+        }
+
         if (!Yii::app()->session['id_user']) {
             exit;
         }
@@ -62,26 +55,6 @@ class CallShopCdrController extends Controller
             );
             $this->paramsFilter['idgA0'] = Yii::app()->session['id_group'];
         }
-    }
-
-    public function repaceColumns($columns)
-    {
-        for ($i = 0; $i < count($columns); $i++) {
-
-            if ($columns[$i]['dataIndex'] == 'idUserusername') {
-                $columns[$i]['dataIndex'] = 'id_user';
-            } else if ($columns[$i]['dataIndex'] == 'idPrefixdestination') {
-                $columns[$i]['dataIndex'] = 'id_prefix';
-            } else if ($columns[$i]['dataIndex'] == 'idPrefixprefix') {
-                $columns[$i]['dataIndex'] = 'id_prefix';
-            } else if ($columns[$i]['dataIndex'] == 'idPhonebookt.name') {
-                $columns[$i]['dataIndex'] = 'id_phonebook';
-            } else if ($columns[$i]['dataIndex'] == 'idDiddid') {
-                $columns[$i]['dataIndex'] = 'id_did';
-            }
-
-        }
-        return $columns;
     }
 
     public function getSumPrice()

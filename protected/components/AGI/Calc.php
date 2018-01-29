@@ -491,9 +491,8 @@ class Calc
                 )
             );
 
-            $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix);
-
         }
+        $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix);
 
         if ($this->did_charge_of_id_user > 0) {
 
@@ -852,40 +851,43 @@ class Calc
 
         if ($MAGNUS->callshop == 1) {
 
-            $modelReteCallshop = RateCallshop::model()->findCallShopRate($MAGNUS->destination, $MAGNUS->id_user);
+            Sip::model()->updateAll(array('status' => 2), 'name = :key', array(':key' => $MAGNUS->sip_account));
 
-            if (!count($modelReteCallshop)) {
-                $agi->verbose('Not found CallShop rate => ' . $MAGNUS->destination . ' ' . $MAGNUS->id_user);
-                return;
-            }
-            $agi->verbose(print_r($modelReteCallshop[0], true));
-            $buyrate   = $modelReteCallshop[0]['buyrate'] > 0 ? $modelReteCallshop[0]['buyrate'] : $cost;
-            $initblock = $modelReteCallshop[0]['minimo'];
-            $increment = $modelReteCallshop[0]['block'];
+            if ($sessiontime > 0) {
 
-            $sellratecost_callshop = $MAGNUS->calculation_price($buyrate, $sessiontime, $initblock, $increment);
+                $modelReteCallshop = RateCallshop::model()->findCallShopRate($MAGNUS->destination, $MAGNUS->id_user);
 
-            if ($sessiontime < $modelReteCallshop[0]['minimal_time_charge']) {
-                $agi->verbose("Minimal time to charge. Cost 0.0000", 15);
-                $sellratecost_callshop = 0;
-            }
+                if (!count($modelReteCallshop)) {
+                    $agi->verbose('Not found CallShop rate => ' . $MAGNUS->destination . ' ' . $MAGNUS->id_user);
+                    return;
+                }
+                $buyrate   = $modelReteCallshop[0]['buyrate'] > 0 ? $modelReteCallshop[0]['buyrate'] : $cost;
+                $initblock = $modelReteCallshop[0]['minimo'];
+                $increment = $modelReteCallshop[0]['block'];
 
-            $modelCallShop = CallShopCdr::model()->deleteAll('sessionid = :key', array(':key' => $MAGNUS->channel));
+                $sellratecost_callshop = $MAGNUS->calculation_price($buyrate, $sessiontime, $initblock, $increment);
 
-            $modelCallShop                = new CallShopCdr();
-            $modelCallShop->sessionid     = $MAGNUS->channel;
-            $modelCallShop->id_user       = $MAGNUS->id_user;
-            $modelCallShop->id_prefix     = $id_prefix;
-            $modelCallShop->status        = 0;
-            $modelCallShop->price         = $sellratecost_callshop;
-            $modelCallShop->buycost       = $MAGNUS->round_precision(abs($cost));
-            $modelCallShop->calledstation = $MAGNUS->destination;
-            $modelCallShop->cabina        = $MAGNUS->sip_account;
-            $modelCallShop->sessiontime   = $sessiontime;
-            $modelCallShop->save();
-            $modelError = $modelCallShop->getErrors();
-            if (count($modelError)) {
-                $agi->verbose(print_r($modelError, true), 25);
+                if ($sessiontime < $modelReteCallshop[0]['minimal_time_charge']) {
+                    $agi->verbose("Minimal time to charge. Cost 0.0000", 15);
+                    $sellratecost_callshop = 0;
+                }
+                //save in CDRCALLSHOP the
+                $modelCallShop                = new CallShopCdr();
+                $modelCallShop->sessionid     = $MAGNUS->channel;
+                $modelCallShop->id_user       = $MAGNUS->id_user;
+                $modelCallShop->status        = 0;
+                $modelCallShop->price         = $sellratecost_callshop;
+                $modelCallShop->buycost       = $MAGNUS->round_precision(abs($buyrate));
+                $modelCallShop->calledstation = $MAGNUS->destination;
+                $modelCallShop->destination   = $modelReteCallshop[0]['destination'];
+                $modelCallShop->price_min     = $buyrate;
+                $modelCallShop->cabina        = $MAGNUS->sip_account;
+                $modelCallShop->sessiontime   = $sessiontime;
+                $modelCallShop->save();
+                $modelError = $modelCallShop->getErrors();
+                if (count($modelError)) {
+                    $agi->verbose(print_r($modelError, true), 25);
+                }
             }
         }
         return;
