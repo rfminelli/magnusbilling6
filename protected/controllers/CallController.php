@@ -211,19 +211,25 @@ class CallController extends Controller
 
         if (preg_match("/id_campaign/", $this->filter)) {
 
-            $filterCampaign = 1;
-            //get the campaign filter
-            foreach (explode("AND", $this->filter) as $key => $value) {
-                if (preg_match('/id_campaign/', $value)) {
-                    $getCampaignIdParams = explode("IN(", $value);
-                    $getCampaignIdParams = substr($getCampaignIdParams[1], 1, -1);
+            $filterCampaign = json_decode($_GET['filter']);
 
-                    $filterCampaign = preg_replace("/id_campaign/", "id", $value);
-                    break;
+            foreach ($filterCampaign as $f) {
+                if (!isset($f->type) || $f->field != 'id_campaign') {
+                    continue;
                 }
+                if (count($f->value) > 1) {
+                    echo json_encode(array(
+                        $this->nameSuccess => false,
+                        $this->nameRoot    => 'error',
+                        $this->nameMsg     => 'Please select one campaign',
+                    ));
+                    exit;
+                }
+
+                $id = $f->value[0];
             }
 
-            $modelCampaign = Campaign::model()->find($filterCampaign, array($getCampaignIdParams => $this->paramsFilter[$getCampaignIdParams]));
+            $modelCampaign = Campaign::model()->findByPk($id);
             $nameCampaign  = $modelCampaign->name;
             $timeCampaign  = $modelCampaign->nb_callmade;
 
