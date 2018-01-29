@@ -28,6 +28,11 @@ class AsteriskAccess
 
     private function connectAsterisk($host, $user, $pass)
     {
+        if ($host == 'localhost' && file_exists('/etc/asterisk/asterisk2.conf')) {
+            $configFile = '/etc/asterisk/asterisk2.conf';
+            $array      = parse_ini_file($configFile);
+            $host       = $array['host'];
+        }
         $this->asmanager->connect($host, $user, $pass);
     }
 

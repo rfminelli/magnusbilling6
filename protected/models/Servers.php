@@ -16,80 +16,92 @@
 
 class Servers extends Model
 {
-	protected $_module = 'servers';
-	/**
-	 * Retorna a classe estatica da model.
-	 *
-	 * @return Prefix classe estatica da model.
-	 */
-	public static function model( $className = __CLASS__ ) {
-		return parent::model( $className );
-	}
+    protected $_module = 'servers';
+    /**
+     * Retorna a classe estatica da model.
+     *
+     * @return Prefix classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 *
-	 *
-	 * @return nome da tabela.
-	 */
-	public function tableName() {
-		return 'pkg_servers';
-	}
+    /**
+     *
+     *
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_servers';
+    }
 
-	/**
-	 *
-	 *
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey() {
-		return 'id';
-	}
+    /**
+     *
+     *
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 *
-	 *
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules() {
-		return array(
-			array( 'host', 'required' ),
-			array( 'status, weight', 'numerical', 'integerOnly'=>true ),
-			array( 'host', 'length', 'max'=>100 ),
-			array( 'description', 'length', 'max'=>500 ),
-			array( 'password, username', 'length', 'max'=>50 ),
-			array( 'type, port', 'length', 'max'=>20 ),
-			array( 'password', 'checkpassword' ),
-		);
-	}
+    /**
+     *
+     *
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('host', 'required'),
+            array('status, weight', 'numerical', 'integerOnly' => true),
+            array('host', 'length', 'max' => 100),
+            array('description', 'length', 'max' => 500),
+            array('password, username', 'length', 'max' => 50),
+            array('type, port', 'length', 'max' => 20),
+            array('password', 'checkpassword'),
+        );
+    }
 
-	public function checkpassword($attribute) {
+    public function checkpassword($attribute)
+    {
 
-		$modelUser = User::model()->find("password = :password", array(':password'=>$this->password));
-		if ( count( $modelUser ) ) {
-			$this->addError( $attribute, Yii::t( 'yii', 'This password in in use' ) );
-		}
-	}
+        $modelUser = User::model()->find("password = :password", array(':password' => $this->password));
+        if (count($modelUser)) {
+            $this->addError($attribute, Yii::t('yii', 'This password in in use'));
+        }
+    }
 
-	public function getAllAsteriskServers()
-    	{
-        	$resultServers[0] = array(
-               'host' => 'localhost',
-               'username' => 'magnus',
-               'password' => 'magnussolution'
-            	);
+    public function getAllAsteriskServers()
+    {
 
-        	$modelServers = Servers::model()->findAll('type = :key AND status = :key1 AND host != :key2', 
-                    array(
-                    	':key'=>'asterisk',
-                    	':key1' => 1,
-                    	':key2' => 'localhost'
-                    	));
-        	foreach ($modelServers as $key => $server) {
-           	array_push($resultServers, array(
-                    'host' => $server->host,
-                    'username' =>$server->username,
-                    'password' => $server->password
-               ));
-        	}
-        	return $resultServers;
-    	}
+        $resultServers[0] = array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        );
+
+        if ($resultServers[0]['host'] == 'localhost' && file_exists('/etc/asterisk/asterisk2.conf')) {
+            $configFile               = '/etc/asterisk/asterisk2.conf';
+            $array                    = parse_ini_file($configFile);
+            $resultServers[0]['host'] = $array['host'];
+        }
+
+        $modelServers = Servers::model()->findAll('type = :key AND status = :key1 AND host != :key2',
+            array(
+                ':key'  => 'asterisk',
+                ':key1' => 1,
+                ':key2' => 'localhost',
+            ));
+        foreach ($modelServers as $key => $server) {
+            array_push($resultServers, array(
+                'host'     => $server->host,
+                'username' => $server->username,
+                'password' => $server->password,
+            ));
+        }
+        return $resultServers;
+    }
 }
