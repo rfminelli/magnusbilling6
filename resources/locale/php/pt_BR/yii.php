@@ -1,6 +1,9 @@
 <?php
 return array(
     /*new '' => '', */
+    'Answered'                                                                                                                                                                         => 'Atendidas',
+    'Votes'                                                                                                                                                                            => 'Votos',
+    'Voted'                                                                                                                                                                            => 'Votaram',
     'Limit refill exceeded, your limit is'                                                                                                                                             => 'Limite de recarga excedido, seu limite é',
     'You have'                                                                                                                                                                         => 'Você tem',
     'to refill'                                                                                                                                                                        => 'para recargar',
