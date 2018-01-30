@@ -528,6 +528,17 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.1') {
+            $sql = "ALTER TABLE `pkg_callshop` ADD `destination` VARCHAR(100) NULL DEFAULT NULL AFTER `calledstation`;
+        		ALTER TABLE `pkg_callshop` DROP `id_prefix`;
+        		ALTER TABLE `pkg_callshop` ADD `price_min` DECIMAL(15,5) NOT NULL DEFAULT '0.00000' AFTER `price`;";
+            $this->executeDB($sql);
+
+            $version = '6.1.2';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
