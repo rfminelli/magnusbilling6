@@ -710,7 +710,7 @@ class Magnus
         if ($this->record_call == 1) {
             $command_mixmonitor = "MixMonitor /var/spool/asterisk/monitor/$this->accountcode/{$this->destination}{$addicional}.{$this->uniqueid}." . $this->mix_monitor_format . ",b";
             $agi->execute($command_mixmonitor);
-            $agi->verbose($command_mixmonitor, 1);
+            $agi->verbose($command_mixmonitor, 6);
         }
     }
 

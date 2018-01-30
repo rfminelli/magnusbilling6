@@ -178,6 +178,9 @@ class DidAgi
             if (AuthenticateAgi::authenticateUser($agi, $MAGNUS) != 1) {
                 $msg = "DID AUTHENTICATION ERROR";
             } else {
+
+                $MAGNUS->record_call = $inst_listdestination->idDid->idUser->record_call;
+
                 /* IF SIP CALL*/
                 if ($inst_listdestination['voip_call'] == 1) {
                     $agi->verbose("DID call friend: IS LOCAL !!!", 10);
