@@ -184,8 +184,9 @@ class DidAgi
                 /* IF SIP CALL*/
                 if ($inst_listdestination['voip_call'] == 1) {
                     $agi->verbose("DID call friend: IS LOCAL !!!", 10);
-                    $modelSip = Sip::model()->findByPk((int) $inst_listdestination['id_sip']);
-
+                    $modelSip            = Sip::model()->findByPk((int) $inst_listdestination['id_sip']);
+                    $MAGNUS->destination = $modelSip['name'];
+                    $MAGNUS->voicemail   = count($modelSip) ? $modelSip->voicemail : false;
                     if (count($modelSip)) {
                         $inst_listdestination['destination'] = "SIP/" . $modelSip->name;
                     } else {
