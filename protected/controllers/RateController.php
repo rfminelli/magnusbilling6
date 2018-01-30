@@ -195,7 +195,7 @@ class RateController extends Controller
         $this->importRates($handle, $values);
 
         fclose($handle);
-
+        Prefix::model()->prefixLength();
         echo json_encode(array(
             $this->nameSuccess => true,
             'msg'              => $this->msgSuccess,

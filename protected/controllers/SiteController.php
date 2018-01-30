@@ -11,7 +11,6 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-
         if (isset($_GET['paypal'])) {
             exit(isset($this->config['global']['paypal-softphone']) ? $this->config['global']['paypal-softphone'] : 0);
         }
