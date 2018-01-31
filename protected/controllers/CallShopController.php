@@ -37,15 +37,23 @@ class CallShopController extends Controller
 
     public function actionLiberar()
     {
-        if (isset($_GET['name'])) {
-            $filter[0]['value'] = $_GET['name'];
-        } else {
-            $filter = json_decode($_POST['filter'], true);
-        }
 
-        $modelSip         = Sip::model()->find("name = :name ", array(':name' => $filter[0]['value']));
-        $modelSip->status = 2;
-        $modelSip->save();
+        if (isset($_GET['id'])) {
+            $id = (int) $_GET['id'];
+            Sip::model()->updateByPk((int) $id, array('status' => 2));
+        } else {
+
+            if (isset($_GET['name'])) {
+                $filter[0]['value'] = $_GET['name'];
+            } else {
+                $filter = json_decode($_POST['filter'], true);
+            }
+
+            $modelSip         = Sip::model()->find("name = :name ", array(':name' => $filter[0]['value']));
+            $modelSip->status = 2;
+            $modelSip->save();
+
+        }
 
         echo json_encode(array(
             $this->nameSuccess => true,
@@ -56,20 +64,31 @@ class CallShopController extends Controller
 
     public function actionCobrar()
     {
-        if (isset($_GET['name'])) {
-            $filter[0]['value'] = $_GET['name'];
+        if (isset($_GET['id'])) {
+            $id                       = (int) $_GET['id'];
+            $modelSip                 = Sip::model()->findByPk((int) $id);
+            $modelSip->status         = 0;
+            $modelSip->callshopnumber = 'NULL';
+            $modelSip->callshoptime   = 0;
+            $modelSip->save();
+
+            CallShopCdr::model()->updateAll(array('status' => '1'), 'cabina = :key', array(':key' => $modelSip->name));
         } else {
-            $filter = json_decode($_POST['filter'], true);
+
+            if (isset($_GET['name'])) {
+                $filter[0]['value'] = $_GET['name'];
+            } else {
+                $filter = json_decode($_POST['filter'], true);
+            }
+
+            $modelSip                 = Sip::model()->find("name = :name ", array(':name' => $filter[0]['value']));
+            $modelSip->status         = 0;
+            $modelSip->callshopnumber = 'NULL';
+            $modelSip->callshoptime   = 0;
+            $modelSip->save();
+
+            CallShopCdr::model()->updateAll(array('status' => '1'), 'cabina = :key', array(':key' => $filter[0]['value']));
         }
-
-        $modelSip                 = Sip::model()->find("name = :name ", array(':name' => $filter[0]['value']));
-        $modelSip->status         = 0;
-        $modelSip->callshopnumber = 'NULL';
-        $modelSip->callshoptime   = 0;
-        $modelSip->save();
-
-        CallShopCdr::model()->updateAll(array('status' => '1'), 'cabina = :key', array(':key' => $filter[0]['value']));
-
         echo json_encode(array(
             $this->nameSuccess => true,
             $this->nameMsg     => $this->msgSuccess,
