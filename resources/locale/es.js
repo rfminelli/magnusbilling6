@@ -1,4 +1,5 @@
 Locale.load({
+    'Price minute': 'Precio Minuto',
     'Insert the space available to record in GB. Use -1 to unlimit': 'GB para espacio disponible para grabaciones.-1 para ilimitado',
     'Insert the space available to record in GB.': 'Espacion em GB para grabaciones.',
     'It is used to change the dialing number.': 'Esta opcion es para permitir marcar los numeros de forma local, sin codigo del país',

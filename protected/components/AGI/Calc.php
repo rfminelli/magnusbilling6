@@ -492,7 +492,7 @@ class Calc
             );
 
         }
-        $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix);
+        $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix, $cost);
 
         if ($this->did_charge_of_id_user > 0) {
 
@@ -846,7 +846,7 @@ class Calc
 
     }
 
-    public function callShop($agi, $MAGNUS, $sessiontime, $id_prefix)
+    public function callShop($agi, $MAGNUS, $sessiontime, $id_prefix, $cost)
     {
 
         if ($MAGNUS->callshop == 1) {
@@ -877,7 +877,7 @@ class Calc
                 $modelCallShop->id_user       = $MAGNUS->id_user;
                 $modelCallShop->status        = 0;
                 $modelCallShop->price         = $sellratecost_callshop;
-                $modelCallShop->buycost       = $MAGNUS->round_precision(abs($buyrate));
+                $modelCallShop->buycost       = $MAGNUS->round_precision(abs($cost));
                 $modelCallShop->calledstation = $MAGNUS->destination;
                 $modelCallShop->destination   = $modelReteCallshop[0]['destination'];
                 $modelCallShop->price_min     = $buyrate;

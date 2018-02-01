@@ -37,7 +37,6 @@ class CallShopController extends Controller
 
     public function actionLiberar()
     {
-
         if (isset($_GET['id'])) {
             $id = (int) $_GET['id'];
             Sip::model()->updateByPk((int) $id, array('status' => 2));
