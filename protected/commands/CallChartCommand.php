@@ -192,7 +192,7 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
-                    $sql[] = "(NULL, $originate, $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelSip->idUser->callshop == 1) {
                         $modelSip->status         = 3;
