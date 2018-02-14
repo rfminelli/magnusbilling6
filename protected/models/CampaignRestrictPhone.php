@@ -72,4 +72,27 @@ class CampaignRestrictPhone extends Model
         $sql = "ALTER TABLE  pkg_campaign_restrict_phone ADD INDEX (  `number` )";
         Yii::app()->db->createCommand($sql)->execute();
     }
+
+    public function insertNumbers($sqlNumbersInsert)
+    {
+        $sql = 'INSERT IGNORE INTO pkg_campaign_restrict_phone (number)
+                            VALUES ' . implode(',', $sqlNumbersInsert) . ';';
+        try {
+            Yii::app()->db->createCommand($sql)->execute();
+            return true;
+        } catch (Exception $e) {
+            return $e;
+        }
+    }
+
+    public function deleteNumbers($sqlNumbersDelete)
+    {
+        $sql = 'DELETE FROM pkg_campaign_restrict_phone WHERE number IN (' . substr($sqlNumbersDelete, 0, -2) . ');';
+        try {
+            Yii::app()->db->createCommand($sql)->execute();
+            return true;
+        } catch (Exception $e) {
+            return $e;
+        }
+    }
 }

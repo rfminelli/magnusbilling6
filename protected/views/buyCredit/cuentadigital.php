@@ -26,22 +26,27 @@
     };
 </script>
 <?php
-$url    = "http://finance.yahoo.com/d/quotes.csv?s=ARSUSD=X&f=l1";
-$handle = @fopen($url, 'r');
-if ($handle) {
-    $result = fgets($handle, 4096);
-    fclose($handle);
+if (Yii::app()->session['currency'] == 'U$S') {
+    $currency = 'USD';
+} else if (Yii::app()->session['currency'] == 'R$') {
+    $currency = 'BRL';
+} elseif (Yii::app()->session['currency'] == '€') {
+    $currency = 'EUR';
+} elseif (Yii::app()->session['currency'] == 'AUD$') {
+    $currency = 'AUD';
+} else if (Yii::app()->session['currency'] == '$') {
+    $currency = 'USD';
+} else {
+    $currency = Yii::app()->session['currency'];
 }
-$cambio      = trim($result);
-$precioPesos = ($_GET['amount'] * 1.15) / $cambio;
-
 ?>
 
 <form method="GET" action="<?php echo $modelMethodPay->url ?>" target="_parent" id="buyForm">
-<input type="hidden" name="precio" value="<?php echo $precioPesos; ?>">
+<input type="text" name="precio" value="<?php echo $_GET['amount'] * 1.27; ?>">
 <input type="hidden" name="id" value="<?php echo $modelMethodPay->username ?>">
-<input type="hidden" name="hacia"  value="<?php echo $modelUser->email; ?>">
+
 <input type="hidden" name="codigo" value="<?php echo $modelUser->username ?>">
 <input type="hidden" name="venc" value="7">
 <input type="hidden" name="concepto" value="<?php echo $reference; ?>">
+<input type="text" name="moneda" value="<?php echo $currency; ?>">
 </form>

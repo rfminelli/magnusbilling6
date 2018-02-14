@@ -43,4 +43,92 @@ class CampaignRestrictPhoneController extends Controller
 
     }
 
+    public function actionImportFromCsv()
+    {
+        if (!Yii::app()->session['id_user'] || Yii::app()->session['isClient'] == true) {
+            exit();
+        }
+
+        $handle = fopen($_FILES['file']['tmp_name'], "r");
+        $line   = fgets($handle);
+
+        if (preg_match('/Cadastrado|bloqueado/', $line)) {
+
+            ini_set("upload_max_filesize", "3M");
+            ini_set("max_execution_time", "120");
+            $values = $this->getAttributesRequest();
+
+            $values['delimiter'] = preg_match("/;/", $line) ? ';' : ',';
+
+            $this->importNumbers($handle, $values);
+            fclose($handle);
+
+            echo json_encode(array(
+                $this->nameSuccess => true,
+                'msg'              => $this->msgSuccess,
+            ));
+        } else {
+            parent::actionImportFromCsv();
+        }
+    }
+
+    public function importNumbers($handle, $values)
+    {
+        $sqlNumbersInsert = array();
+        $sqlNumbersDelete = '';
+        while (($row = fgetcsv($handle, 32768, $values['delimiter'])) !== false) {
+
+            if (isset($row[1])) {
+                if (!isset($row[0]) || $row[0] == '') {
+                    echo json_encode(array(
+                        $this->nameSuccess => false,
+                        'errors'           => 'Prefix not exit in the CSV file . Line: ' . print_r($row, true),
+                    ));
+                    exit;
+                }
+                $number = preg_replace('/-/', '', trim($row[0]));
+
+                if (strlen($number) < 12) {
+                    $number = '55' . $number;
+                }
+                if ($row[2] == 'bloqueado') {
+                    $sqlNumbersInsert[] = "('$number')";
+                }
+                if ($row[2] == 'desbloqueado') {
+                    $sqlNumbersDelete .= "'$number', ";
+                }
+
+            }
+        }
+
+        if (count($sqlNumbersInsert) > 0) {
+            SqlInject::sanitize($sqlNumbersInsert);
+            if (count($sqlNumbersInsert) > 0) {
+                $result = CampaignRestrictPhone::model()->insertNumbers($sqlNumbersInsert);
+
+                if (isset($result->errorInfo)) {
+                    echo json_encode(array(
+                        $this->nameSuccess => false,
+                        'errors'           => $this->getErrorMySql($result),
+                    ));
+                    exit;
+                }
+            }
+        }
+
+        if (count($sqlNumbersDelete) > 0) {
+            if (strlen($sqlNumbersDelete) > 1) {
+                $result = CampaignRestrictPhone::model()->deleteNumbers($sqlNumbersDelete);
+
+                if (isset($result->errorInfo)) {
+                    echo json_encode(array(
+                        $this->nameSuccess => false,
+                        'errors'           => $this->getErrorMySql($result),
+                    ));
+                    exit;
+                }
+            }
+        }
+    }
+
 }
