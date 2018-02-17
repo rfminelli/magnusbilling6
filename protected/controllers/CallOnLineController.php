@@ -57,7 +57,8 @@ class CallOnLineController extends Controller
 
     public function actionGetChannelDetails()
     {
-        $channel = AsteriskAccess::getCoreShowChannel($_POST['channel']);
+        $model   = $this->abstractModel->findByPk((int) $_POST['id']);
+        $channel = AsteriskAccess::getCoreShowChannel($model->canal);
 
         $sipcallid = explode("\n", $channel['SIPCALLID']['data']);
 
@@ -75,9 +76,10 @@ class CallOnLineController extends Controller
         echo json_encode(array(
             'success'     => true,
             'msg'         => 'success',
-            'description' => print_r($channel, true),
+            'description' => Yii::app()->session['isAdmin'] ? print_r($channel, true) : '',
             'codec'       => $channel['WriteFormat'],
             'billsec'     => $channel['billsec'],
+            'callerid'    => $channel['Caller ID'],
             'from_ip'     => $from_ip,
             'reinvite'    => preg_match("/local/", $reinvite) ? 'no' : 'yes',
             'ndiscado'    => $channel['dnid'],
@@ -86,9 +88,11 @@ class CallOnLineController extends Controller
 
     public function actionDestroy()
     {
-        if (strlen($_POST['channel']) < 30 && preg_match('/SIP\//', $_POST['channel'])) {
+        $model = $this->abstractModel->findByPk((int) $_POST['id']);
 
-            AsteriskAccess::instance()->hangupRequest($_POST['channel']);
+        if (strlen($model->canal) < 30 && preg_match('/SIP\//', $model->canal)) {
+
+            AsteriskAccess::instance()->hangupRequest($model->canal);
             $success = true;
             $msn     = Yii::t('yii', 'Operation was successful.') . Yii::app()->language;
         } else {
@@ -104,6 +108,8 @@ class CallOnLineController extends Controller
 
     public function actionSpyCall()
     {
+
+        $model = $this->abstractModel->findByPk((int) $_POST['id']);
 
         if (count($this->config['global']['channel_spy']) == 0) {
             echo json_encode(array(
@@ -121,7 +127,7 @@ class CallOnLineController extends Controller
         $call .= "Priority: 1\n";
         $call .= "Set:USERNAME=" . Yii::app()->session['username'] . "\n";
         $call .= "Set:SPY=1\n";
-        $call .= "Set:CHANNELSPY=" . $_POST['channel'] . "\n";
+        $call .= "Set:CHANNELSPY=" . $model->canal . "\n";
 
         AsteriskAccess::generateCallFile($call);
 

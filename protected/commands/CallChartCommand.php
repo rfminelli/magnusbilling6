@@ -122,7 +122,12 @@ class CallChartCommand extends ConsoleCommand
                                     'join'      => 'LEFT JOIN pkg_user ON t.id_user = pkg_user.id',
                                     'condition' => "t.name = '" . $usernameReceive[1] . "'",
                                 ));
-                                $id_user = isset($resultUser[0]['id']) ? $resultUser[0]['id'] : 'NULL';
+                                if (isset($resultUser[0]['id'])) {
+                                    $id_user = $resultUser[0]['id'];
+                                } else {
+                                    $modelDid = Did::model()->find('did = :key', array(':key' => $call[2]));
+                                    $id_user  = count($modelDid) ? $modelDid->id_user : null;
+                                }
                             }
 
                         }
