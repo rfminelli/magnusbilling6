@@ -39,10 +39,9 @@ class QueueMemberDashBoardController extends Controller
     {
 
         for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
-            if ($attributes[$i]['agentStatus'] == 'On Hold' || $attributes[$i]['agentStatus'] == 'In use') {
+            if (preg_match('/IN CALL|IN USE|ON HOLD/', strtoupper($attributes[$i]['agentStatus']))) {
                 $result                   = Queue::model()->getQueueStatus($attributes[$i]['id']);
                 $attributes[$i]['number'] = $result[0]['callerId'];
-
             }
         }
         return $attributes;
