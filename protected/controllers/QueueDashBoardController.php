@@ -20,9 +20,6 @@ class QueueDashBoardController extends Controller
 
     public $attributeOrder = 'callId';
     public $extraValues    = array('idQueue' => 'name');
-    private $host          = 'localhost';
-    private $user          = 'magnus';
-    private $password      = 'magnussolution';
 
     public function init()
     {
@@ -72,16 +69,13 @@ class QueueDashBoardController extends Controller
 
         QueueMember::model()->truncateQueueAgentStatus();
 
-        $asmanager       = new AGI_AsteriskManager;
-        $conectaServidor = $conectaServidor = $asmanager->connect($this->host, $this->user, $this->password);
-
         $resultQueue = Queue::model()->findAll();
 
         foreach ($resultQueue as $key => $queue) {
             //echo $queue->name."\n";
 
-            $server = $asmanager->Command("queue show " . $queue->name);
-            $arr    = explode("\n", $server["data"]);
+            $queueData = AsteriskAccess::instance()->queueShow($queue->name);
+            $arr       = explode("\n", $queueData["data"]);
             //echo '<pre>';
             foreach ($arr as $key => $line) {
                 $line = trim($line);
@@ -147,19 +141,12 @@ class QueueDashBoardController extends Controller
                 $result = Queue::model()->getQueueAgentStatus($attributes[$i]['id_agent']);
 
                 $agentName = $result[0]['agentName'];
-                $time      = $attributes[$key]['time'];
-                $now       = date('Y-m-d H:i:s');
-                $duration  = strtotime($now) - strtotime($time) - $attributes[$key]['oldtime'];
 
             } else {
                 $agentName = '';
-
-                $time    = $attributes[$key]['time'];
-                $now     = date('Y-m-d H:i:s');
-                $oldtime = strtotime($now) - strtotime($time);
-
-                $oldtime = $oldtime;
             }
+
+            $duration = time() - strtotime($attributes[$i]['time']) - $attributes[$i]['oldtime'];
 
             $attributes[$i]['agentName'] = $agentName;
             $attributes[$i]['duration']  = $duration;
