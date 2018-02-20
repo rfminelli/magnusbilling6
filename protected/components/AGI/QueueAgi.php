@@ -122,7 +122,6 @@ class QueueAgi
         $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator ATENDEU A CHAMADAS\n\n", 6);
 
         $modelUser           = Sip::model()->find('name = :key', array(':key' => $operator));
-        $MAGNUS->record_call = $modelUser->idUser->record_call;
         $MAGNUS->record_call = $modelUser->record_call;
 
         $MAGNUS->startRecordCall($agi);

@@ -32,9 +32,10 @@ class IvrAgi
 
         $modelIvr = Ivr::model()->findByPk($modelDestination->id_ivr);
 
-        $username        = $modelIvr->idUser->username;
-        $MAGNUS->id_user = $modelIvr->id_user;
-        $MAGNUS->id_plan = $modelIvr->idUser->id_plan;
+        $username            = $modelIvr->idUser->username;
+        $MAGNUS->id_user     = $modelIvr->id_user;
+        $MAGNUS->id_plan     = $modelIvr->idUser->id_plan;
+        $MAGNUS->record_call = $modelIvr->idUser->record_call;
 
         $monFriStart = $modelIvr->monFriStart;
         $monFriStop  = $modelIvr->monFriStop;
