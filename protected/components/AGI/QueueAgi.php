@@ -43,7 +43,8 @@ class QueueAgi
         $agi->verbose($queueName);
         Queue::model()->insertQueueStatus($modelQueue->id, $MAGNUS->uniqueid, $queueName, $MAGNUS->CallerID, $MAGNUS->channel);
 
-        $agi->execute("Queue", $queueName . ',tc,,,,' . Yii::app()->baseUrl . '/agi.php');
+        $ring_or_moh = $modelQueue->ring_or_moh == 'ring' ? 'r' : '';
+        $agi->execute("Queue", $queueName . ',' . $ring_or_moh . 'tc,,,,' . Yii::app()->baseUrl . '/agi.php');
 
         $MAGNUS->stopRecordCall($agi);
 
@@ -119,7 +120,7 @@ class QueueAgi
 
         Queue::model()->updateQueueStatus($operator, $id_queue, $oldtime, $MAGNUS->uniqueid);
 
-        $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator ATENDEU A CHAMADAS\n\n", 6);
+        $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator answer the call from QUEUE \n\n", 6);
 
         $modelUser           = Sip::model()->find('name = :key', array(':key' => $operator));
         $MAGNUS->record_call = $modelUser->record_call;

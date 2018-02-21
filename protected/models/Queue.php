@@ -57,6 +57,7 @@ class Queue extends Model
             array('id_user, timeout, retry, wrapuptime, weight, periodic-announce-frequency', 'numerical', 'integerOnly' => true),
             array('language, joinempty, leavewhenempty, musiconhold,announce-holdtime,leavewhenempty,strategy, ringinuse, announce-position, announce-holdtime, announce-frequency', 'length', 'max' => 128),
             array('periodic-announce ', 'length', 'max' => 200),
+            array('ring_or_moh ', 'length', 'max' => 4),
             array('name ', 'length', 'max' => 25),
             array('name', 'checkname'),
         );
