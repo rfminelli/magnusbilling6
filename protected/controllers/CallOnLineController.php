@@ -57,7 +57,7 @@ class CallOnLineController extends Controller
 
     public function actionGetChannelDetails()
     {
-        $model   = $this->abstractModel->findByPk((int) $_POST['id']);
+        $model   = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
         $channel = AsteriskAccess::getCoreShowChannel($model->canal);
 
         $sipcallid = explode("\n", $channel['SIPCALLID']['data']);
@@ -88,7 +88,7 @@ class CallOnLineController extends Controller
 
     public function actionDestroy()
     {
-        $model = $this->abstractModel->findByPk((int) $_POST['id']);
+        $model = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
 
         if (strlen($model->canal) < 30 && preg_match('/SIP\//', $model->canal)) {
 
@@ -108,8 +108,7 @@ class CallOnLineController extends Controller
 
     public function actionSpyCall()
     {
-
-        $model = $this->abstractModel->findByPk((int) $_POST['id']);
+        $model = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
 
         if (count($this->config['global']['channel_spy']) == 0) {
             echo json_encode(array(

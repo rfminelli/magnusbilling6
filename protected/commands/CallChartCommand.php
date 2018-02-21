@@ -58,6 +58,7 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
                     $trunk         = null;
+                    $uniqueid      = $call[13];
                     $bridgeChannel = $channel[12];
                     $ndiscado      = $call[2];
                     $cdr           = $call[11];
@@ -197,7 +198,7 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
-                    $sql[] = "(NULL, '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelSip->idUser->callshop == 1) {
                         $modelSip->status         = 3;
