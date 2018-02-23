@@ -19,10 +19,15 @@
  * 19/09/2012
  */
 
-class User extends Model
+class TransferToMobile extends Model
 {
-    protected $_module     = 'user';
-    protected $newPassword = null;
+    protected $_module = 'user';
+    public $method;
+    public $number;
+    public $operator;
+    public $fm_transfer_fee;
+    public $amountValues;
+    public $amount;
     /**
      * Return the static class of model.
      *
@@ -67,8 +72,7 @@ class User extends Model
                     callingcard_pin, callshop, plan_day, record_call, active_paypal, boleto,
                     boleto_day, calllimit, disk_space,id_group_agent,transfer_dbbl_rocke_profit,
                     transfer_bkash_profit,transfer_flexiload_profit,transfer_international_profit,
-                    transfer_dbbl_rocke,transfer_bkash,transfer_flexiload,transfer_international,
-                    transfer_bdservice_rate
+                    transfer_dbbl_rocke,transfer_bkash,transfer_flexiload,transfer_international
                         ', 'numerical', 'integerOnly' => true),
             array('language,mix_monitor_format', 'length', 'max' => 5),
             array('username, zipcode, phone, mobile, vat', 'length', 'max' => 20),
@@ -78,39 +82,16 @@ class User extends Model
             array('address, email, description, doc', 'length', 'max' => 100),
             array('credit', 'type', 'type' => 'double'),
             array('expirationdate, password, lastuse', 'length', 'max' => 100),
-            array('username', 'checkusername'),
-            array('password', 'checksecret'),
             array('username', 'unique', 'caseSensitive' => 'false'),
 
         );
     }
 
-    public function checkusername($attribute, $params)
+    public function checkmethod($attribute, $params)
     {
         if (preg_match('/ /', $this->username)) {
-            $this->addError($attribute, Yii::t('yii', 'No space allow in username'));
+            $this->addError($attribute, Yii::t('yii', 'Please select a moethod'));
         }
-
-        if (!preg_match('/^[0-9]|^[A-Z]|^[a-z]/', $this->username)) {
-            $this->addError($attribute, Yii::t('yii', 'Username need start with numbers or letters'));
-        }
-
-    }
-
-    public function checksecret($attribute, $params)
-    {
-        if (preg_match('/ /', $this->password)) {
-            $this->addError($attribute, Yii::t('yii', 'No space allow in password'));
-        }
-
-        if ($this->password == '123456' || $this->password == '12345678' || $this->password == '012345') {
-            $this->addError($attribute, Yii::t('yii', 'No use sequence in the pasword'));
-        }
-
-        if ($this->password == $this->username) {
-            $this->addError($attribute, Yii::t('yii', 'Password cannot be equal username'));
-        }
-
     }
 
     public function relations()

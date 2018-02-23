@@ -1,196 +1,373 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 /**
- * Url for customer register http://ip/billing/index.php/user/add .
+ * =======================================
+ * ###################################
+ * MagnusBilling
+ *
+ * @package MagnusBilling
+ * @author Heitor Gianastasio Pipet de Oliveira.
+ * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * ###################################
+ *
+ * This software is released under the terms of the GNU Lesser General Public License v2.1
+ * A copy of which is available from http://www.gnu.org/copyleft/lesser.html
+ *
+ * Please submit bug reports, patches, etc to https://github.com/magnusbilling/mbilling/issues
+ * =======================================
+ * Magnusbilling.com <info@magnusbilling.com>
+ *
  */
 class TransferToMobileController extends Controller
 {
-    private $url = "https://fm.transfer-to.com/cgi-bin/shop/topup?";
+    private $url;
+    private $amounts    = 0;
+    private $user_cost  = 0;
+    private $agent_cost = 0;
+    private $login;
+    private $token;
+    private $currency;
+    private $bDService_id;
 
     public function init()
     {
 
-        $startSession = strlen(session_id()) < 1 ? session_start() : null;
-
-        if (!Yii::app()->session['id_user']) {
-            $user     = $_POST['user'];
-            $password = $_POST['pass'];
-
-            $condition = "(username COLLATE utf8_bin LIKE :user OR username LIKE :user
-                OR email COLLATE utf8_bin LIKE :user)";
-
-            $sql = "SELECT pkg_user.id, username, id_group, id_plan, pkg_user.firstname,
-                            pkg_user.lastname , id_user_type, id_user, loginkey, active, password
-                            FROM pkg_user JOIN pkg_group_user ON id_group = pkg_group_user.id
-                            WHERE $condition";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":user", $user, PDO::PARAM_STR);
-            $result = $command->queryAll();
-
-            if (!isset($result[0]['username']) || sha1($result[0]['password']) != $password) {
-                Yii::app()->session['logged'] = false;
-                echo json_encode(array(
-                    'success' => false,
-                    'msg'     => 'Usuário e/ou login incorretos',
-                ));
-                exit;
-            }
-
-            if (!$result) {
-                Yii::app()->session['logged'] = false;
-                echo json_encode(array(
-                    'success' => false,
-                    'msg'     => 'Usuário e/ou login incorretos',
-                ));
-                exit;
-            }
-
-            if ($result[0]['active'] == 0) {
-                Yii::app()->session['logged'] = false;
-                echo json_encode(array(
-                    'success' => false,
-                    'msg'     => 'Username is disabled',
-                ));
-                exit;
-            }
-            $user = $result[0];
-
-            Yii::app()->session['isAdmin']       = $user['id_user_type'] == 1 ? true : false;
-            Yii::app()->session['isAgent']       = $user['id_user_type'] == 2 ? true : false;
-            Yii::app()->session['isClient']      = $user['id_user_type'] == 3 ? true : false;
-            Yii::app()->session['isClientAgent'] = false;
-            Yii::app()->session['id_plan']       = $user['id_plan'];
-            Yii::app()->session['credit']        = isset($user['credit']) ? $user['credit'] : 0;
-            Yii::app()->session['username']      = $user['username'];
-            Yii::app()->session['logged']        = true;
-            Yii::app()->session['id_user']       = $user['id'];
-            Yii::app()->session['id_agent']      = is_null($user['id_user']) ? 1 : $user['id_user'];
-            Yii::app()->session['name_user']     = $user['firstname'] . ' ' . $user['lastname'];
-            Yii::app()->session['id_group']      = $user['id_group'];
-            Yii::app()->session['user_type']     = $user['id_user_type'];
-
-            $sql = "SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module
-                            FROM pkg_group_module gm INNER JOIN pkg_module m ON gm.id_module = m.id
-                            WHERE id_group = :id_group";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":id_group", $user['id_group'], PDO::PARAM_STR);
-            $result                         = $command->queryAll();
-            Yii::app()->session['currency'] = $this->config['global']['base_currency'];
-
-        }
-
+        $this->instanceModel = new User;
+        $this->abstractModel = User::model();
         parent::init();
+
+        if (isset($_POST['TransferToMobile']['method'])) {
+
+            if ($_POST['TransferToMobile']['method'] == 'international') {
+                $this->login    = $this->config['global']['fm_transfer_to_username'];
+                $this->token    = $this->config['global']['fm_transfer_to_ token'];
+                $this->currency = $this->config['global']['fm_transfer_currency'];
+                $this->url      = 'https://fm.transfer-to.com/cgi-bin/shop/topup?';
+            } else {
+                $this->login    = $this->config['global']['BDService_username'];
+                $this->token    = $this->config['global']['BDService_token'];
+                $this->currency = $this->config['global']['BDService_cambio'];
+                $this->url      = $this->config['global']['BDService_url'];
+            }
+        }
     }
 
     public function actionRead($asJson = true, $condition = null)
     {
-        if (isset($_POST['amount'])) {
-            $values = $this->actionMsisdn_info();
-        } elseif (isset($_POST['number'])) {
-            $values = $this->actionMsisdn_info();
-            $this->secondForm($values);
+
+        $modelTransferToMobile = TransferToMobile::model()->findByPk((int) Yii::app()->session['id_user']);
+        //if we already request the number info, check if select a valid amount
+        if (isset($_POST['TransferToMobile']['amountValues'])) {
+
+            $modelTransferToMobile->method          = $_POST['TransferToMobile']['method'];
+            $modelTransferToMobile->number          = $_POST['TransferToMobile']['number'];
+            $modelTransferToMobile->country         = $_POST['TransferToMobile']['country'];
+            $modelTransferToMobile->operator        = $_POST['TransferToMobile']['operator'];
+            $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
+            $modelTransferToMobile->amountValues    = $_POST['TransferToMobile']['amountValues'];
+
+            if ($modelTransferToMobile->method != 'international') {
+                //check min max
+                $min = Yii::app()->session['allowedAmount'][0];
+                $max = Yii::app()->session['allowedAmount'][1];
+
+                if ($_POST['TransferToMobile']['amountValues'] < $min) {
+                    $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is < then minimal allowed'));
+
+                } else if ($_POST['TransferToMobile']['amountValues'] > $max) {
+                    $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is > then maximum allowed'));
+                }
+
+            }
+
+            if (!is_numeric($_POST['TransferToMobile']['amountValues'])) {
+
+                $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Invalid amount'));
+
+            } elseif (!count($modelTransferToMobile->getErrors())) {
+
+                $this->confirmRefill($modelTransferToMobile);
+
+            }
+
+        }
+        //check the number and methods.
+        elseif (isset($_POST['TransferToMobile']['method'])) {
+            if ($_POST['TransferToMobile']['method'] == '') {
+                $modelTransferToMobile->addError('method', Yii::t('yii', 'Please select a method'));
+            }
+
+            if ($_POST['TransferToMobile']['number'] == '' || !is_numeric($_POST['TransferToMobile']['number'])
+                || strlen($_POST['TransferToMobile']['number']) < 11
+                || preg_match('/ /', $_POST['TransferToMobile']['number'])) {
+                $modelTransferToMobile->addError('number', Yii::t('yii', 'Number invalid, try again'));
+            }
+
+            $modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
+            $modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
+
+            if ($_POST['TransferToMobile']['method'] == 'international') {
+                //if ok, request number information
+                if (!count($modelTransferToMobile->getErrors())) {
+                    $this->actionMsisdn_info($modelTransferToMobile);
+                }
+            }
+        }
+
+        $methods = [];
+        if ($modelTransferToMobile->transfer_international) {
+            $methods["international"] = "International";
+        }
+        if ($modelTransferToMobile->transfer_flexiload) {
+            $methods["flexiload"] = "Flexiload";
+        }
+        if ($modelTransferToMobile->transfer_bkash) {
+            $methods["bkash"] = "Bkash";
+        }
+        if ($modelTransferToMobile->transfer_dbbl_rocke) {
+            $methods["dbbl_rocke"] = "DBBL/Rocket";
+        }
+
+        $view = !isset($_POST['TransferToMobile']['method']) || $_POST['TransferToMobile']['method'] == 'international' ? 'transferToMobile' : 'bDService';
+
+        $amountDetails = null;
+
+        if (isset($_POST['TransferToMobile']['method']) && $_POST['TransferToMobile']['method'] != 'international') {
+            if ($_POST['TransferToMobile']['method'] == 'dbbl_rocke') {
+                $values = explode("-", "50-25000");
+            } else {
+                $values = explode("-", $this->config['global']['BDService_flexiload']);
+            }
+            Yii::app()->session['allowedAmount'] = $values;
+            $amountDetails                       = 'Amount (Min: ' . $values[0] . ' BDT, Max: ' . $values[1] . ' BDT)';
+
+        }
+        if (count($methods)) {
+            $this->render($view, array(
+                'modelTransferToMobile' => $modelTransferToMobile,
+                'methods'               => $methods,
+                'amountDetails'         => $amountDetails,
+            ));
+        } else {
+            echo '<div align=center id="container">';
+            echo '<font color=red>Not available any refill method for you</font>';
+            echo '</div>';
+            exit;
+        }
+
+    }
+
+    public function sendActionTransferToMobile($modelTransferToMobile, $action, $product = null)
+    {
+        $number = $modelTransferToMobile->number;
+        $key    = time();
+        $md5    = md5($this->login . $this->token . $key);
+
+        if ($action == 'topup') {
+            $action .= '&msisdn=$number&delivered_amount_info=1&product=' . $product;
+        }
+
+        $url               = $this->url . "login=" . $this->login . "&key=$key&md5=$md5&destination_msisdn=$number&action=" . $action;
+        $arrContextOptions = array(
+            "ssl" => array(
+                "verify_peer"      => false,
+                "verify_peer_name" => false,
+            ),
+        );
+
+        if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
+            $result = '';
+        }
+
+        return $result;
+    }
+    public function sendActionBDService($modelTransferToMobile, $cost)
+    {
+
+        $sql      = "SELECT id FROM pkg_BDService ORDER BY id DESC";
+        $resultID = Yii::app()->db->createCommand($sql)->queryAll();
+
+        $this->bDService_id = $resultID[0]['id'] + 1;
+
+        $type = $modelTransferToMobile->method == 'dbbl_rocke' ? 'DBBL' : $modelTransferToMobile->method;
+
+        $url = $this->url . "/ezzeapi/request/" . $type . "?number=" . $modelTransferToMobile->number . "&amount=" . $modelTransferToMobile->amountValues . "&type=1&id=" . $this->bDService_id . "&user=" . $this->login . "&key=" . $this->token;
+
+        if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
+            $result = '';
+        }
+
+        $sql     = "INSERT INTO  pkg_BDService (id_user) VALUES (:id)";
+        $command = Yii::app()->db->createCommand($sql);
+        $command->bindValue(":id", Yii::app()->session['id_user'], PDO::PARAM_STR);
+        $command->execute();
+
+        return $result;
+    }
+
+    public function calculateCost($modelTransferToMobile, $cost)
+    {
+        // echo 'cost=' . $cost . ' - prodict=' . $product . "<br>";
+
+        $methosProfit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
+
+        if ($modelTransferToMobile->credit + $modelTransferToMobile->creditlimit < $cost) {
+
+            echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
+            echo '<form action="" id="form1" method="POST">';
+            echo '<font color=red>ERROR:You no have enough credit to transfer</font>';
+            echo '</form>';
+            echo '</div></div></div></div>';
+            exit;
+        }
+
+        $userProfit = $modelTransferToMobile->{$methosProfit};
+
+        $this->user_cost = $cost - ($cost * ($userProfit / 100));
+
+        if ($modelTransferToMobile->id_user > 1) {
+
+            //check if agent have credit
+
+            $modelAgent = User::model()->findByPk($modelTransferToMobile->id_user);
+
+            if ($modelAgent->credit + $modelAgent->creditlimit < $cost) {
+
+                echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
+                echo '<form action="" id="form1" method="POST">';
+                echo '<font color=red>ERROR:Your Agent no have enough credit to transfer</font>';
+                echo '</form>';
+                echo '</div></div></div></div>';
+                exit;
+
+            }
+
+            $modelAgent       = User::model()->findByPk($modelTransferToMobile->id_user);
+            $agentProfit      = $modelAgent->{$methosProfit};
+            $this->agent_cost = $cost - ($cost * ($userProfit / 100));
+        }
+    }
+
+    public function confirmRefill($modelTransferToMobile)
+    {
+
+        if ($_POST['TransferToMobile']['method'] == 'international') {
+            $product = $_POST['TransferToMobile']['amountValues']; //is the amout to refill
+            $cost    = Yii::app()->session['amounts'][$product];
+            $cost    = explode($this->currency, $cost);
+            $cost    = $cost[1];
         } else {
 
-            $this->fistForm();
+            $rateinitial = $modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
+            //cost to send to provider selected value + admin rate * exchange
+            $cost = $_POST['TransferToMobile']['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
+
         }
 
-    }
+        $this->calculateCost($modelTransferToMobile, $cost);
 
-    public function fistForm()
-    {
-        echo '<div id="container"><div id="form"> <div id="box-4">';
-        echo '<form action="" id="form1" method="POST">
-            <fieldset class="well">
-                <div class="control-group">
+        //echo "REMOVE " . $this->user_cost . " from user " . $modelTransferToMobile->username;
 
-                    <div class="control-label">
-                        <label >Number<span class="star">&nbsp;*</span></label>
-                    </div>
-                    <div class="controls">
-                        <input type="text" name="number" size="25" required="" aria-required="true" value = "">
-                    </div>
-
-                    <br>
-                    <div class="controls" id="fistButtondiv">
-                        <button id="fistButton" type="submit" onclick="button1();" class="btn btn-primary">Next</button>
-                    </div>
-                    <div class="controls" id="fistButtondivWait"></div>
-
-            </fieldset>
-        </form>';
-        echo '</div></div></div>';
-
-    }
-
-    public function secondForm($values)
-    {
-
-        $number = $_POST['number'];
-        //$_POST['amount'] = isset($_POST['amount']) ? $_POST['amount'] : '';
-
-        $country  = $values['country'];
-        $operator = $values['operator'];
-        $country  = $values['country'];
-        $amount   = '';
-        foreach ($values['rows'] as $key => $value) {
-            $amount .= "<option value='$value[0]'>$value[1]</option>";
-        }
-
-        if ($this->config['global']['fm_transfer_show_selling_price'] > 0) {
-            $valor      = preg_replace("/\%/", '', $this->config['global']['fm_transfer_show_selling_price']);
-            $show_price = 'onchange="showPrice(\'' . $valor . '\')"';
+        if ($modelTransferToMobile->method == 'international') {
+            $result = $this->sendActionTransferToMobile($modelTransferToMobile, 'topup', $product);
         } else {
-            $show_price = '';
+            $result = $this->sendActionBDService($modelTransferToMobile, $cost);
         }
 
-        echo '<div id="container"><div id="form"> <div id="box-4">';
-        echo '<form action="" id="form2" method="POST">
-            <fieldset class="well">
-                <div class="control-group">
+        $this->checkResult($modelTransferToMobile, $result);
 
-                    <br>
-                    <div class="control-label">
-                        <label >Number<span class="star">&nbsp;*</span> : ' . $number . '</label>
-                    </div>
-                    <div class="control-label">
-                        <label >Operator<span class="star">&nbsp;*</span> : ' . $operator . '</label>
-                    </div>
-                    <div class="control-label">
-                        <label >Country<span class="star">&nbsp;*</span> : ' . $country . '</label>
-                    </div>
-
-
-                    <div class="controls">
-                    <label >Amount<span class="star">&nbsp;*</span> :</label>
-                        <select id=amountfiel name="amount" ' . $show_price . '>
-                        <option value=""></option>
-                            ' . $amount . '
-                        </select>
-                    </div>
-
-
-                    <div id="rsp_age" style="font-size: 11px; color: red;"></div>
-                    <input type="hidden" name="number" value="' . $number . '">
-                    <input type="hidden" name="rows" value="' . urlencode(json_encode($values['rows'])) . '">
-                    <br>
-                    <div class="controls" id="secondButtondiv">
-                        <button type="submit" id="secondButton" onclick="button2();" class="btn btn-primary">Next</button>
-                    </div>
-                    <div class="controls" id="secondButtondivWait"></div>
-                    <div id="sellingPrice"></div>
-
-            </fieldset>
-        </form>';
-        echo '</div></div></div>';
     }
 
-    public function actionMsisdn_info()
+    public function checkResult($modelTransferToMobile, $result)
     {
 
-        if (isset($_POST['number'])) {
-            $number = preg_match("/\+/", $_POST['number']) ? $_POST['number'] : '+' . $_POST['number'];
+        if ($modelTransferToMobile->method == 'international') {
+            $result = explode("error_txt=", $result);
+
+            if (preg_match("/Transaction successful/", $result[1])) {
+                $this->releaseCredit($modelTransferToMobile, $result);
+                exit;
+            } else {
+                echo '<div align=center id="container">';
+                echo '<font color=red>ERROR: ' . $result[1] . '</font>';
+                echo '</div>';
+            }
+
+        } else {
+
+            if (strlen($result) < 1) {
+                echo '<div align=center id="container">';
+                echo "<font color=red>INVALID REQUEST, CONTACT ADMIN</font>";
+                echo '</div>';
+            } else if (preg_match("/ERROR|error/", $result)) {
+                echo '<div align=center id="container">';
+                echo "<font color=red>" . $result . "</font>";
+                echo '</div>';
+            } elseif (preg_match("/SUCCESS/", strtoupper($result))) {
+                $this->releaseCredit($modelTransferToMobile, $result);
+                exit;
+            }
+
+        }
+    }
+
+    public function releaseCredit($modelTransferToMobile, $result)
+    {
+
+        $msg = $modelTransferToMobile->method == 'international' ? $result[1] : $result;
+        echo '<div align=center id="container">';
+        echo '<font color=green>Success: ' . $msg . '</font>';
+        echo '</div>';
+
+        User::model()->updateByPk(Yii::app()->session['id_user'],
+            array(
+                'credit' => new CDbExpression('credit - ' . $this->user_cost),
+            )
+        );
+
+        $description = 'Credit tranfered to mobile ' . $modelTransferToMobile->number;
+        $values      = ":id_user, :costUser, :description, 1";
+        $sql         = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
+        $command     = Yii::app()->db->createCommand($sql);
+        $command->bindValue(":id_user", Yii::app()->session['id_user'], PDO::PARAM_INT);
+        $command->bindValue(":costUser", $this->user_cost * -1, PDO::PARAM_STR);
+        $command->bindValue(":description", $description, PDO::PARAM_STR);
+        $command->execute();
+
+        // echo $sql . "<br>";
+
+        if ($modelTransferToMobile->id_user > 1) {
+
+            $sql     = "UPDATE  pkg_user SET credit = credit - :costAgent WHERE id = :id";
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":id", $modelTransferToMobile->id_user, PDO::PARAM_INT);
+            $command->bindValue(":costAgent", $this->agent_cost, PDO::PARAM_STR);
+            $command->execute();
+
+            //echo $sql . "<br>";
+
+            $description = 'Credit tranfered to mobile ' . $modelTransferToMobile->number;
+
+            $values  = ":id_user, :costAgent , :description,1";
+            $sql     = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":id_user", $modelTransferToMobile->id_user, PDO::PARAM_INT);
+            $command->bindValue(":costAgent", $this->agent_cost * -1, PDO::PARAM_STR);
+            $command->bindValue(":description", $description, PDO::PARAM_STR);
+            $command->execute();
+
+            //echo $sql . "<br>";
+
+        }
+    }
+
+    public function actionMsisdn_info($modelTransferToMobile)
+    {
+
+        if (isset($_POST['TransferToMobile']['number'])) {
+
+            $number = $_POST['TransferToMobile']['number'];
+
+            $number = preg_match("/\+/", $number) ? $number : '+' . $number;
 
             if (isset($this->config['global']['fm_transfer_to_username'])) {
 
@@ -198,303 +375,91 @@ class TransferToMobileController extends Controller
 
                 $sql     = "SELECT * FROM pkg_refill WHERE description LIKE :description AND date BETWEEN '$timeToCall' AND  NOW() AND payment = 1 AND id_user =" . Yii::app()->session['id_user'];
                 $command = Yii::app()->db->createCommand($sql);
-                $command->bindValue(":description", "%" . $_POST['number'] . "%", PDO::PARAM_STR);
-                //$command->bindValue(":timeToCall", $timeToCall, PDO::PARAM_STR);
-                //$command->bindValue(":id", Yii::app()->session['id_user'], PDO::PARAM_STR);
+                $command->bindValue(":description", "%" . $number . "%", PDO::PARAM_STR);
                 $result = $command->queryAll();
 
                 if (count($result) > 0) {
-                    echo '<div id="container"><div id="form"> <div id="box-4">';
+                    echo '<div align=center id="container">';
                     echo "<font color=red>You already send credit to this number. Wait minimal 10 minutes to new recharge</font>";
-                    echo '</div></div></div>';
-                    echo '<a href="../../index.php/transferToMobile/read">Back</a>';
+                    echo '</div>';
                     exit;
                 }
 
-                $login       = $this->config['global']['fm_transfer_to_username'];
-                $token       = $this->config['global']['fm_transfer_to_ token'];
-                $agentProfit = $this->config['global']['fm_transfer_to_profit'];
+                $result = $this->sendActionTransferToMobile($modelTransferToMobile, 'msisdn_info');
 
-                $key = time();
-                $md5 = md5($login . $token . $key);
+                if (preg_match("/Transaction successful/", $result)) {
 
-                if (isset($_POST['amount']) && $_POST['amount'] > 0) {
+                    $result = explode("\n", $result);
+                    //echo '<pre>';
+                    // print_r($result);
 
-                    $rows    = json_decode(urldecode($_POST['rows']));
-                    $product = $_POST['amount'];
+                    /*
+                    Array
+                    (
+                    [0] => country=Brazil
+                    [1] => countryid=691
+                    [2] => operator=TIM Brazil
+                    [3] => operatorid=610
+                    [4] => connection_status=100
+                    [5] => destination_msisdn=5551982464731
+                    [6] => destination_currency=BRL
+                    [7] => product_list=10,15,20,30,35,40,50,100
+                    [8] => retail_price_list=3.50,5.20,6.90,10.40,12.10,12.90,17.30,34.50
+                    [9] => wholesale_price_list=2.77,4.15,5.48,8.28,12.72,10.93,13.81,27.32
+                    [10] => authentication_key=1519327737
+                    [11] => error_code=0
+                    [12] => error_txt=Transaction successful
+                    [13] =>
+                    )
+                     */
 
-                    foreach ($rows as $value) {
+                    $operatorId = explode("=", $result[3]);
+                    $operatorId = trim($operatorId[1]);
 
-                        if ($value[0] == $product) {
-                            $cost = $value[1];
-                            break;
-                        }
+                    $modelRate = Rate::model()->find(array(
+                        'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                        'params' => array(':key' => '888' . $operatorId),
+                    ));
 
+                    $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
+                    //echo "admin profit " . $modelRate->rateinitial . "% <br>";
+                    $product_list      = explode(",", substr($result[7], 13));
+                    $retail_price_list = explode(",", substr($result[8], 18));
+
+                    $local_currency = explode("=", $result[6]);
+                    $local_currency = trim($local_currency[1]);
+
+                    $country = explode("=", $result[0]);
+                    $country = trim($country[1]);
+
+                    $operator = explode("=", $result[2]);
+                    $operator = trim($operator[1]);
+
+                    $values = array();
+                    $i      = 0;
+                    foreach ($product_list as $key => $product) {
+                        $values[trim($product)] = $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial);
+                        $i++;
                     }
 
-                    Yii::app()->session['currency'] = '€';
+                    Yii::app()->session['amounts']          = $values;
+                    $modelTransferToMobile->country         = $country;
+                    $modelTransferToMobile->operator        = $operator;
+                    $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
 
-                    if (Yii::app()->session['currency'] == 'U$S') {
-                        Yii::app()->session['currency'] = '$';
-                    }
-
-                    $cost = explode(Yii::app()->session['currency'], $cost);
-                    $cost = $cost[1];
-
-                    if (Yii::app()->session['currency'] == 'COP') {
-                        $cost                           = $cost * 3066;
-                        Yii::app()->session['currency'] = '$';
-                    }
-
-                    $sql     = "SELECT credit, creditlimit, id_user FROM pkg_user WHERE id = :id ";
-                    $command = Yii::app()->db->createCommand($sql);
-                    $command->bindValue(":id", Yii::app()->session['id_user'], PDO::PARAM_INT);
-                    $resultUser = $command->queryAll();
-
-                    if ($resultUser[0]['credit'] + $resultUser[0]['creditlimit'] < $cost) {
-
-                        echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
-                        echo '<form action="" id="form1" method="POST">';
-                        echo '<font color=red>ERROR:You no have enough credit to transfer</font>';
-                        echo '</form>';
-                        echo '</div></div></div></div>';
-                        exit;
-                    }
-                    //check if agent have credit
-                    if ($resultUser[0]['id_user'] > 1) {
-                        $sql     = "SELECT credit, creditlimit, id_user FROM pkg_user WHERE id = :id ";
-                        $command = Yii::app()->db->createCommand($sql);
-                        $command->bindValue(":id", $resultUser[0]['id_user'], PDO::PARAM_INT);
-                        $resultAgent = $command->queryAll();
-
-                        if ($resultAgent[0]['credit'] + $resultAgent[0]['creditlimit'] < $cost) {
-
-                            echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
-                            echo '<form action="" id="form1" method="POST">';
-                            echo '<font color=red>ERROR:Your Agent no have enough credit to transfer</font>';
-                            echo '</form>';
-                            echo '</div></div></div></div>';
-                            exit;
-
-                        }
-                    }
-
-                    $url = $this->url . "login=$login&key=$key&md5=$md5&destination_msisdn=$number&msisdn=$number&delivered_amount_info=1&product=$product&action=topup";
-
-                    if (preg_match("/5551982464731/", $number)) {
-                        //echo $url;
-                    }
-
-                    $arrContextOptions = array(
-                        "ssl" => array(
-                            "verify_peer"      => false,
-                            "verify_peer_name" => false,
-                        ),
-                    );
-
-                    if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
-                        $result = '';
-                    }
-
-                    if (preg_match("/5551982464731/", $number)) {
-                        //print_r($result);
-                    }
-
-                    $result = explode("error_txt=", $result);
-
-                    if (preg_match("/Transaction successful/", $result[1])) {
-
-                        echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
-                        echo '<form action="" id="form1" method="POST">';
-                        echo '<font color=green>Success: ' . $result[1] . '</font>';
-                        echo '</form>';
-                        echo '</div></div></div></div>';
-
-                        $sql     = "UPDATE  pkg_user SET credit = credit - :cost WHERE id = :id";
-                        $command = Yii::app()->db->createCommand($sql);
-                        $command->bindValue(":id", Yii::app()->session['id_user'], PDO::PARAM_INT);
-                        $command->bindValue(":cost", $cost, PDO::PARAM_STR);
-                        $command->execute();
-                        if (preg_match("/5551982464731/", $number)) {
-                            echo $sql . "<br>";
-                        }
-
-                        $costUser    = $cost * -1;
-                        $description = 'Credit tranfered to mobile ' . $number;
-                        $values      = ":id_user, :costUser, :description, 1";
-                        $sql         = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
-                        $command     = Yii::app()->db->createCommand($sql);
-                        $command->bindValue(":id_user", Yii::app()->session['id_user'], PDO::PARAM_INT);
-                        $command->bindValue(":costUser", $costUser, PDO::PARAM_STR);
-                        $command->bindValue(":description", $description, PDO::PARAM_STR);
-                        $command->execute();
-
-                        if (preg_match("/5551982464731/", $number)) {
-                            echo $sql . "<br>";
-
-                            echo print_r($resultUser) . "<br>";
-                        }
-
-                        if ($resultUser[0]['id_user'] > 1) {
-                            $costAgent = $cost - ($cost * ($agentProfit / 100));
-                            $sql       = "UPDATE  pkg_user SET credit = credit - :costAgent WHERE id = :id";
-                            $command   = Yii::app()->db->createCommand($sql);
-                            $command->bindValue(":id", $resultUser[0]['id_user'], PDO::PARAM_INT);
-                            $command->bindValue(":costAgent", $costAgent, PDO::PARAM_STR);
-                            $command->execute();
-                            if (preg_match("/5551982464731/", $number)) {
-                                echo $sql . "<br>";
-                            }
-                            $costAgent   = $costAgent * -1;
-                            $description = 'Credit tranfered to mobile ' . $number;
-
-                            $values  = ":id_user, :costAgent , :description,1";
-                            $sql     = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
-                            $command = Yii::app()->db->createCommand($sql);
-                            $command->bindValue(":id_user", $resultUser[0]['id_user'], PDO::PARAM_INT);
-                            $command->bindValue(":costAgent", $costAgent, PDO::PARAM_STR);
-                            $command->bindValue(":description", $description, PDO::PARAM_STR);
-                            $command->execute();
-
-                            if (preg_match("/5551982464731/", $number)) {
-                                echo $sql . "<br>";
-                            }
-
-                        }
-
-                    } else {
-                        echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
-                        echo '<form action="" id="form1" method="POST">';
-                        echo '<font color=red>ERROR: ' . $result[1] . '</font>';
-                        echo '</form>';
-                        echo '</div></div></div></div>';
-                        echo '<a href="../../index.php/transferToMobile/read">Back</a>';
-                    }
+                    return $modelTransferToMobile;
 
                 } else {
-
-                    $url = $this->url . "login=$login&key=$key&md5=$md5&destination_msisdn=$number&action=msisdn_info";
-
-                    $arrContextOptions = array(
-                        "ssl" => array(
-                            "verify_peer"      => false,
-                            "verify_peer_name" => false,
-                        ),
-                    );
-
-                    if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
-                        $result = '';
-                    }
-
-                    //echo '<pre>';
-                    if (preg_match("/Transaction successful/", $result)) {
-
-                        $result = explode("\n", $result);
-                        //print_r($result);
-
-                        $product_list      = explode(",", substr($result[7], 13));
-                        $retail_price_list = explode(",", substr($result[8], 18));
-
-                        $local_currency = explode("=", $result[6]);
-                        $local_currency = trim($local_currency[1]);
-
-                        $country = explode("=", $result[0]);
-                        $country = trim($country[1]);
-
-                        $operator = explode("=", $result[2]);
-                        $operator = trim($operator[1]);
-
-                        $values = array();
-                        $i      = 0;
-                        foreach ($product_list as $key => $product) {
-                            $values[] = array("$product", $local_currency . ' ' . trim($product) . ' = ' . $this->config['global']['fm_transfer_currency'] . ' ' . trim($retail_price_list[$i]));
-                            $i++;
-                        }
-
-                        return array(
-                            'success'         => true,
-                            'rows'            => $values,
-                            'country'         => $country,
-                            'operator'        => $operator,
-                            'fm_transfer_fee' => $this->config['global']['fm_transfer_show_selling_price'],
-                        );
-
-                    } else {
-                        $result = explode("error_txt=", $result);
-
-                        echo '<div id="container"><div id="form"> <div id="box-4">';
-                        echo "<font color=red>" . $result[1] . "</font>";
-                        echo '</div></div></div>';
-                        echo '<a href="../../index.php/transferToMobile/read">Back</a>';
-                        exit;
-                    }
+                    $result = explode("error_txt=", $result);
+                    echo '<div align=center id="container">';
+                    echo "<font color=red>" . $result[1] . "</font>";
+                    echo '</div>';
+                    exit;
                 }
+
             } else {
-                echo json_encode(array(
-                    'success' => false,
-                    'msg'     => 'Service inactive',
-                ));
+                echo 'Service inactive';
             }
         }
     }
-
-    public function actionPrintRefill()
-    {
-
-        if (isset($_GET['id'])) {
-
-            $id_refill = $_GET['id'];
-            $sql       = "SELECT * FROM pkg_refill WHERE id = :id_refill AND id_user = :id_user";
-            $command   = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":id_refill", $id_refill, PDO::PARAM_INT);
-            $command->bindValue(":id_user", Yii::app()->session['id_user'], PDO::PARAM_INT);
-            $resultRefill = $command->queryAll();
-
-            echo $this->config['global']['fm_transfer_print_header'] . "<br>";
-
-            $sql     = "SELECT * FROM pkg_user WHERE id = :id";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":id", Yii::app()->session['id_user'], PDO::PARAM_INT);
-            $resultUser = $command->queryAll();
-
-            echo $resultUser[0]['company_name'] . "<br>";
-
-            echo "Trx ID: " . $resultRefill[0]['id'] . "<br>";
-
-            echo $resultRefill[0]['date'] . "<br>";
-            $number = trim(preg_replace("/Credit tranfered to mobile/", "", $resultRefill[0]['description']));
-            $number = explode(" ", $number);
-            echo "Mobile: " . $number[0] . "<br>";
-            $amount = number_format($resultRefill[0]['credit'], 2) * -1;
-            echo "Amount: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
-
-            echo $this->config['global']['fm_transfer_print_footer'] . "<br><br>";
-
-            echo '<td><a href="javascript:window.print()">Print</a></td>';
-        } else {
-            echo ' Invalid reffil';
-        }
-    }
-
 }
-?>
-
-<script type="text/javascript">
-
-    function button1(buttonId) {
-        document.getElementById("fistButtondiv").style.display = 'none';
-        document.getElementById("fistButtondivWait").innerHTML = "<font color = green>Wait! </font>";
-    }
-    function button2(buttonId) {
-      document.getElementById("secondButtondiv").style.display = 'none';
-        document.getElementById("secondButtondivWait").innerHTML = "<font color = green>Wait! </font>";
-    }
-    function showPrice(argument) {
-        text = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].text;
-        var valueAmout = text.split(' ');
-        fee = Number('1.'+argument);
-
-        newText = '<b>Selling Price</b>'+' <font color=blue size=7><b>'+valueAmout[3]+ ' '+valueAmout[4] * fee+'</b></font>'
-        document.getElementById('sellingPrice').innerHTML = newText;
-    }
-</script>

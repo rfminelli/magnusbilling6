@@ -558,6 +558,56 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.4') {
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Send Credit\')' WHERE module = 'transfertomobile';
+
+            ALTER TABLE `pkg_user`
+            	ADD `transfer_international` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_flexiload` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_bkash` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_dbbl_rocke` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_international_profit` INT(11) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_flexiload_profit` INT(11) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_bkash_profit` INT(11) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_dbbl_rocke_profit` INT(11) NULL DEFAULT '0' AFTER `mix_monitor_format`,
+            	ADD `transfer_bdservice_rate` INT(11) NULL DEFAULT '0' AFTER `mix_monitor_format`;
+
+            ";
+            $this->executeDB($sql);
+
+            $sql = "
+            DELETE FROM pkg_configuration WHERE config_key = 'fm_transfer_to_profit';
+            DELETE FROM pkg_configuration WHERE config_key = 'BDService_agent';
+            ";
+            $this->executeDB($sql);
+
+            $sql = "
+            INSERT IGNORE INTO pkg_configuration  VALUES
+            	(NULL, 'BDService Username', 'BDService_username', '', 'BDService username', 'global', '1'),
+            	(NULL, 'BDService token', 'BDService_token', '', 'BDService token', 'global', '1'),
+            	(NULL, 'BDService flexiload values', 'BDService_flexiload', '10-1000', 'BDService flexiload values', 'global', '1'),
+            	(NULL, 'BDService bkash values', 'BDService_bkash', '50-2500', 'BDService bkash values', 'global', '1'),
+            	(NULL, 'BDService currency translation', 'BDService_cambio', '0.01', 'BDService currency translation', 'global', '1');
+            ";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS `pkg_BDService` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `id_user` int(11) NOT NULL,
+              `date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+            INSERT IGNORE INTO pkg_BDService (id) VALUES (15254);
+
+            ";
+            $this->executeDB($sql);
+
+            $version = '6.1.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
