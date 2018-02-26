@@ -41,6 +41,22 @@ class RefillController extends Controller
         parent::init();
     }
 
+    public function extraFilterCustomAgent($filter)
+    {
+        if (array_key_exists('idUser', $this->relationFilter)) {
+            $this->relationFilter['idUser']['condition'] .= " AND idUser.id_user LIKE :agfby";
+        } else {
+            $this->relationFilter['idUser'] = array(
+                'condition' => "t.id_user = :idagent5334 OR  idUser.id_user LIKE :agfby",
+            );
+        }
+        $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
+
+        $this->paramsFilter[':idagent5334'] = Yii::app()->session['id_user'];
+
+        return $filter;
+    }
+
     public function beforeSave($values)
     {
         if (isset(Yii::app()->session['isAgent']) && Yii::app()->session['isAgent'] == true) {
