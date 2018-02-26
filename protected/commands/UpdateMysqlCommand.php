@@ -608,6 +608,17 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.5') {
+            $sql = " INSERT IGNORE INTO pkg_configuration  VALUES
+            	(NULL, 'BDService DBBL/Rocket values', 'BDService_dbbl_rocket', '10-1000', 'DBBL/Rocket flexiload values', 'global', '1');
+            ";
+            $this->executeDB($sql);
+
+            $version = '6.1.6';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

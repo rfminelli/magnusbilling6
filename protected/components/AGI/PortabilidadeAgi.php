@@ -21,7 +21,7 @@
 class PortabilidadeAgi
 {
 
-    public function getDestination($agi, $MAGNUS, $number)
+    public static function getDestination($agi, $MAGNUS, $number)
     {
         $agi->verbose("consulta portabilidade numero " . $number, 25);
 

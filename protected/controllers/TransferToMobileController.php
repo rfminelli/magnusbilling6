@@ -58,12 +58,14 @@ class TransferToMobileController extends Controller
         //if we already request the number info, check if select a valid amount
         if (isset($_POST['TransferToMobile']['amountValues'])) {
 
-            $modelTransferToMobile->method          = $_POST['TransferToMobile']['method'];
-            $modelTransferToMobile->number          = $_POST['TransferToMobile']['number'];
-            $modelTransferToMobile->country         = $_POST['TransferToMobile']['country'];
-            $modelTransferToMobile->operator        = $_POST['TransferToMobile']['operator'];
-            $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
-            $modelTransferToMobile->amountValues    = $_POST['TransferToMobile']['amountValues'];
+            $modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
+            $modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
+            if ($modelTransferToMobile->method == 'international') {
+                $modelTransferToMobile->country         = $_POST['TransferToMobile']['country'];
+                $modelTransferToMobile->operator        = $_POST['TransferToMobile']['operator'];
+                $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
+            }
+            $modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
 
             if ($modelTransferToMobile->method != 'international') {
                 //check min max
@@ -132,10 +134,13 @@ class TransferToMobileController extends Controller
         $amountDetails = null;
 
         if (isset($_POST['TransferToMobile']['method']) && $_POST['TransferToMobile']['method'] != 'international') {
-            if ($_POST['TransferToMobile']['method'] == 'dbbl_rocke') {
-                $values = explode("-", "50-25000");
-            } else {
+
+            if ($_POST['TransferToMobile']['method'] == 'flexiload') {
                 $values = explode("-", $this->config['global']['BDService_flexiload']);
+            } elseif ($_POST['TransferToMobile']['method'] == 'dbbl_rocke') {
+                $values = explode("-", $this->config['global']['BDService_dbbl_rocket']);
+            } elseif ($_POST['TransferToMobile']['method'] == 'bkash') {
+                $values = explode("-", $this->config['global']['BDService_bkash']);
             }
             Yii::app()->session['allowedAmount'] = $values;
             $amountDetails                       = 'Amount (Min: ' . $values[0] . ' BDT, Max: ' . $values[1] . ' BDT)';
@@ -204,7 +209,7 @@ class TransferToMobileController extends Controller
         return $result;
     }
 
-    public function calculateCost($modelTransferToMobile, $cost)
+    public function calculateCost($modelTransferToMobile, $cost, $product = 0)
     {
         // echo 'cost=' . $cost . ' - prodict=' . $product . "<br>";
 
@@ -241,9 +246,16 @@ class TransferToMobileController extends Controller
 
             }
 
-            $modelAgent       = User::model()->findByPk($modelTransferToMobile->id_user);
-            $agentProfit      = $modelAgent->{$methosProfit};
-            $this->agent_cost = $cost - ($cost * ($userProfit / 100));
+            //get the admin sell price.
+            $sellAdmin   = Yii::app()->session['sellAdmin'][$product];
+            $modelAgent  = User::model()->findByPk($modelTransferToMobile->id_user);
+            $agentProfit = $modelAgent->{$methosProfit};
+            //plus the admin rate
+            $agentSell = $sellAdmin + ($sellAdmin * ($agentProfit / 100));
+
+            //remove the agent comission
+            $this->agent_cost = $agentSell - ($agentSell * ($agentProfit / 100));
+
         }
     }
 
@@ -255,15 +267,17 @@ class TransferToMobileController extends Controller
             $cost    = Yii::app()->session['amounts'][$product];
             $cost    = explode($this->currency, $cost);
             $cost    = $cost[1];
+
         } else {
 
             $rateinitial = $modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
             //cost to send to provider selected value + admin rate * exchange
-            $cost = $_POST['TransferToMobile']['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
+            $cost    = $_POST['TransferToMobile']['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
+            $product = 0;
 
         }
 
-        $this->calculateCost($modelTransferToMobile, $cost);
+        $this->calculateCost($modelTransferToMobile, $cost, $product);
 
         //echo "REMOVE " . $this->user_cost . " from user " . $modelTransferToMobile->username;
 
@@ -323,11 +337,11 @@ class TransferToMobileController extends Controller
                 'credit' => new CDbExpression('credit - ' . $this->user_cost),
             )
         );
+        $description = 'Send Credit to ' . $modelTransferToMobile->number . ' via ' . $modelTransferToMobile->method;
 
-        $description = 'Credit tranfered to mobile ' . $modelTransferToMobile->number;
-        $values      = ":id_user, :costUser, :description, 1";
-        $sql         = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
-        $command     = Yii::app()->db->createCommand($sql);
+        $values  = ":id_user, :costUser, :description, 1";
+        $sql     = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
+        $command = Yii::app()->db->createCommand($sql);
         $command->bindValue(":id_user", Yii::app()->session['id_user'], PDO::PARAM_INT);
         $command->bindValue(":costUser", $this->user_cost * -1, PDO::PARAM_STR);
         $command->bindValue(":description", $description, PDO::PARAM_STR);
@@ -344,8 +358,6 @@ class TransferToMobileController extends Controller
             $command->execute();
 
             //echo $sql . "<br>";
-
-            $description = 'Credit tranfered to mobile ' . $modelTransferToMobile->number;
 
             $values  = ":id_user, :costAgent , :description,1";
             $sql     = "INSERT INTO pkg_refill (id_user,credit,description,payment) VALUES ($values)";
@@ -416,10 +428,25 @@ class TransferToMobileController extends Controller
                     $operatorId = explode("=", $result[3]);
                     $operatorId = trim($operatorId[1]);
 
-                    $modelRate = Rate::model()->find(array(
-                        'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                        'params' => array(':key' => '888' . $operatorId),
-                    ));
+                    if ($modelTransferToMobile->id_user > 1) {
+                        $modelRate = RateAgent::model()->find(array(
+                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                            'params' => array(':key' => '888' . $operatorId),
+                        ));
+
+                        $modelRateAdmin = Rate::model()->find(array(
+                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                            'params' => array(':key' => '888' . $operatorId),
+                        ));
+
+                        $rateinitialAdmin = isset($modelRate->modelRateAdmin) ? $modelRate->modelRateAdmin / 100 + 1 : 1;
+
+                    } else {
+                        $modelRate = Rate::model()->find(array(
+                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                            'params' => array(':key' => '888' . $operatorId),
+                        ));
+                    }
 
                     $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
                     //echo "admin profit " . $modelRate->rateinitial . "% <br>";
@@ -435,14 +462,17 @@ class TransferToMobileController extends Controller
                     $operator = explode("=", $result[2]);
                     $operator = trim($operator[1]);
 
-                    $values = array();
+                    $values = $sellAdmin = array();
                     $i      = 0;
+
                     foreach ($product_list as $key => $product) {
-                        $values[trim($product)] = $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial);
+                        $values[trim($product)]    = $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial);
+                        $sellAdmin[trim($product)] = trim($retail_price_list[$i] * $rateinitialAdmin);
                         $i++;
                     }
 
                     Yii::app()->session['amounts']          = $values;
+                    Yii::app()->session['sellAdmin']        = $sellAdmin;
                     $modelTransferToMobile->country         = $country;
                     $modelTransferToMobile->operator        = $operator;
                     $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
