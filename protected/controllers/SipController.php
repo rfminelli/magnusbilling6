@@ -156,7 +156,7 @@ class SipController extends Controller
             } elseif ($type == 'save') {
                 if ($this->isNewRecord) {
                     $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode) VALUES
-                            ('$values->defaultuser,'$hostname','" . md5($values->defaultuser . ':' . $hostname . ':' . $values->secret) . "','$values->accountcode')";
+                            ('$values->defaultuser','$hostname','" . md5($values->defaultuser . ':' . $hostname . ':' . $values->secret) . "','$values->accountcode')";
                     $con->createCommand($sql)->execute();
                 } else {
                     $sql = "UPDATE $dbname.$table SET ha1 = '" . md5($values->defaultuser . ':' . $hostname . ':' . $values->secret) . "',
