@@ -61,9 +61,8 @@ class TransferToMobileController extends Controller
             $modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
             $modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
             if ($modelTransferToMobile->method == 'international') {
-                $modelTransferToMobile->country         = $_POST['TransferToMobile']['country'];
-                $modelTransferToMobile->operator        = $_POST['TransferToMobile']['operator'];
-                $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
+                $modelTransferToMobile->country  = $_POST['TransferToMobile']['country'];
+                $modelTransferToMobile->operator = $_POST['TransferToMobile']['operator'];
             }
             $modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
 
@@ -200,6 +199,7 @@ class TransferToMobileController extends Controller
         if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
             $result = '';
         }
+        //$result = 'SUCCESS';
 
         $sql     = "INSERT INTO  pkg_BDService (id_user) VALUES (:id)";
         $command = Yii::app()->db->createCommand($sql);
@@ -246,15 +246,21 @@ class TransferToMobileController extends Controller
 
             }
 
-            //get the admin sell price.
-            $sellAdmin   = Yii::app()->session['sellAdmin'][$product];
             $modelAgent  = User::model()->findByPk($modelTransferToMobile->id_user);
             $agentProfit = $modelAgent->{$methosProfit};
-            //plus the admin rate
-            $agentSell = $sellAdmin + ($sellAdmin * ($agentProfit / 100));
 
-            //remove the agent comission
-            $this->agent_cost = $agentSell - ($agentSell * ($agentProfit / 100));
+            if ($_POST['TransferToMobile']['method'] == 'international') {
+                //get the admin sell price.
+                $sellAdmin = Yii::app()->session['sellAdmin'][$product];
+
+                //plus the admin rate
+                $agentSell = $sellAdmin + ($sellAdmin * ($agentProfit / 100));
+
+                //remove the agent comission
+                $this->agent_cost = $agentSell - ($agentSell * ($agentProfit / 100));
+            } else {
+                $this->agent_cost = $cost - ($cost * ($agentProfit / 100));
+            }
 
         }
     }
@@ -425,9 +431,9 @@ class TransferToMobileController extends Controller
                     )
                      */
 
-                    $operatorId = explode("=", $result[3]);
-                    $operatorId = trim($operatorId[1]);
-
+                    $operatorId       = explode("=", $result[3]);
+                    $operatorId       = trim($operatorId[1]);
+                    $rateinitialAdmin = 1;
                     if ($modelTransferToMobile->id_user > 1) {
                         $modelRate = RateAgent::model()->find(array(
                             'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
@@ -471,11 +477,10 @@ class TransferToMobileController extends Controller
                         $i++;
                     }
 
-                    Yii::app()->session['amounts']          = $values;
-                    Yii::app()->session['sellAdmin']        = $sellAdmin;
-                    $modelTransferToMobile->country         = $country;
-                    $modelTransferToMobile->operator        = $operator;
-                    $modelTransferToMobile->fm_transfer_fee = $this->config['global']['fm_transfer_show_selling_price'];
+                    Yii::app()->session['amounts']   = $values;
+                    Yii::app()->session['sellAdmin'] = $sellAdmin;
+                    $modelTransferToMobile->country  = $country;
+                    $modelTransferToMobile->operator = $operator;
 
                     return $modelTransferToMobile;
 

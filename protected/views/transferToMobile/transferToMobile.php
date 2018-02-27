@@ -98,6 +98,8 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
     array(
         'empty'    => Yii::t('yii', 'Select the amount'),
         'disabled' => false,
+        'onchange' => $modelTransferToMobile->transfer_show_selling_price > 0 ? 'showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')' : '',
+        'id'       => 'amountfiel',
     ));
 ?>
 		<?php echo $form->error($modelTransferToMobile, 'amount') ?>
@@ -106,19 +108,24 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
 	</div>
 
 <?php endif?>
-
+<div class='field' id="divsellingPrice" style="display:none; border:0">
+	<label>Selling Price</label>
+	<div id="sellingPrice" class="input" style="border:0; width:650px" ></div>
+</div>
 
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', $buttonName), array(
     'class'   => 'button',
-    'onclick' => 'button2()',
+    'onclick' => "button2()",
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
 
 </div>
 <div class="controls" id="buttondivWait"></div>
-<?php $this->endWidget();?>
+<?php
+
+$this->endWidget();?>
 
 
 <script type="text/javascript">
@@ -127,11 +134,15 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
 	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 	}
 	function showPrice(argument) {
+
 		text = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].text;
+
 		var valueAmout = text.split(' ');
 		fee = Number('1.'+argument);
+		var showprice = Number(valueAmout[4] * fee);
 
-		newText = '<b>Selling Price</b>'+' <font color=blue size=7><b>'+valueAmout[3]+ ' '+valueAmout[4] * fee+'</b></font>'
+		newText = '<font color=blue size=7><b>'+valueAmout[3]+ ' '+showprice.toFixed(2);+'</b></font>'
+		document.getElementById('divsellingPrice').style.display = 'inline';
 		document.getElementById('sellingPrice').innerHTML = newText;
 	}
 </script>

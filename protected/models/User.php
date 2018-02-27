@@ -68,7 +68,7 @@ class User extends Model
                     boleto_day, calllimit, disk_space,id_group_agent,transfer_dbbl_rocke_profit,
                     transfer_bkash_profit,transfer_flexiload_profit,transfer_international_profit,
                     transfer_dbbl_rocke,transfer_bkash,transfer_flexiload,transfer_international,
-                    transfer_bdservice_rate
+                    transfer_bdservice_rate,transfer_show_selling_price
                         ', 'numerical', 'integerOnly' => true),
             array('language,mix_monitor_format', 'length', 'max' => 5),
             array('username, zipcode, phone, mobile, vat', 'length', 'max' => 20),

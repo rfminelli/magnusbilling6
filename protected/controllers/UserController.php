@@ -50,7 +50,6 @@ class UserController extends Controller
         'idGroupname',
         'id_offer',
         'id_user',
-        'id_plan',
         'idAgentlogin',
         'creationdate',
         'lastuse',

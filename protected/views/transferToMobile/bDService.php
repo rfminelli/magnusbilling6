@@ -67,12 +67,23 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 <?php if (strlen($modelTransferToMobile->number) > 10): ?>
 	<div class="field">
 		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Amount')) ?>
-		<?php echo $form->numberField($modelTransferToMobile, 'amountValues', array('class' => 'input')) ?>
+		<?php echo $form->numberField($modelTransferToMobile, 'amountValues',
+    array(
+        'class'   => 'input',
+        'id'      => 'amountfiel',
+        'onkeyup' => $modelTransferToMobile->transfer_show_selling_price > 0
+        ? 'showPrice("' . $modelTransferToMobile->transfer_show_selling_price . '","' . $this->config['global']['BDService_cambio'] . '","' . $this->config['global']['fm_transfer_currency'] . '")'
+        : '',
+    )) ?>
 		<?php echo $form->error($modelTransferToMobile, 'amountValues') ?>
 		<p class="hint"><?php echo $amountDetails ?></p>
 	</div>
 <?php endif?>
-
+<br>
+<div class='field' id="divsellingPrice" style="display:none; border:0">
+	<label>Selling Price</label>
+	<div id="sellingPrice" class="input" style="border:0; width:650px" ></div>
+</div>
 
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', $buttonName), array(
@@ -93,12 +104,18 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	  	document.getElementById("sendButton").style.display = 'none';
 	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 	}
-	function showPrice(argument) {
-		text = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].text;
-		var valueAmout = text.split(' ');
-		fee = Number('1.'+argument);
+	function showPrice(transfer_show_selling_price,exchange,currency) {
 
-		newText = '<b>Selling Price</b>'+' <font color=blue size=7><b>'+valueAmout[3]+ ' '+valueAmout[4] * fee+'</b></font>'
+		valueAmout = document.getElementById('amountfiel').value;
+
+		//convert to eur
+		valueAmout = valueAmout * exchange;
+
+		fee = Number('1.'+transfer_show_selling_price);
+		var showprice = Number(valueAmout * fee);
+
+		newText = '<font color=blue size=7><b>'+currency+' '+showprice.toFixed(2);+'</b></font>'
+		document.getElementById('divsellingPrice').style.display = 'inline';
 		document.getElementById('sellingPrice').innerHTML = newText;
 	}
 </script>
