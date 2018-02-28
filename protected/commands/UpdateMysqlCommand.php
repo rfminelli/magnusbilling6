@@ -1,4 +1,3 @@
-
 <?php
 /**
  * =======================================
@@ -615,6 +614,42 @@ class UpdateMysqlCommand extends ConsoleCommand
             $this->executeDB($sql);
 
             $version = '6.1.6';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
+        if ($version == '6.1.6') {
+            $sql = "
+            	DELETE FROM pkg_configuration WHERE config_key = 'fm_transfer_show_selling_price';
+            	RENAME TABLE pkg_BDService TO pkg_send_credit;
+            	ALTER TABLE `pkg_send_credit` ADD `service` VARCHAR(50) NOT NULL AFTER `date`;
+            	ALTER TABLE `pkg_send_credit` ADD `number` VARCHAR(30) NOT NULL AFTER `service`;
+            	ALTER TABLE `pkg_send_credit` ADD `profit` VARCHAR(10) NULL DEFAULT '0' AFTER `number`;
+            	ALTER TABLE `pkg_send_credit` ADD `earned` VARCHAR(20) NULL DEFAULT NULL AFTER `profit`;
+            	ALTER TABLE `pkg_send_credit` ADD `amount` VARCHAR(10) NULL DEFAULT NULL AFTER `earned`;
+            	ALTER TABLE `pkg_send_credit` ADD `count` INT(11) NULL DEFAULT NULL AFTER `amount`;
+            	ALTER TABLE `pkg_send_credit` ADD `total_sale` INT(11) NULL DEFAULT NULL AFTER `amount`;
+            	ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke_profit` `transfer_dbbl_rocket_profit` INT(11) NOT NULL DEFAULT '0';
+            	ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke` `transfer_dbbl_rocket` TINYINT(1) NOT NULL DEFAULT '0';
+
+            ";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE `pkg_user`
+            	ADD `transfer_show_selling_price` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`;
+            ";
+            $this->executeDB($sql);
+
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Send Credit Summary'')', 'sendcreditsummary', 'callsummary', '9')";
+            $this->executeDB($sql);
+
+            $sql = "
+            	ALTER TABLE `pkg_send_credit` ADD `confirmed` TINYINT(1) NOT NULL DEFAULT '0' AFTER `count`;
+            	UPDATE `pkg_send_credit` SET `confirmed` = '1'
+            	";
+            $this->executeDB($sql);
+
+            $version = '6.1.7';
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }

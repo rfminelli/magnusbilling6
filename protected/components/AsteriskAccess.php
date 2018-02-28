@@ -500,6 +500,10 @@ class AsteriskAccess
                             $line .= 'call-limit=' . $sip->calllimit . "\n";
                         }
 
+                        if (strlen($sip->mohsuggest) > 1) {
+                            $line .= 'mohsuggest=' . $sip->mohsuggest . "\n";
+                        }
+
                         $line .= 'allowtransfer=' . $sip->allowtransfer . "\n";
 
                         if ($sip->context == 'encryption') {

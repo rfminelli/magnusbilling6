@@ -70,9 +70,9 @@ class TransferToMobile extends Model
             array('id_user, id_group, id_plan, id_offer, active, enableexpire, expiredays,
                     typepaid, creditlimit, credit_notification,sipaccountlimit, restriction,
                     callingcard_pin, callshop, plan_day, record_call, active_paypal, boleto,
-                    boleto_day, calllimit, disk_space,id_group_agent,transfer_dbbl_rocke_profit,
+                    boleto_day, calllimit, disk_space,id_group_agent,transfer_dbbl_rocket_profit,
                     transfer_bkash_profit,transfer_flexiload_profit,transfer_international_profit,
-                    transfer_dbbl_rocke,transfer_bkash,transfer_flexiload,transfer_international
+                    transfer_dbbl_rocket,transfer_bkash,transfer_flexiload,transfer_international
                         ', 'numerical', 'integerOnly' => true),
             array('language,mix_monitor_format', 'length', 'max' => 5),
             array('username, zipcode, phone, mobile, vat', 'length', 'max' => 20),
