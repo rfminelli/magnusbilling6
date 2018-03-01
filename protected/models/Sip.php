@@ -75,6 +75,7 @@ class Sip extends Model
             array('rtptimeout, rtpholdtimeout,videosupport', 'length', 'max' => 3),
             array('deny, permit', 'length', 'max' => 95),
             array('type', 'length', 'max' => 6),
+            array('url_events', 'length', 'max' => 150),
             array('disallow, allow, setvar, useragent', 'length', 'max' => 100),
             array('lastms, directmedia', 'length', 'max' => 11),
             array('defaultuser, cid_number, outboundproxy, sippasswd', 'length', 'max' => 40),

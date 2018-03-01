@@ -658,6 +658,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.7') {
+            $sql = " ALTER TABLE `pkg_sip` ADD `url_events` VARCHAR(150) NULL DEFAULT NULL AFTER `forward`";
+            $this->executeDB($sql);
+
+            $version = '6.1.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
