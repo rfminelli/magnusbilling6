@@ -649,6 +649,10 @@ class UpdateMysqlCommand extends ConsoleCommand
             	";
             $this->executeDB($sql);
 
+            $sql = " INSERT IGNORE INTO pkg_configuration  VALUES
+            	(NULL, 'BDService Credit', 'BDService_credit_provider', '0', 'BDService Credit', 'global', '1');";
+            $this->executeDB($sql);
+
             $version = '6.1.7';
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();

@@ -17,6 +17,14 @@
  * Magnusbilling.com <info@magnusbilling.com>
  *
  */
+
+/*
+add the cron to check the BDService transaction status
+echo "
+ * * * * * php /var/www/html/mbilling/cron.php bdservice
+" >> /var/spool/cron/root
+ */
+
 class TransferToMobileController extends Controller
 {
     private $url;
