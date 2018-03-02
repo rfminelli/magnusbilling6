@@ -667,6 +667,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.8') {
+            $sql = "ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocket_profit` `transfer_dbbl_rocket_profit` INT(11) NULL DEFAULT '0';";
+            $this->executeDB($sql);
+
+            $version = '6.1.9';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
