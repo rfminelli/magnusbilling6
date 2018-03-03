@@ -819,13 +819,54 @@ class BaseController extends CController
         $this->applyFilterToLimitedAdmin();
         $this->showAdminLog();
 
-        CsvExport::export(
-            $this->abstractModel->findAll($this->readModel()),
-            $columns,
-            true, // boolPrintRows
-            $this->modelName . '_' . time() . '.csv'
-        );
+        if (preg_match('/call|rate|phonenumber/', $this->instanceModel->getModule())) {
+            $this->magnusFilesDirectory = '/tmp/';
+            $nameFileCsv                = $this->nameFileReport . time();
+            $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
 
+            $this->convertRelationFilter();
+
+            $sql = "SELECT " . $this->getColumnsFromReport($columns) . " INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
+                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
+
+            $command = Yii::app()->db->createCommand($sql);
+            if (count($this->paramsFilter)) {
+                foreach ($this->paramsFilter as $key => $value) {
+                    $command->bindValue($key, $value, PDO::PARAM_STR);
+                }
+
+            }
+
+            $command->execute();
+            header('Content-type: application/csv');
+            header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
+            header('Content-Transfer-Encoding: binary');
+            header('Accept-Ranges: bytes');
+            ob_clean();
+            flush();
+            if (readfile($pathCsv)) {
+                unlink($pathCsv);
+            }
+        } else {
+            CsvExport::export(
+                $this->abstractModel->findAll($this->readModel()),
+                $columns,
+                true, // boolPrintRows
+                $this->modelName . '_' . time() . '.csv'
+            );
+        }
+
+    }
+
+    public function convertRelationFilter()
+    {
+        foreach ($this->relationFilter as $key => $relationFilter) {
+            //convert $this->relationFilter to SQL text;
+            $table     = strtolower(preg_replace("/id/", 'pkg_', $key));
+            $joinField = strtolower(preg_replace("/id/", 'id_', $key));
+            $this->join .= ' JOIN ' . $table . ' ' . $key . ' ON t.' . $joinField . ' = ' . $key . '.id';
+            $this->filter .= ' AND ' . $relationFilter['condition'];
+        }
     }
 
     /**
@@ -852,13 +893,7 @@ class BaseController extends CController
             //if have related filter
             if (count($this->relationFilter)) {
 
-                foreach ($this->relationFilter as $key => $relationFilter) {
-                    //convert $this->relationFilter to DELETE SQL;
-                    $table     = strtolower(preg_replace("/id/", 'pkg_', $key));
-                    $joinField = strtolower(preg_replace("/id/", 'id_', $key));
-                    $this->join .= ' JOIN ' . $table . ' ' . $key . ' ON t.' . $joinField . ' = ' . $key . '.id';
-                    $this->filter .= ' AND ' . $relationFilter['condition'];
-                }
+                $this->convertRelationFilter();
 
                 $sql     = 'DELETE t FROM ' . $this->abstractModel->tableName() . ' t ' . $this->join . ' WHERE ' . $this->filter;
                 $command = Yii::app()->db->createCommand($sql);
