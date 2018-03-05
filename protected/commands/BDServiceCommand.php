@@ -69,6 +69,8 @@ class BDServiceCommand extends CConsoleCommand
                 $result = '';
             }
 
+            print_r($result);
+
             if (preg_match("/SUCCESS/", $result)) {
 
                 $modelRefill = Refill::model()->find('invoice_number = :key AND id_user = :key1',

@@ -36,7 +36,7 @@ class TransferToMobileController extends Controller
     private $currency;
     private $send_credit_id;
     private $user_profit;
-    private $test = true;
+    private $test = false;
     private $cost;
 
     public function init()
