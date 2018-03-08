@@ -116,7 +116,7 @@ class CallSummaryController extends Controller
         parent::actionRead($asJson = true, $condition = null);
 
     }
-    public function recordsExtraSum($select = '*', $join = '', $filter = '', $group = '', $limit = '', $records = array())
+    public function recordsExtraSum($records = array())
     {
         foreach ($records as $key => $value) {
             $records[0]->sumsessiontime += $value['sessiontime'] / 60;

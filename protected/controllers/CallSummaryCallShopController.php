@@ -93,7 +93,7 @@ class CallSummaryCallShopController extends Controller
         parent::actionRead($asJson = true, $condition = null);
 
     }
-    public function recordsExtraSum($select = '*', $join = '', $filter = '', $group = '', $limit = '', $records = array())
+    public function recordsExtraSum($records = array())
     {
         foreach ($records as $key => $value) {
             $records[0]->sumsessiontime += $value['sessiontime'] / 60;
@@ -118,6 +118,7 @@ class CallSummaryCallShopController extends Controller
             $attributes[$key]                   = $item->attributes;
             $attributes[$key]['nbcall']         = $item->nbcall;
             $attributes[$key]['day']            = $item->day;
+            $attributes[$key]['lucro']          = $item->lucro;
             $attributes[$key]['sessiontime']    = $item->sessiontime / 60;
             $attributes[$key]['aloc_all_calls'] = $item->nbcall > 0
             ? $item->sessiontime / $item->nbcall
