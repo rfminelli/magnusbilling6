@@ -113,7 +113,7 @@ class TransferToMobileController extends Controller
             }
 
             if ($_POST['TransferToMobile']['number'] == '' || !is_numeric($_POST['TransferToMobile']['number'])
-                || strlen($_POST['TransferToMobile']['number']) < 11
+                || strlen($_POST['TransferToMobile']['number']) < 8
                 || preg_match('/ /', $_POST['TransferToMobile']['number'])) {
                 $modelTransferToMobile->addError('number', Yii::t('yii', 'Number invalid, try again'));
             }
@@ -147,7 +147,7 @@ class TransferToMobileController extends Controller
 
         $amountDetails = null;
 
-        if (isset($_POST['TransferToMobile']['method']) && $_POST['TransferToMobile']['method'] != 'international') {
+        if (isset($_POST['TransferToMobile']['method']) && strlen($_POST['TransferToMobile']['method']) && $_POST['TransferToMobile']['method'] != 'international') {
 
             if ($_POST['TransferToMobile']['method'] == 'flexiload') {
                 $values = explode("-", $this->config['global']['BDService_flexiload']);

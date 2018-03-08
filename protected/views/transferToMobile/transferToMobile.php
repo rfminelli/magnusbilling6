@@ -20,12 +20,12 @@ $buttonName = 'Next';
 
 $fieldOption = array('class' => 'input');
 
-if (strlen($modelTransferToMobile->country) > 4):
+if (strlen($modelTransferToMobile->country) > 2):
     $fieldOption['readonly'] = true;
 endif;
 ?>
 
-<?php if (strlen($modelTransferToMobile->country) > 4): ?>
+<?php if (strlen($modelTransferToMobile->country) > 2): ?>
 	<div class="field">
 	<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
 	<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
@@ -44,7 +44,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
     $methods,
     array(
         'empty'    => Yii::t('yii', 'Select the method'),
-        'disabled' => strlen($modelTransferToMobile->country) > 4,
+        'disabled' => strlen($modelTransferToMobile->country) > 2,
     ));
 ?>
 	<?php echo $form->error($modelTransferToMobile, 'method') ?>
@@ -68,7 +68,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'number') ?></p>
 </div>
 
-<?php if (strlen($modelTransferToMobile->country) > 4): ?>
+<?php if (strlen($modelTransferToMobile->country) > 2): ?>
 	<div class="field">
 		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'country')) ?>
 		<?php echo $form->textField($modelTransferToMobile, 'country', $fieldOption) ?>
