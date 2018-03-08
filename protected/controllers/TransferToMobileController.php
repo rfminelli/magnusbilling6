@@ -5,7 +5,7 @@
  * MagnusBilling
  *
  * @package MagnusBilling
- * @author Heitor Gianastasio Pipet de Oliveira.
+ * @author Adilson Leffa Magnus.
  * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
  * ###################################
  *
@@ -42,6 +42,10 @@ class TransferToMobileController extends Controller
     public function init()
     {
 
+        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
+            $this->test = true;
+            echo 'teste';
+        }
         $this->instanceModel = new User;
         $this->abstractModel = User::model();
         parent::init();
@@ -242,7 +246,9 @@ class TransferToMobileController extends Controller
 
     public function calculateCost($modelTransferToMobile, $product = 0)
     {
-        // echo 'cost=' . $this->cost . ' - prodict=' . $product . "<br>";
+        if ($this->test == true) {
+            echo 'cost=' . $this->cost . ' - prodict=' . $product . "<br>";
+        }
 
         $methosProfit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
 
@@ -262,7 +268,9 @@ class TransferToMobileController extends Controller
 
         $this->user_profit = $this->cost * ($user_profit / 100);
 
-        //echo 'cost=' . $this->cost . ', user_profit= ' . $this->cost * ($this->user_profit / 100) . ' user_profit=' . $this->user_profit . "<BR>";
+        if ($this->test == true) {
+            echo 'cost=' . $this->cost . ', user_profit= ' . $this->cost * ($this->user_profit / 100) . ' user_profit=' . $this->user_profit . "<BR>";
+        }
 
         if ($modelTransferToMobile->id_user > 1) {
 
@@ -288,11 +296,18 @@ class TransferToMobileController extends Controller
                 //get the admin sell price.
                 $sellAdmin = Yii::app()->session['sellAdmin'][$product];
 
-                //plus the admin rate
-                $agentSell = $sellAdmin + ($sellAdmin * ($agentProfit / 100));
+                if ($this->test == true) {
+                    echo '$sellAdmin = ' . $sellAdmin . "<br>";
+                    echo '$agentProfit = ' . $agentProfit . "<br>";
+                }
 
                 //remove the agent comission
-                $this->agent_cost = $agentSell - ($agentSell * ($agentProfit / 100));
+                $this->agent_cost = $sellAdmin - ($sellAdmin * ($agentProfit / 100));
+
+                if ($this->test == true) {
+                    echo '$this->agent_cost = ' . $this->agent_cost . "<br>";
+                }
+
             } else {
                 $this->agent_cost = $this->cost - ($this->cost * ($agentProfit / 100));
             }
@@ -320,7 +335,10 @@ class TransferToMobileController extends Controller
 
         $this->calculateCost($modelTransferToMobile, $product);
 
-        //echo "REMOVE " . $this->user_cost . " from user " . $modelTransferToMobile->username;
+        if ($this->test == true) {
+            echo "REMOVE " . $this->user_cost . " from user " . $modelTransferToMobile->username;
+        }
+
         $this->addInDataBase();
         if ($modelTransferToMobile->method == 'international') {
             $result = $this->sendActionTransferToMobile($modelTransferToMobile, 'topup', $product);
@@ -400,7 +418,9 @@ class TransferToMobileController extends Controller
         $command->bindValue(":description", $description, PDO::PARAM_STR);
         $command->execute();
 
-        // echo $sql . "<br>";
+        if ($this->test == true) {
+            echo $sql . "<br>";
+        }
 
         if ($modelTransferToMobile->id_user > 1) {
             if ($modelTransferToMobile->method == 'international') {
@@ -420,7 +440,9 @@ class TransferToMobileController extends Controller
                 $field .= ',invoice_number';
             }
 
-            //echo $sql . "<br>";
+            if ($this->test == true) {
+                echo $sql . "<br>";
+            }
 
             $sql     = "INSERT INTO pkg_refill ($field) VALUES ($values)";
             $command = Yii::app()->db->createCommand($sql);
@@ -429,7 +451,9 @@ class TransferToMobileController extends Controller
             $command->bindValue(":description", $description, PDO::PARAM_STR);
             $command->execute();
 
-            //echo $sql . "<br>";
+            if ($this->test == true) {
+                echo $sql . "<br>";
+            }
 
         }
     }
@@ -464,8 +488,6 @@ class TransferToMobileController extends Controller
                 if (preg_match("/Transaction successful/", $result)) {
 
                     $result = explode("\n", $result);
-                    //echo '<pre>';
-                    // print_r($result);
 
                     /*
                     Array
@@ -509,6 +531,9 @@ class TransferToMobileController extends Controller
                             'params' => array(':key' => '888' . $operatorId),
                         ));
                     }
+                    if ($this->test == true) {
+                        echo '$operatorId = ' . $operatorId . "<br>";
+                    }
 
                     $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
                     //echo "admin profit " . $modelRate->rateinitial . "% <br>";
@@ -528,6 +553,10 @@ class TransferToMobileController extends Controller
                     $i      = 0;
 
                     foreach ($product_list as $key => $product) {
+                        if ($this->test == true) {
+                            echo $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial) . " -> admin price = " . trim($retail_price_list[$i] * $rateinitialAdmin) . "<BR>";
+
+                        }
                         $values[trim($product)]    = $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial);
                         $sellAdmin[trim($product)] = trim($retail_price_list[$i] * $rateinitialAdmin);
                         $i++;
@@ -551,6 +580,36 @@ class TransferToMobileController extends Controller
             } else {
                 echo 'Service inactive';
             }
+        }
+    }
+
+    public function actionPrintRefill()
+    {
+
+        if (isset($_GET['id'])) {
+            $config    = LoadConfig::getConfig();
+            $id_refill = $_GET['id'];
+
+            $modelRefill = Refill::model()->findByPk((int) $id_refill, 'id_user = :key', array(':key' => Yii::app()->session['id_user']));
+
+            echo $config['global']['fm_transfer_print_header'] . "<br>";
+
+            echo $modelRefill->idUser->company_name . "<br>";
+
+            echo "Trx ID: " . $modelRefill->id . "<br>";
+
+            echo $modelRefill->date . "<br>";
+
+            $number = explode(" ", $modelRefill->description);
+            echo "Phonenumber: " . $number[3] . "<br>";
+            $amount = number_format($modelRefill->credit, 2) * -1;
+            echo "Amount: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
+
+            echo $config['global']['fm_transfer_print_footer'] . "<br><br>";
+
+            echo '<td><a href="javascript:window.print()">Print</a></td>';
+        } else {
+            echo ' Invalid reffil';
         }
     }
 }

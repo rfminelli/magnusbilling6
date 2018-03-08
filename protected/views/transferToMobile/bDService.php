@@ -71,9 +71,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
     array(
         'class'   => 'input',
         'id'      => 'amountfiel',
-        'onkeyup' => $modelTransferToMobile->transfer_show_selling_price > 0
-        ? 'showPrice("' . $modelTransferToMobile->transfer_show_selling_price . '","' . $this->config['global']['BDService_cambio'] . '","' . $this->config['global']['fm_transfer_currency'] . '")'
-        : '',
+        'onkeyup' => 'showPrice("' . $modelTransferToMobile->transfer_show_selling_price . '","' . $this->config['global']['BDService_cambio'] . '","' . $this->config['global']['fm_transfer_currency'] . '")',
     )) ?>
 		<?php echo $form->error($modelTransferToMobile, 'amountValues') ?>
 		<p class="hint"><?php echo $amountDetails ?></p>
@@ -111,7 +109,12 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 		//convert to eur
 		valueAmout = valueAmout * exchange;
 
-		fee = Number('1.'+transfer_show_selling_price);
+		if (transfer_show_selling_price < 10) {
+			fee = Number('1.0'+transfer_show_selling_price);
+		}else{
+			fee = Number('1.'+transfer_show_selling_price);
+		}
+
 		var showprice = Number(valueAmout * fee);
 
 		newText = '<font color=blue size=7><b>'+currency+' '+showprice.toFixed(2);+'</b></font>'

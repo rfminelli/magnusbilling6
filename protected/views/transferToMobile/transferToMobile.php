@@ -98,7 +98,7 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
     array(
         'empty'    => Yii::t('yii', 'Select the amount'),
         'disabled' => false,
-        'onchange' => $modelTransferToMobile->transfer_show_selling_price > 0 ? 'showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')' : '',
+        'onchange' => 'showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')',
         'id'       => 'amountfiel',
     ));
 ?>
@@ -138,7 +138,11 @@ $this->endWidget();?>
 		text = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].text;
 
 		var valueAmout = text.split(' ');
-		fee = Number('1.'+argument);
+		if (argument < 10) {
+			fee = Number('1.0'+argument);
+		}else{
+			fee = Number('1.'+argument);
+		}
 		var showprice = Number(valueAmout[4] * fee);
 
 		newText = '<font color=blue size=7><b>'+valueAmout[3]+ ' '+showprice.toFixed(2);+'</b></font>'
