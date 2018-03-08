@@ -98,7 +98,7 @@ class AsteriskAccess
 
     public function iaxReload()
     {
-        return @$this->asmanager->Command("iax reload");
+        return @$this->asmanager->Command("iax2 reload");
     }
 
     public function coreShowChannelsConcise()
