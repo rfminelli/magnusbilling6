@@ -120,9 +120,8 @@ class BaseController extends CController
 
         if (!Yii::app()->session['id_user']) {
             if (!$this->authorizedNoSession()) {
-                exit();
+                exit("Access denied to All action in All modules");
             }
-
         }
 
         $this->modelName  = get_class($this->abstractModel);
@@ -159,7 +158,8 @@ class BaseController extends CController
 
         Yii::app()->language = Yii::app()->sourceLanguage = $this->config['global']['base_language'];
 
-        if (isset(Yii::app()->session['session_start']) && time() > Yii::app()->session['session_start'] + 3600) {
+        if ($this->config['global']['session_timeout'] > 60 && isset(Yii::app()->session['session_start']) &&
+            time() > Yii::app()->session['session_start'] + $this->config['global']['session_timeout']) {
             Yii::app()->session->clear();
             Yii::app()->session->destroy();
             exit("Access denied to All action in All modules");
