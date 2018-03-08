@@ -51,6 +51,10 @@ class MagnusCommand extends CConsoleCommand
             exit;
         }
 
+        if (substr($MAGNUS->dnid, 0, 2) == '*7') {
+            PickupAgi::execute($agi, $MAGNUS);
+        }
+
         //Hangup call that start with 1111, avoid fake call to Brasilian portability
         if (substr($MAGNUS->dnid, 0, 4) == 1111) {
             $agi->execute((congestion), Congestion);
