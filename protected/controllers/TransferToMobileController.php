@@ -601,7 +601,7 @@ class TransferToMobileController extends Controller
             echo $modelRefill->date . "<br>";
 
             $number = explode(" ", $modelRefill->description);
-            echo "Phonenumber: " . $number[3] . "<br>";
+            echo "Mobile No.: " . $number[3] . "<br>";
             $amount = number_format($modelRefill->credit, 2) * -1;
             echo "Amount: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
 
