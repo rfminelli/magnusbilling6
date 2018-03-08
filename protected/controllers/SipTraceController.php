@@ -22,7 +22,7 @@
 
 class SipTraceController extends Controller
 {
-    public $attributeOrder = 't.id';
+    public $attributeOrder = 't.id DESC';
 
     public function init()
     {
