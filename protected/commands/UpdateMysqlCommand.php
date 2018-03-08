@@ -676,6 +676,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.1.9') {
+            $sql = "ALTER TABLE `pkg_campaign` ADD `tts_audio` VARCHAR(200) NULL DEFAULT NULL AFTER `digit_authorize`, ADD `tts_audio2` VARCHAR(200) NULL DEFAULT NULL AFTER `tts_audio`, ADD `asr_audio` VARCHAR(200) NULL DEFAULT NULL AFTER `tts_audio2`, ADD `asr_options` VARCHAR(200) NULL DEFAULT NULL AFTER `asr_audio`;";
+            $this->executeDB($sql);
+
+            $version = '6.2.0';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
