@@ -472,13 +472,11 @@ fi
 cd /var/www/html/mbilling
 
 echo $'[billing]
-exten => _X.,1,AGI("/var/www/html/mbilling/agi.php")
+exten => _.,1,AGI("/var/www/html/mbilling/agi.php")
 
 exten => 111,1,VoiceMailMain(${SIPCHANINFO(peername)}@billing)
   same => n,Hangup()
 
-exten => _*7.,1,Pickup(${EXTEN:2})
-  same => n,Hangup()
 ' > /etc/asterisk/extensions_magnus.conf
 
 echo "
