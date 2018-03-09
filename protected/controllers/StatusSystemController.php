@@ -60,7 +60,7 @@ class StatusSystemController extends Controller
         foreach ($sysinfo->network() as $net_name => $net) {
             $net_name = trim($net_name);
 
-            if (($net_name != 'eth0' && $net_name != 'venet0' && $net_name != 'eth1' && $net_name != 'eth2') || preg_match('/w.g./', $net_name)) {
+            if ((!preg_match('/eth/', $net_name) && !preg_match('/enp/', $net_name) && !preg_match('/venet/', $net_name)) || preg_match('/w.g./', $net_name)) {
                 continue;
             }
 
