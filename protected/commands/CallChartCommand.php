@@ -101,8 +101,6 @@ class CallChartCommand extends ConsoleCommand
                                 $trunk = preg_split("/\&/", $trunk);
                                 $trunk = explode("/", $trunk[0]);
 
-                            } else if (preg_match("/\-/", $trunk)) {
-                                $trunk = explode("/", substr($trunk, 0, strrpos($trunk, "-")));
                             } else {
                                 $trunk = explode("/", $trunk);
                             }

@@ -70,7 +70,7 @@ class User extends Model
                     transfer_dbbl_rocket,transfer_bkash,transfer_flexiload,transfer_international,
                     transfer_bdservice_rate,transfer_show_selling_price
                         ', 'numerical', 'integerOnly' => true),
-            array('language,mix_monitor_format', 'length', 'max' => 5),
+            array('language,mix_monitor_format,calllimit_error', 'length', 'max' => 5),
             array('username, zipcode, phone, mobile, vat', 'length', 'max' => 20),
             array('city, state, country, loginkey', 'length', 'max' => 40),
             array('lastname, firstname, company_name, redial, prefix_local', 'length', 'max' => 50),
