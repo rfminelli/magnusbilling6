@@ -229,6 +229,21 @@ class AsteriskAccess
         LinuxAccess::system("mv $arquivo_call /var/spool/asterisk/outgoing/$aleatorio.call");
     }
 
+    public function getCallsPerDid($did)
+    {
+        $channelsData = AsteriskAccess::instance()->coreShowChannelsConcise();
+        $channelsData = explode("\n", $channelsData["data"]);
+
+        $calls = 0;
+        foreach ($channelsData as $key => $line) {
+            if (preg_match("/$did/", $line)) {
+                $calls++;
+            }
+        }
+
+        return $calls;
+    }
+
     public function getCallsPerUser($accountcode)
     {
         $channelsData = AsteriskAccess::instance()->coreShowChannelsConcise();
