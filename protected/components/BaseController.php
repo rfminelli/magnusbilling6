@@ -820,7 +820,7 @@ class BaseController extends CController
         $this->showAdminLog();
 
         if (preg_match('/call|rate|phonenumber/', $this->instanceModel->getModule())) {
-            $this->magnusFilesDirectory = '/tmp/';
+            $this->magnusFilesDirectory = '/var/www/tmpmagnus/';
             $nameFileCsv                = $this->nameFileReport . time();
             $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
 
