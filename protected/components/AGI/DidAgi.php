@@ -43,6 +43,22 @@ class DidAgi
             );
             if (count($this->modelDestination)) {
                 $agi->verbose("Did have destination", 15);
+
+                if ($modelDid->calllimit > 0) {
+                    $agi->verbose('Check DID channels');
+                    $calls = AsteriskAccess::getCallsPerDid($modelDid->did);
+                    $agi->verbose('Did ' . $modelDid->did . ' have ' . $calls . ' Calls');
+                    if ($calls > $modelDid->calllimit) {
+                        if ($modelDid->idUser->calllimit_error == 403) {
+                            $agi->execute((busy), busy);
+                        } else {
+                            $agi->execute((congestion), Congestion);
+                        }
+
+                        $MAGNUS->hangup($agi);
+                        exit;
+                    }
+                }
                 $this->checkDidDestinationType($agi, $MAGNUS, $Calc);
             } else {
                 $agi->verbose("Is a DID call But not have destination Hangup Call");
