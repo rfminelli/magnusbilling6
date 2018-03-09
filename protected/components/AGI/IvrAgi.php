@@ -221,7 +221,7 @@ class IvrAgi
             {
                 $insertCDR = false;
                 $agi->verbose("CALL number $optionValue");
-                $MAGNUS->call_did($agi, $Calc, $modelDestination, $optionValue);
+                $DidAgi->call_did($agi, $MAGNUS, $Calc, $optionValue);
             }
 
             $agi->verbose("FIM do loop");
