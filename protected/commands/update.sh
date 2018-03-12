@@ -55,3 +55,7 @@ chmod -R 655 /var/www/html/mbilling/tmp
 chmod -R 750 /var/www/html/mbilling/assets
 chmod -R 750 /var/www/html/mbilling/resources/sounds
 chmod -R 770 /var/www/html/mbilling/resources/images
+
+if [[ -e /var/www/html/mbilling/protected/commands/update3.sh ]]; then
+	/var/www/html/mbilling/protected/commands/update3.sh
+fi

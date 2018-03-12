@@ -47,6 +47,7 @@ class SipTraceController extends Controller
         $modelTrace          = new Trace();
         $modelTrace->filter  = $_POST['filter'];
         $modelTrace->timeout = $_POST['timeout'];
+        $modelTrace->port    = $_POST['port'];
         $modelTrace->status  = 1;
         $modelTrace->in_use  = 0;
         $modelTrace->save();
