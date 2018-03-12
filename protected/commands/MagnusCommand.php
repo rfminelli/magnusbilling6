@@ -79,7 +79,7 @@ class MagnusCommand extends CConsoleCommand
         if ($agi->get_variable("MEMBERNAME", true) || $agi->get_variable("QUEUEPOSITION", true)) {
             $agi->answer();
             $Calc->init();
-            QueueAgi::recIvrQueue($agi, $MAGNUS, $Calc, $result_did);
+            QueueAgi::recIvrQueue($agi, $MAGNUS, $Calc);
         }
 
         if ($agi->get_variable("PHONENUMBER_ID", true) > 0 && $agi->get_variable("CAMPAIGN_ID", true) > 0) {

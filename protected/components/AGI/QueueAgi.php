@@ -105,7 +105,7 @@ class QueueAgi
 
     }
 
-    public function recIvrQueue($agi, $MAGNUS, $Calc, $result_did)
+    public function recIvrQueue($agi, $MAGNUS, $Calc)
     {
 
         $agi->verbose('recIvrQueue');
@@ -113,7 +113,7 @@ class QueueAgi
 
         $MAGNUS->uniqueid    = $agi->get_variable("UNIQUEID", true);
         $MAGNUS->destination = $agi->request['agi_extension'];
-        $username            = $agi->get_variable("USERNAME", true);
+        $MAGNUS->accountcode = $agi->get_variable("USERNAME", true);
         $id_queue            = $agi->get_variable("IDQUEUE", true);
         $callerid            = $agi->get_variable("QUEUCALLERID", true);
         $oldtime             = $agi->get_variable("QEHOLDTIME", true);
