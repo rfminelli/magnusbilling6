@@ -44,11 +44,14 @@ class MassiveCall
         $modelCampaign = Campaign::model()->findByPk((int) $idCampaign);
 
         if (!count($modelCampaign)) {
+            $agi->verbose($idCampaign . ' campaing not exist');
             return;
         }
 
         $modelPhoneNumber = PhoneNumber::model()->findByPk((int) $idPhonenumber);
         if (!count($modelPhoneNumber)) {
+
+            $agi->verbose($idPhonenumber . ' number not exist');
             exit;
         }
 
@@ -57,60 +60,33 @@ class MassiveCall
         /*VERIFICA SE CAMPAÃ‘A TEM ENCUESTA*/
         $modelCampaignPoll = CampaignPoll::model()->findAll('id_campaign = :key', array(':key' => $idCampaign));
 
-        if (isset($modelCampaign->audio_2) && strlen($modelCampaign->audio_2) > 5) {
+        if (isset($modelCampaign->audio_2) && strlen($modelPhoneNumber->name) > 3 && (strlen($modelCampaign->audio_2) > 5) || strlen($modelCampaign->tts_audio2) > 2) {
+            $agi->verbose('get phonenumber name from TTS');
+            $tts  = true;
+            $file = $idPhonenumber . date("His");
 
-            $executeAudio2 = true;
+            $audio_name = Tts::create($modelPhoneNumber->name, $file);
 
-            //verifica se tem nome no numero
-            if (isset($modelPhoneNumber->name) && strlen($modelPhoneNumber->name) > 3) {
-                $agi->verbose("TTS", 10);
-                $executeTTS = true;
-                $name       = utf8_encode($modelPhoneNumber->name);
-                $file       = $idPhonenumber . date("His");
-                $name       = urlencode($name);
-
-                //http://api.voicerss.org/?key=0ed8d233c8534591a7abf4b620606bc2&src=Adilson&hl=pt-br
-                $tts_url = preg_replace('/\$name/', $name, $MAGNUS->config['global']['tts_url']);
-
-                if (preg_match("/ttsgo/", $tts_url)) {
-
-                    $ch = curl_init();
-                    //Caso tenha dificuldade com a requisição via HTTPS, descomente a linha abaixo
-                    //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-                    curl_setopt($ch, CURLOPT_URL, $tts_url);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    $retorno = curl_exec($ch);
-
-                    $objJson = json_decode($retorno);
-
-                    $agi->verbose(print_r($objJson->url, true));
-                    $fp = fopen('/tmp/' . $file . '.wav', 'w');
-                    fwrite($fp, file_get_contents($objJson->url));
-                    fclose($fp);
-                    exec('sox /tmp/' . $file . '.wav -c 1 -r 8000 /tmp/' . $file . '.sln && rm -rf /tmp/' . $file . '.wav');
-
-                } else {
-
-                    if (preg_match("/google/", $tts_url)) {
-                        $token   = MassiveCall::make_token($resultPhoneNumber[0]['name']);
-                        $tts_url = preg_replace("/tk=/", "tkold=", $tts_url);
-                        $tts_url .= "&tk=$token";
-                    }
-                    $agi->verbose($tts_url, 8);
-                    exec("wget -q -U Mozilla -O \"/tmp/$file.mp3\" \"$tts_url\"");
-                    exec("mpg123 -w /tmp/$file.wav /tmp/$file.mp3 && rm -rf /tmp/$file.mp3");
-                    exec("sox -v 2.0 /tmp/$file.wav /tmp/$file2.wav && rm -rf /tmp/$file.wav");
-                    exec("sox /tmp/$file2.wav -c 1 -r 8000 /tmp/$file.wav && rm -rf /tmp/$file2.wav ");
-                }
-            }
         }
 
         /*AUDIO FOR CAMPAIN*/
+        if (strlen($modelCampaign->tts_audio) > 2) {
 
-        $audio = $uploaddir . "idCampaign_" . $idCampaign;
+            $file = 'campaign_' . MD5($modelCampaign->tts_audio);
+            if (file_exists('/tmp/' . $file . '.wav')) {
+                $agi->verbose('Audio already exist');
+                $audio = '/tmp/' . $file;
+            } else {
+                $agi->verbose('Get audio from TTS');
+                $audio = Tts::create($modelCampaign->tts_audio, $file);
+            }
 
-        //se tiver audio 2 passar direto
-        if (isset($executeAudio2)) {
+        } else {
+            $audio = $uploaddir . "idCampaign_" . $modelCampaign->id;
+        }
+
+        //If exist audio2 execute audio1
+        if (isset($tts)) {
             $agi->stream_file($audio, '#');
 
         } else {
@@ -122,14 +98,34 @@ class MassiveCall
             }
         }
 
-        if (isset($executeTTS)) {
-            $agi->stream_file("/tmp/" . $file, ' #');
-            exec("rm -rf /tmp/$file*");
+        //execute
+        if (isset($tts)) {
+            $agi->stream_file($audio_name, ' #');
+            if (!preg_match('/campaign/', $audio_name)) {
+                $agi->verbose('delete audio name ' . $audio_name);
+                exec("rm -rf $audio_name*");
+            }
         }
 
-        if (isset($executeAudio2)) {
+        if (strlen($modelCampaign->audio_2) > 5 || strlen($modelCampaign->tts_audio2) > 2) {
+
             /*Execute audio 2*/
-            $audio = $uploaddir . "idCampaign_" . $idCampaign . "_2";
+
+            if (strlen($modelCampaign->tts_audio2) > 2) {
+
+                $file = 'campaign_' . MD5($modelCampaign->tts_audio2);
+
+                if (file_exists('/tmp/' . $file . '.wav')) {
+                    $agi->verbose('Audio2 already exist');
+                    $audio = '/tmp/' . $file;
+                } else {
+                    $agi->verbose('Get audio2 from TTS');
+                    $audio = Tts::create($modelCampaign->tts_audio2, $file);
+                }
+
+            } else {
+                $audio = $uploaddir . "idCampaign_" . $idCampaign . "_2";
+            }
 
             // CHECK IF NEED AUTORIZATION FOR EXECUTE POLL OR IS EXISTE FORWARD NUMBER
             if (strlen($forward_number) > 2 || (count($modelCampaignPoll) && $modelCampaignPoll->request_authorize == 1)) {
@@ -138,6 +134,35 @@ class MassiveCall
                 $agi->stream_file($audio, ' #');
             }
 
+        }
+
+        if (strlen($modelCampaign->asr_audio)) {
+            //execute audio to ASR
+            $file = 'campaign_' . MD5($modelCampaign->asr_audio);
+
+            if (file_exists('/tmp/' . $file . '.wav')) {
+                $agi->verbose('Audio2 already exist');
+                $audio = '/tmp/' . $file;
+            } else {
+                $agi->verbose('Get audio2 from TTS');
+                $audio = Tts::create($modelCampaign->asr_audio, $file);
+            }
+
+            for ($i = 0; $i < 4; $i++) {
+                $agi->stream_file($audio);
+                $agi->execute('AGI speech-recog.agi,"pt-BR",1,,NOBEEP');
+                $textASR = $agi->get_variable("utterance", true);
+                $agi->verbose('O texto que você acabou de dizer: ' . $textASR);
+                if (strlen($textASR) < 1) {
+                    $agi->execute('AGI googletts.agi,"Desculpe não consegui te compreender. Vamos tentar novamente?",pt-BR');
+                } elseif (preg_match('/' . $modelCampaign->asr_options . '/', $textASR)) {
+                    $agi->execute('AGI googletts.agi,"Você disse. ' . $textASR . '. Por favor aguarde.",pt-BR');
+                    $res_dtmf['result'] = 1;
+                    break;
+                } else {
+                    $agi->execute('AGI googletts.agi,"Você realmente não quer escutar o recado? Vamos tentar novamente?",pt-BR');
+                }
+            }
         }
 
         $agi->verbose('RESULT DTMF ' . $res_dtmf['result'], 25);
@@ -531,50 +556,6 @@ class MassiveCall
         $modelPhoneNumber->status = 3;
         $modelPhoneNumber->save();
         $MAGNUS->hangup($agi);
-    }
-
-    private function make_token($line)
-    {
-        $text  = $line;
-        $time  = round(time() / 3600);
-        $chars = unpack('C*', $text);
-        $stamp = $time;
-
-        foreach ($chars as $key => $char) {
-            $stamp = MassiveCall::make_rl($stamp + $char, '+-a^+6');
-        }
-
-        $stamp = MassiveCall::make_rl($stamp, '+-3^+b+-f');
-
-        if ($stamp < 0) {
-            $stamp = ($stamp & 2147483647) + 2147483648;
-        }
-        $stamp %= pow(10, 6);
-        return ($stamp . '.' . ($stamp ^ $time));
-
-    }
-
-    private function make_rl($num, $str)
-    {
-        for ($i = 0; $i < strlen($str) - 2; $i += 3) {
-            $d = substr($str, $i + 2, 1);
-            if (ord($d) >= ord('a')) {
-                $d = ord($d) - 87;
-            } else {
-                $d = round($d);
-            }
-            if (substr($str, $i + 1, 1) == '+') {
-                $d = $num >> $d;
-            } else {
-                $d = $num << $d;
-            }
-            if (substr($str, $i, 1) == '+') {
-                $num = $num + $d & 4294967295;
-            } else {
-                $num = $num ^ $d;
-            }
-        }
-        return $num;
     }
 
 }
