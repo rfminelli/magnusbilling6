@@ -136,21 +136,10 @@ class MassiveCall
 
         }
 
-        if (strlen($modelCampaign->asr_audio)) {
+        if (strlen($modelCampaign->asr_options)) {
             //execute audio to ASR
-            $file = 'campaign_' . MD5($modelCampaign->asr_audio);
-
-            if (file_exists('/tmp/' . $file . '.wav')) {
-                $agi->verbose('Audio2 already exist');
-                $audio = '/tmp/' . $file;
-            } else {
-                $agi->verbose('Get audio2 from TTS');
-                $audio = Tts::create($modelCampaign->asr_audio, $file);
-            }
-
             for ($i = 0; $i < 4; $i++) {
-                $agi->stream_file($audio);
-                $agi->execute('AGI speech-recog.agi,"pt-BR",1,,NOBEEP');
+                $agi->execute('AGI speech-recog.agi,"pt-BR",2,,NOBEEP');
                 $textASR = $agi->get_variable("utterance", true);
                 $agi->verbose('O texto que você acabou de dizer: ' . $textASR);
                 if (strlen($textASR) < 1) {

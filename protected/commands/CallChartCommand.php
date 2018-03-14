@@ -196,6 +196,10 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
+                    if (!is_numeric($id_user)) {
+                        continue;
+                    }
+
                     $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelSip->idUser->callshop == 1) {

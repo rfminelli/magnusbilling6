@@ -19,10 +19,7 @@
  */
 
 /*
-rpm -Uhv http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
-yum -y install mpg123
-
-yum -y install perl perl-libwww-perl sox cpan
+yum -y install mpg123 perl perl-libwww-perl sox cpan
 yum -y install perl-LWP-Protocol-https
 yum -y install perl-JSON flac
  */

@@ -78,6 +78,10 @@ class BDServiceCommand extends CConsoleCommand
                         ':key'  => $sendCredit->id,
                         ':key1' => $sendCredit->id_user,
                     ));
+
+                if (!count($modelRefill)) {
+                    continue;
+                }
                 $message = explode("SUCCESS: ", $result);
                 User::model()->updateByPk($sendCredit->id_user,
                     array(
@@ -118,9 +122,11 @@ class BDServiceCommand extends CConsoleCommand
                 $sendCredit->confirmed = 3;
                 $sendCredit->save();
 
-                $modelRefill              = Refill::model()->find('invoice_number = :key', array(':key' => $sendCredit->id));
-                $modelRefill->description = $modelRefill->description . '. Ref: ' . $result;
-                $modelRefill->save();
+                $modelRefill = Refill::model()->find('invoice_number = :key', array(':key' => $sendCredit->id));
+                if (count($modelRefill)) {
+                    $modelRefill->description = $modelRefill->description . '. Ref: ' . $result;
+                    $modelRefill->save();
+                }
             }
         }
 
