@@ -21,54 +21,60 @@
 
 class Call extends Model
 {
-	public $totalCall;
-	protected $_module = 'call';
-	/**
-	 * Retorna a classe estatica da model.
-	 * @return Prefix classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    public $totalCall;
+    protected $_module       = 'call';
+    public $sessiontimeFixed = 0;
+    public $sessionbillFixed;
+    public $sessiontimeMobile = 0;
+    public $sessionbillMobile;
+    public $sessiontimeRest = 0;
+    public $sessionbillRest;
+    /**
+     * Retorna a classe estatica da model.
+     * @return Prefix classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return nome da tabela.
-	 */
-	public function tableName()
-	{
-		return 'pkg_cdr';
-	}
+    /**
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_cdr';
+    }
 
-	/**
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('id_user, id_plan, calledstation', 'required'),
-			array('id_user, id_plan, id_campaign, id_trunk, sessiontime, real_sessiontime, sipiax', 'numerical', 'integerOnly'=>true),
+    /**
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_user, id_plan, calledstation', 'required'),
+            array('id_user, id_plan, id_campaign, id_trunk, sessiontime, real_sessiontime, sipiax', 'numerical', 'integerOnly' => true),
             array('sessionid, uniqueid, starttime, stoptime, src, calledstation,
-            	terminatecauseid, buycost, sessionbill,  agent_bill', 'length', 'max'=>50),
-     	);
-	}
+                terminatecauseid, buycost, sessionbill,  agent_bill', 'length', 'max' => 50),
+        );
+    }
 
-	public function relations()
-	{
-		return array(
-			'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
-			'idPlan' => array(self::BELONGS_TO, 'Plan', 'id_plan'),
-			'idTrunk' => array(self::BELONGS_TO, 'Trunk', 'id_trunk'),
-			'idUser' => array(self::BELONGS_TO, 'User', 'id_user'),
-			'idCampaign' => array(self::BELONGS_TO, 'Campaign', 'id_campaign'),
-		);
-	}
+    public function relations()
+    {
+        return array(
+            'idPrefix'   => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
+            'idPlan'     => array(self::BELONGS_TO, 'Plan', 'id_plan'),
+            'idTrunk'    => array(self::BELONGS_TO, 'Trunk', 'id_trunk'),
+            'idUser'     => array(self::BELONGS_TO, 'User', 'id_user'),
+            'idCampaign' => array(self::BELONGS_TO, 'Campaign', 'id_campaign'),
+        );
+    }
 }
