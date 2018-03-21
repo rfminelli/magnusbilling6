@@ -782,7 +782,7 @@ class Calc
             $destination = substr($destination, strlen($removeprefix));
         }
 
-        if ($MAGNUS->agiconfig['switchdialcommand'] == 1) {
+        if ($MAGNUS->agiconfig['switchdialcommand'] == 1 || $tech == 'Local') {
             $dialstr = "$tech/$prefix$destination@$ipaddress";
         } else {
             $dialstr = "$tech/$ipaddress/$prefix$destination";
