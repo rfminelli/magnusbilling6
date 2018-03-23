@@ -21,41 +21,42 @@
 
 class Provider extends Model
 {
-	protected $_module = 'provider';
-	/**
-	 * Retorna a classe estatica da model.
-	 * @return Provider classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module = 'provider';
+    /**
+     * Retorna a classe estatica da model.
+     * @return Provider classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return nome da tabela.
-	 */
-	public function tableName()
-	{
-		return 'pkg_provider';
-	}
+    /**
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_provider';
+    }
 
-	/**
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('provider_name', 'required'),
-            array('description, credit, credit_control', 'length', 'max'=>100)
-		);
-	}
+    /**
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('provider_name', 'required'),
+            array('description, credit_control', 'length', 'max' => 100),
+            array('credit', 'type', 'type' => 'double'),
+        );
+    }
 
 }

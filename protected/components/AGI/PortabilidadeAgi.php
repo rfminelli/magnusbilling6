@@ -55,7 +55,7 @@ class PortabilidadeAgi
                 } else {
                     $ddd = substr($number, 2);
                     //verifico se é radio
-                    if (strlen($number) == 10 && $mobile == true) {
+                    if (strlen($ddd) == 10 && $mobile == true) {
                         $resultNextel = Portability::model()->findPrefix(substr($ddd, 0, 6));
                         if (count($resultNextel) && ($resultNextel[0]['company'] == '55377' || $resultNextel[0]['company'] == '55390' || $resultNextel[0]['company'] == '55391')) {
                             $agi->verbose("é Nextel", 15);

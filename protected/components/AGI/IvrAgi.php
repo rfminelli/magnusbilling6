@@ -211,12 +211,12 @@ class IvrAgi
             } else if ($optionType == 'ivr') // QUEUE
             {
                 $modelDestination->id_ivr = $optionValue;
-                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDestination, null, $type);
+                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDestination, $DidAgi, $type);
             } else if ($optionType == 'queue') // QUEUE
             {
                 $insertCDR                  = false;
                 $modelDestination->id_queue = $optionValue;
-                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDestination, null, $type);
+                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDestination, $DidAgi, $type);
             } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
             {
                 $insertCDR = false;
