@@ -484,12 +484,15 @@ class Calc
                     'secondusedreal' => new CDbExpression('secondusedreal + ' . $sessiontime),
                 )
             );
-
-            Provider::model()->updateByPk($this->tariffObj[$K]['id_provider'],
-                array(
-                    'credit' => new CDbExpression('credit - ' . $buycost),
-                )
-            );
+            try {
+                Provider::model()->updateByPk($this->tariffObj[$K]['id_provider'],
+                    array(
+                        'credit' => new CDbExpression('credit - ' . $buycost),
+                    )
+                );
+            } catch (Exception $e) {
+                $agi->verbose(print_r($e->getMessage(), true));
+            }
 
         }
         $this->callShop($agi, $MAGNUS, $sessiontime, $id_prefix, $cost);

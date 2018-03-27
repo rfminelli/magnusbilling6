@@ -716,6 +716,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.2.3') {
+            $sql = "ALTER TABLE  `pkg_provider` CHANGE  `credit`  `credit` DECIMAL( 18, 5 ) NOT NULL DEFAULT  '0.00000';";
+            $this->executeDB($sql);
+
+            $version = '6.2.4';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
