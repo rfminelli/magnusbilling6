@@ -44,7 +44,16 @@ class MagnusCommand extends CConsoleCommand
         $MAGNUS->init();
         $Calc->init();
         $MAGNUS->mode = 'standard';
-
+        if (file_exists('/root/log.conf')) {
+            $resultFile = file_get_contents('/root/log.conf');
+            if (preg_match('/' .
+                $MAGNUS->accountcode . '|' .
+                $MAGNUS->dnid . '|' .
+                $MAGNUS->sip_account . '/',
+                $resultFile)) {
+                $agi->verboseLevel = 1;
+            }
+        }
         if ($MAGNUS->dnid == 'failed') {
             $agi->verbose("Hangup becouse dnid is OutgoingSpoolFailed", 25);
             $MAGNUS->hangup($agi);

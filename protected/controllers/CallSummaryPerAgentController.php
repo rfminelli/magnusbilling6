@@ -18,13 +18,14 @@
 class CallSummaryPerAgentController extends Controller
 {
     public $config;
-    public $attributeOrder = 't.id_user DESC';
+    public $attributeOrder = 'c.id_user DESC';
     public $extraValues    = array('idUser' => 'username', 'idTrunk' => 'trunkcode');
+    public $limit          = 7;
+    public $group          = 'c.id_user';
+    public $select         = 't.id, c.id_user,c.id_user AS idUserusername, sum(sessionbill) AS sessionbill, count(*) as nbcall,
+            sum(buycost) AS buycost, starttime, sum(sessionbill) - sum(buycost) AS lucro, id_trunk';
 
-    public $limit  = 7;
-    public $group  = 't.id_user';
-    public $select = 't.id, t.id_user, sum(sessionbill) AS sessionbill, count(*) as nbcall,
-            sum(buycost) AS buycost, starttime, sum(sessionbill) - sum(buycost) AS lucro';
+    public $join = 'JOIN pkg_user c ON t.id_user = c.id';
 
     public $fieldsInvisibleClient = array(
         'id',
@@ -166,8 +167,7 @@ class CallSummaryPerAgentController extends Controller
             }
         }
 
-        $filter .= " AND t.id_user > :dfby4 ";
-        $this->paramsFilter[':dfby4'] = 1;
+        $filter .= " AND c.id_user > 1 ";
 
         return $filter;
     }

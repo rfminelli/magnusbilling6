@@ -49,10 +49,9 @@ class RefillController extends Controller
             $this->relationFilter['idUser'] = array(
                 'condition' => "t.id_user = :idagent5334 OR  idUser.id_user LIKE :agfby",
             );
+            $this->paramsFilter[':idagent5334'] = Yii::app()->session['id_user'];
         }
         $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
-
-        $this->paramsFilter[':idagent5334'] = Yii::app()->session['id_user'];
 
         return $filter;
     }

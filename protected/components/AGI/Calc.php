@@ -536,7 +536,8 @@ class Calc
 
             $modelError = $modelCall->getErrors();
             if (count($modelError)) {
-                $agi->verbose(print_r($modelError, true), 25);
+                $agi->verbose(print_r($modelCall->getAttributes(), true));
+                $agi->verbose(print_r($modelError, true));
             }
 
         }
@@ -555,7 +556,7 @@ class Calc
             $modelCall->sessionid        = $MAGNUS->channel;
             $modelCall->id_user          = $MAGNUS->id_user;
             $modelCall->starttime        = date("Y-m-d H:i:s", time() - $this->real_answeredtime);
-            $modelCall->sessiontime      = $sessiontime;
+            $modelCall->sessiontime      = intval($sessiontime);
             $modelCall->real_sessiontime = intval($this->real_answeredtime);
             $modelCall->calledstation    = $MAGNUS->destination;
             $modelCall->terminatecauseid = $terminatecauseid;
@@ -571,7 +572,8 @@ class Calc
             $modelCall->save();
             $modelError = $modelCall->getErrors();
             if (count($modelError)) {
-                $agi->verbose(print_r($modelError, true), 25);
+                $agi->verbose(print_r($modelCall->getAttributes(), true));
+                $agi->verbose(print_r($modelError, true));
             }
 
         } else {

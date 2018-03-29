@@ -598,6 +598,7 @@ class Magnus
             $agi->answer();
             sleep(20);
         }
+        $agi->verbose("DIAL $dialstr" . $dialparams, 25);
         return $agi->execute("DIAL $dialstr" . $dialparams);
     }
 
