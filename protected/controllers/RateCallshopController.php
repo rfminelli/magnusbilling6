@@ -44,4 +44,20 @@ class RateCallshopController extends Controller
         }
         parent::actionSave();
     }
+
+    public function extraFilterCustomClient($filter)
+    {
+
+        //se for cliente filtrar pelo pkg_user.id
+        $filter .= ' AND id_user = :clfby';
+        $this->paramsFilter[':clfby'] = Yii::app()->session['id_user'];
+
+        return $filter;
+    }
+
+    public function importCsvSetAdditionalParams()
+    {
+        $values = $this->getAttributesRequest();
+        return [['key' => 'id_user', 'value' => Yii::app()->session['id_user']]];
+    }
 }
