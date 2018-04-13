@@ -16,7 +16,7 @@ $form = $this->beginWidget('CActiveForm', array(
     <label for="Call_StartTime"><?php echo Yii::t('yii', 'Filter call to username') . ' ' . $modelUser->username; ?></label>
 
 </div>
-<br><br>
+<br><br><br><br>
 
 <div class="field">
     <?php echo $form->labelEx($model, Yii::t('yii', 'StartTime')) ?>

@@ -1,6 +1,11 @@
 <?php
 return array(
     /*new '' => '', */
+    'Select a user'                                                                                                                                                                    => 'Selecione um usuário',
+    'Filter call to username'                                                                                                                                                          => 'Filtro para',
+    'StopTime'                                                                                                                                                                         => 'Data final',
+    'StartTime'                                                                                                                                                                        => 'Data inicio',
+    'Filter'                                                                                                                                                                           => 'Buscar',
     'Answered'                                                                                                                                                                         => 'Atendidas',
     'Votes'                                                                                                                                                                            => 'Votos',
     'Voted'                                                                                                                                                                            => 'Votaram',
