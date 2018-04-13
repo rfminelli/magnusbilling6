@@ -66,7 +66,10 @@ class QueueAgi
         } else {
             $terminatecauseid = 1;
         }
-        $DidAgi->billDidCall($agi, $MAGNUS, $answeredtime);
+        if (!is_null($DidAgi)) {
+            $DidAgi->billDidCall($agi, $MAGNUS, $answeredtime);
+        }
+
         $agi->verbose('$siptransfer => ' . $siptransfer['data'], 5);
         if ($siptransfer['data'] != 'yes' && $type == 'queue') {
             $modelPrefix = Prefix::model()->find("prefix = SUBSTRING(:key,1,length(prefix))",
