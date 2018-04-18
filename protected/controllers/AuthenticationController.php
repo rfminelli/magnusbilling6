@@ -139,7 +139,7 @@ class AuthenticationController extends Controller
 
             }
 
-            Yii::app()->session['googleAuthenticatorKey'] = $ga->getQRCodeGoogleUrl('MagnusBilling-' . $modelUser->username . '-' . $modelUser->id, $secret);
+            Yii::app()->session['googleAuthenticatorKey'] = $ga->getQRCodeGoogleUrl('VoIP-' . $modelUser->username . '-' . $modelUser->id, $secret);
 
             Yii::app()->session['checkGoogleAuthenticator'] = true;
         } else {
