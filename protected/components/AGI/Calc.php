@@ -504,17 +504,21 @@ class Calc
             $didDuration = time() - $this->did_charge_of_answer_time;
 
             $agi->verbose('DidDuration = ' . $didDuration);
-            $this->didAgi->sell_price = $MAGNUS->roudRatePrice($didDuration, $this->didAgi->sell_price,
+            $did_sell_price = $this->didAgi->selling_rate_1;
+
+            $did_sell_price = $MAGNUS->roudRatePrice($didDuration, $did_sell_price,
                 $this->didAgi->initblock,
                 $this->didAgi->increment);
 
+            $agi->verbose('did_sell_price ' . $did_sell_price);
+
             User::model()->updateByPk($this->did_charge_of_id_user,
                 array(
-                    'credit' => new CDbExpression('credit - ' . $MAGNUS->round_precision(abs($MAGNUS->did_charge_of_cost))),
+                    'credit' => new CDbExpression('credit - ' . $MAGNUS->round_precision(abs($did_sell_price))),
                 )
             );
 
-            $agi->verbose('Add CDR the DID cost to CallerID. Cost =' . $MAGNUS->did_charge_of_cost . ', duration' . $didDuration);
+            $agi->verbose('Add CDR the DID cost to CallerID. Cost =' . $did_sell_price . ', duration' . $didDuration);
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
             $modelCall->sessionid        = $MAGNUS->channel;
@@ -525,7 +529,7 @@ class Calc
             $modelCall->calledstation    = $this->didAgi->did;
             $modelCall->terminatecauseid = $terminatecauseid;
             $modelCall->stoptime         = date('Y-m-d H:i:s');
-            $modelCall->sessionbill      = $this->didAgi->sell_price;
+            $modelCall->sessionbill      = $did_sell_price;
             $modelCall->id_plan          = $MAGNUS->id_plan;
             $modelCall->id_trunk         = null;
             $modelCall->src              = $MAGNUS->CallerID;

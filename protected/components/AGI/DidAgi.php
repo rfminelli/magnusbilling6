@@ -77,10 +77,11 @@ class DidAgi
         if ($this->modelDestination[0]->idDid->charge_of == 0) {
             $modelCallerId = Callerid::model()->find('cid = :key AND activated = 1', array(':key' => $MAGNUS->CallerID));
             if (count($modelCallerId)) {
-                $agi->verbose('found callerid, new user = ' . $modelCallerId->idUser->username);
-                $Calc->did_charge_of_id_user     = $modelCallerId->idUser->id;
-                $Calc->did_charge_of_answer_time = time();
-                $Calc->didAgi                    = $this->modelDestination[0]->idDid;
+                $agi->verbose('found callerid, new user = ' . $modelCallerId->idUser->username . ' ' . $this->sell_price);
+                $Calc->did_charge_of_id_user                      = $modelCallerId->idUser->id;
+                $Calc->did_charge_of_answer_time                  = time();
+                $Calc->didAgi                                     = $this->modelDestination[0]->idDid;
+                $this->modelDestination[0]->idDid->selling_rate_1 = $this->sell_price;
 
             } else {
                 $agi->verbose('NOT found callerid, = ' . $MAGNUS->CallerID . ' to did ' . $this->did . ' and was selected charge_of to callerID');
