@@ -74,7 +74,7 @@ class UserCreditManager
         } else {
             $mail = new Mail(Mail::$TYPE_REFILL, $id_user);
             $mail->replaceInEmail(Mail::$ITEM_ID_KEY, $id_user);
-            $mail->replaceInEmail(Mail::$ITEM_AMOUNT_KEY, $signal . $credit);
+            $mail->replaceInEmail(Mail::$ITEM_AMOUNT_KEY, $credit);
             $mail->replaceInEmail(Mail::$DESCRIPTION, $description);
             $mail->send();
         }
@@ -114,7 +114,7 @@ class UserCreditManager
 
         $mail = new Mail(Mail::$TYPE_REFILL, $id_user);
         $mail->replaceInEmail(Mail::$ITEM_ID_KEY, $id_user);
-        $mail->replaceInEmail(Mail::$ITEM_AMOUNT_KEY, $signal . $credit);
+        $mail->replaceInEmail(Mail::$ITEM_AMOUNT_KEY, $credit);
         $mail->replaceInEmail(Mail::$DESCRIPTION, $description);
         $mail->send();
     }
