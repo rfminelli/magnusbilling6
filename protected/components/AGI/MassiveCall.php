@@ -206,7 +206,7 @@ class MassiveCall
                 $modelDiddestination             = new Diddestination();
                 $modelDiddestination->id_ivr     = $forwardOption[1];
                 $modelDiddestination->idDid->did = $destination;
-                Ivr::callIvr($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
+                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
             } elseif ($forwardOptionType == 'group') {
 
                 $agi->verbose("Call group $group ", 25);
