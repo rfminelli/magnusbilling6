@@ -20,7 +20,7 @@
  * 19/09/2012
  */
 
-class Call0800WebController extends BaseController
+class Call0800WebController extends Controller
 {
 
     public function verbose($val = null, $val1 = null)
