@@ -278,23 +278,18 @@ class AsteriskAccess
             $arr   = explode("\n", $groupData["data"]);
             $count = 0;
             if ($arr[0] != "") {
+
                 foreach ($arr as $temp) {
                     $linha = explode("  ", $temp);
 
                     if (trim($linha[4]) == $ipaddress) {
-                        $channel = @$this->asmanager->Command("core show channel " . $linha[0]);
-                        $arr2    = explode("\n", $channel["data"]);
+                        $channel = AsteriskAccess::getCoreShowChannel($linha[0]);
+                        $agi->verbose(print_r($channel['State'], true));
 
-                        foreach ($arr2 as $temp2) {
-                            if (strstr($temp2, 'State:')) {
-                                $arr3   = explode("State:", $temp2);
-                                $status = trim(rtrim($arr3[1]));
-                            }
-                        }
-
-                        if (preg_match("/Up |Ring /", $status)) {
+                        if (preg_match("/Up |Ring /", $channel['State'])) {
                             $count++;
                         }
+
                     }
                 }
             }
