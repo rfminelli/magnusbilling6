@@ -128,6 +128,5 @@ class Prefix extends Model
         } catch (Exception $e) {
 
         }
-
     }
 }

@@ -725,6 +725,34 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.2.4') {
+            $sql = "CREATE TABLE IF NOT EXISTS `pkg_tables_changes` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `table` varchar(300) NOT NULL,
+              `last_time` varchar(18) NOT NULL,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
+            $this->executeDB($sql);
+
+            $version = '6.2.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+        if ($version == '6.2.5') {
+
+            $sql = "
+            	ALTER TABLE `pkg_tables_changes` CHANGE `table` `module` VARCHAR(300) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+            	INSERT INTO `pkg_tables_changes` (`id`, `module`, `last_time`) VALUES
+			(1, 'pkg_rate', '1525439132'),
+			(2, 'pkg_prefix_length', '1525439132'),
+			(3, 'pkg_prefix', '1525439132');";
+            $this->executeDB($sql);
+
+            $version = '6.2.6';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

@@ -308,4 +308,23 @@ class RateController extends Controller
             }
         }
     }
+
+    public function afterSave($model, $values)
+    {
+        $this->tablesChanges();
+    }
+
+    public function afterUpdateAll($strIds)
+    {
+        $this->tablesChanges();
+    }
+    public function afterDestroy($values)
+    {
+        $this->tablesChanges();
+    }
+
+    public function tablesChanges()
+    {
+        TablesChanges::model()->updateAll(array('last_time' => time()), 'module = :key', array(':key' => 'pkg_rate'));
+    }
 }

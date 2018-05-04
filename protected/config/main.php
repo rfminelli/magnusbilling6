@@ -88,5 +88,8 @@ return array(
 
             ),
         ),
+        'cache'        => array(
+            'class' => 'system.caching.CDbCache',
+        ),
     ),
 );
