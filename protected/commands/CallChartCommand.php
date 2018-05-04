@@ -21,6 +21,16 @@ class CallChartCommand extends ConsoleCommand
 {
     public function run($args)
     {
+
+        $modelUserCallShop = User::model()->count('callshop = 1');
+
+        if ($modelUserCallShop > 0) {
+            $modelUserCallShop = User::model()->findAll('callshop = 1');
+            foreach ($modelUserCallShop as $key => $value) {
+                $callShopIds[] = $value->id;
+            }
+        }
+
         for ($i = 0; $i < 12; $i++) {
             $success = CallOnLine::model()->deleteAll();
 
@@ -202,13 +212,15 @@ class CallChartCommand extends ConsoleCommand
 
                     $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
-                    if ($modelSip->idUser->callshop == 1) {
-                        $modelSip->status         = 3;
-                        $modelSip->callshopnumber = $ndiscado;
-                        $modelSip->callshoptime   = $cdr;
-                        $modelSip->save();
+                    if ($modelUserCallShop > 0) {
+                        if (in_array($modelSip->id_user, $callShopIds)) {
+                            $modelSip->status         = 3;
+                            $modelSip->callshopnumber = $ndiscado;
+                            $modelSip->callshoptime   = $cdr;
+                            $modelSip->save();
+                            $modelSip = null;
+                        }
                     }
-                    unset($modelSip);
                 }
 
                 $total = intval($total / 2);
