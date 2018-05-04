@@ -299,6 +299,13 @@ class DidAgi
                     $MAGNUS->agiconfig['use_dnid']       = 1;
                     $MAGNUS->agiconfig['say_timetocall'] = 0;
 
+                    //if is a PSTN call can destination format is number@callerID, set the CallID.
+                    if (preg_match("/@/", $inst_listdestination['destination'])) {
+                        $destinationCallerID                 = explode('@', $inst_listdestination['destination']);
+                        $inst_listdestination['destination'] = $destinationCallerID[0];
+                        $agi->set_callerid($destinationCallerID[1]);
+                    }
+
                     $MAGNUS->extension = $MAGNUS->dnid = $MAGNUS->destination = $inst_listdestination['destination'];
 
                     if ($MAGNUS->checkNumber($agi, $Calc, 0) == true) {
