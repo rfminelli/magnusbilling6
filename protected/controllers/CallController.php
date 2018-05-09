@@ -163,7 +163,9 @@ class CallController extends Controller
                 } else {
                     exec('rm -rf /var/www/html/mbilling/tmp/*');
                     exec('cp -rf ' . $output[0] . ' /var/www/html/mbilling/tmp/');
-                    echo '<audio controls autoplay><source src="../../tmp/' . end($file_name) . '" type="audio/x-wav" /></audio>';
+                    echo '<body style="margin:0px;padding:0px;overflow:hidden">
+                            <iframe src="../../tmp/' . end($file_name) . '" frameborder="0" style="overflow:hidden;height:100%;width:100%" height="100%" width="100%"></iframe>
+                        </body>';
                 }
             } else {
                 echo yii::t('yii', 'Audio no found');

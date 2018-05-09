@@ -42,7 +42,7 @@ chown -R asterisk:asterisk /etc/asterisk
 chown -R asterisk:asterisk /var/www/html/mbilling
 chmod -R 777 /tmp
 chmod -R 555 /var/www/html/mbilling/
-chmod -R 750 /var/www/html/mbilling/resources/reports 
+chmod -R 700 /var/www/html/mbilling/resources/reports 
 chmod -R 774 /var/www/html/mbilling/protected/runtime/
 chmod +x /var/www/html/mbilling/agi.php
 mkdir -p /usr/local/src/magnus
@@ -51,10 +51,10 @@ mkdir -p /var/www/tmpmagnus
 chown -R asterisk:asterisk /var/www/tmpmagnus
 chmod -R 777 /var/www/tmpmagnus
 chmod 774 /var/www/html/mbilling/resources/ip.blacklist
-chmod -R 655 /var/www/html/mbilling/tmp
-chmod -R 750 /var/www/html/mbilling/assets
-chmod -R 750 /var/www/html/mbilling/resources/sounds
-chmod -R 770 /var/www/html/mbilling/resources/images
+chmod -R 700 /var/www/html/mbilling/tmp
+chmod -R 700 /var/www/html/mbilling/assets
+chmod -R 700 /var/www/html/mbilling/resources/sounds
+chmod -R 700 /var/www/html/mbilling/resources/images
 
 if [[ -e /var/www/html/mbilling/protected/commands/update3.sh ]]; then
 	/var/www/html/mbilling/protected/commands/update3.sh

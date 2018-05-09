@@ -290,6 +290,7 @@ class AuthenticationController extends Controller
             Yii::app()->session['version']              = $this->config['global']['version'];
             Yii::app()->session['asterisk_version']     = $this->config['global']['asterisk_version'];
             Yii::app()->session['social_media_network'] = $this->config['global']['social_media_network'];
+            Yii::app()->session['show_playicon_cdr']    = $this->config['global']['show_playicon_cdr'];
 
             $id_user                  = Yii::app()->session['id_user'];
             $id_agent                 = Yii::app()->session['id_agent'];
@@ -313,6 +314,7 @@ class AuthenticationController extends Controller
             $userCount                = Yii::app()->session['userCount'];
             $base_country             = Yii::app()->session['base_country'];
             $version                  = Yii::app()->session['version'];
+            $show_playicon_cdr        = Yii::app()->session['show_playicon_cdr'];
             $social_media_network     = Yii::app()->session['social_media_network'];
             $checkGoogleAuthenticator = Yii::app()->session['checkGoogleAuthenticator'];
             $googleAuthenticatorKey   = Yii::app()->session['googleAuthenticatorKey'];
@@ -346,6 +348,7 @@ class AuthenticationController extends Controller
             $newGoogleAuthenticator   = false;
             $showGoogleCode           = false;
             $social_media_network     = false;
+            $show_playicon_cdr        = false;
         }
         $language = isset(Yii::app()->session['language']) ? Yii::app()->session['language'] : Yii::app()->sourceLanguage;
         $theme    = isset(Yii::app()->session['theme']) ? Yii::app()->session['theme'] : 'blue-neptune';
@@ -379,6 +382,7 @@ class AuthenticationController extends Controller
             'userCount'                => $userCount,
             'base_country'             => $base_country,
             'version'                  => $version,
+            'show_playicon_cdr'        => $show_playicon_cdr,
             'social_media_network'     => $social_media_network,
             'asterisk_version'         => Yii::app()->session['asterisk_version'],
             'checkGoogleAuthenticator' => $checkGoogleAuthenticator,

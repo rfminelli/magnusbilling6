@@ -130,9 +130,9 @@ class QueueAgi
 
         $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator answer the call from QUEUE \n\n", 6);
 
-        $modelUser           = Sip::model()->find('name = :key', array(':key' => $operator));
-        $MAGNUS->record_call = $modelUser->record_call;
-
+        $modelUser                  = Sip::model()->find('name = :key', array(':key' => $operator));
+        $MAGNUS->record_call        = $modelUser->record_call;
+        $MAGNUS->mix_monitor_format = $modelUser->idUser->mix_monitor_format;
         $MAGNUS->startRecordCall($agi);
         exit;
     }
