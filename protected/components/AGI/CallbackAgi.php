@@ -148,6 +148,7 @@ class CallbackAgi
         $call .= "Set:SECCALL=" . $destination . "\n";
 
         AsteriskAccess::generateCallFile($call, 5);
+        $agi->evaluate("ANSWER 0");
         $MAGNUS->hangup($agi);
 
     }

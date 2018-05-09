@@ -36,8 +36,9 @@ class GAuthenticatorController extends Controller
     {
         $modelUser = User::model()->findByPk((int) $values['id']);
 
-        if ($modelUser->googleAuthenticator_enable != 1 && strlen($modelUser->google_authenticator_key) > 5) {
-            $this->googleAuthenticator($modelUser, $values['code']);
+        //try disable token from account
+        if ($values['googleAuthenticator_enable'] != 1 && strlen($modelUser->google_authenticator_key) > 5) {
+            $values = $this->googleAuthenticator($modelUser, $values);
         } else {
             if ($modelUser->googleAuthenticator_enable == 1 && strlen($modelUser->google_authenticator_key) > 5) {
                 $modelUser->google_authenticator_key = '';
@@ -49,16 +50,15 @@ class GAuthenticatorController extends Controller
             }
 
         }
-
         return $values;
     }
-    public function googleAuthenticator($modelUser, $code)
+    public function googleAuthenticator($modelUser, $values)
     {
         require_once 'lib/GoogleAuthenticator/GoogleAuthenticator.php';
 
         $ga          = new PHPGangsta_GoogleAuthenticator();
         $secret      = $modelUser->google_authenticator_key;
-        $oneCodePost = $code;
+        $oneCodePost = $values['code'];
         $checkResult = $ga->verifyCode($secret, $oneCodePost, 2);
 
         if (!$checkResult) {
@@ -71,7 +71,9 @@ class GAuthenticatorController extends Controller
             MagnusLog::insertLOG(2, $info);
             exit;
         } else {
-            $this->google_authenticator_key = '';
+            $values['google_authenticator_key'] = '';
         }
+
+        return $values;
     }
 }
