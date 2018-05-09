@@ -74,7 +74,7 @@ class SmsSend
         $searchTariff = new SearchTariff();
         $callTrunk    = $searchTariff->find($destination, $modelUser->id_plan, $modelUser->id);
 
-        if (!count($callTrunk)) {
+        if ($callTrunk == 0) {
             return array(
                 'success' => false,
                 'msg'     => Yii::t('yii', 'Prefix not found') . ' ' . $destination,
@@ -128,6 +128,9 @@ class SmsSend
                 );
 
             }
+
+            print "VERBOSE $link_sms";
+
             if (!$res = @file_get_contents($linkSms, false)) {
                 return array(
                     'success' => false,

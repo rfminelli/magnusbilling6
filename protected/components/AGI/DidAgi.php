@@ -270,24 +270,46 @@ class DidAgi
                 }
                 /* Call to custom dial*/
                 else if ($inst_listdestination['voip_call'] == 9) {
+                    //SMS@O numero %callerid% acabou de  ligar.
+                    if (strtoupper(substr($inst_listdestination['destination'], 0, 3)) == 'SMS') {
 
-                    $agi->verbose("Ccall group $group ", 6);
-                    $dialstr = $inst_listdestination['destination'];
+                        $removeprefix        = $MAGNUS->config['global']['callback_remove_prefix'];
+                        $MAGNUS->destination = $MAGNUS->CallerID;
 
-                    $MAGNUS->startRecordCall($agi, $did);
+                        if (strncmp($MAGNUS->destination, $removeprefix, strlen($removeprefix)) == 0) {
+                            $MAGNUS->destination = substr($MAGNUS->destination, strlen($removeprefix));
+                        }
 
-                    $agi->verbose("DIAL $dialstr", 6);
-                    $myres = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
-                    $MAGNUS->stopRecordCall($agi);
+                        $addprefix           = $MAGNUS->config['global']['callback_add_prefix'];
+                        $MAGNUS->destination = $addprefix . $MAGNUS->destination;
+                        $MAGNUS->number_translation($agi, $MAGNUS->destination);
+                        $text = substr($inst_listdestination['destination'], 4);
+                        $text = preg_replace("/\%callerid\%/", $MAGNUS->CallerID, $text);
+                        SmsSend::send($inst_listdestination->idUser, $MAGNUS->destination, $text);
 
-                    $answeredtime = $agi->get_variable("ANSWEREDTIME");
-                    $answeredtime = $answeredtime['data'];
-                    $dialstatus   = $agi->get_variable("DIALSTATUS");
-                    $dialstatus   = $dialstatus['data'];
+                        $answeredtime = 60;
+                        $dialstatus   = 'ANSWER';
 
-                    if ($this->parseDialStatus($agi, $dialstatus, $answeredtime) != true) {
-                        $answeredtime = 0;
-                        continue;
+                        break;
+                    } else {
+                        $agi->verbose("Ccall group $group ", 6);
+                        $dialstr = $inst_listdestination['destination'];
+
+                        $MAGNUS->startRecordCall($agi, $did);
+
+                        $agi->verbose("DIAL $dialstr", 6);
+                        $myres = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
+                        $MAGNUS->stopRecordCall($agi);
+
+                        $answeredtime = $agi->get_variable("ANSWEREDTIME");
+                        $answeredtime = $answeredtime['data'];
+                        $dialstatus   = $agi->get_variable("DIALSTATUS");
+                        $dialstatus   = $dialstatus['data'];
+
+                        if ($this->parseDialStatus($agi, $dialstatus, $answeredtime) != true) {
+                            $answeredtime = 0;
+                            continue;
+                        }
                     }
 
                 } else {
