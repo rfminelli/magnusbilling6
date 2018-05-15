@@ -129,8 +129,6 @@ class SmsSend
 
             }
 
-            print "VERBOSE $link_sms";
-
             if (!$res = @file_get_contents($linkSms, false)) {
                 return array(
                     'success' => false,

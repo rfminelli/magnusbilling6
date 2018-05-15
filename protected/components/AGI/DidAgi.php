@@ -273,20 +273,20 @@ class DidAgi
                     //SMS@O numero %callerid% acabou de  ligar.
                     if (strtoupper(substr($inst_listdestination['destination'], 0, 3)) == 'SMS') {
 
-                        $removeprefix        = $MAGNUS->config['global']['callback_remove_prefix'];
-                        $MAGNUS->destination = $MAGNUS->CallerID;
+                        $MAGNUS->destination = $inst_listdestination->idUser->mobile;
+                        $text                = substr($inst_listdestination['destination'], 4);
+                        $text                = preg_replace("/\%callerid\%/", $MAGNUS->CallerID, $text);
 
-                        if (strncmp($MAGNUS->destination, $removeprefix, strlen($removeprefix)) == 0) {
-                            $MAGNUS->destination = substr($MAGNUS->destination, strlen($removeprefix));
+                        if (file_exists('/var/lib/asterisk/sounds/' . $inst_listdestination->idDid->did . '.gsm')) {
+                            $agi->answer();
+                            sleep(2);
+                            $agi->stream_file($inst_listdestination->idDid->did, '#');
+                        } else {
+                            $agi->evaluate("ANSWER 0");
                         }
 
-                        $addprefix           = $MAGNUS->config['global']['callback_add_prefix'];
-                        $MAGNUS->destination = $addprefix . $MAGNUS->destination;
-                        $MAGNUS->number_translation($agi, $MAGNUS->destination);
-                        $text = substr($inst_listdestination['destination'], 4);
-                        $text = preg_replace("/\%callerid\%/", $MAGNUS->CallerID, $text);
                         SmsSend::send($inst_listdestination->idUser, $MAGNUS->destination, $text);
-
+                        $agi->verbose(print_r($result, true));
                         $answeredtime = 60;
                         $dialstatus   = 'ANSWER';
 
