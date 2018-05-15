@@ -25,40 +25,47 @@ yum -y install perl-JSON flac
  */
 class Tts
 {
-    public static function create($string, $file)
+    public static function create($string)
     {
         $config = LoadConfig::getConfig();
 
-        $name    = urlencode($string);
-        $tts_url = preg_replace('/\$name/', $name, $config['global']['tts_url']);
+        $name = urlencode($string);
 
-        if (preg_match("/ttsgo/", $tts_url)) {
+        $file = 'tts_audio_' . MD5($string);
 
-            $ch = curl_init();
-            //Caso tenha dificuldade com a requisição via HTTPS, descomente a linha abaixo
-            //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-            curl_setopt($ch, CURLOPT_URL, $tts_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $retorno = curl_exec($ch);
+        if (!file_exists('/tmp/' . $file . '.wav')) {
 
-            $objJson = json_decode($retorno);
+            $tts_url = preg_replace('/\$name/', $name, $config['global']['tts_url']);
 
-            $agi->verbose(print_r($objJson->url, true));
-            $fp = fopen('/tmp/' . $file . '.wav', 'w');
-            fwrite($fp, file_get_contents($objJson->url));
-            fclose($fp);
-            exec('sox /tmp/' . $file . '.wav -c 1 -r 8000 /tmp/' . $file . '.sln && rm -rf /tmp/' . $file . '.wav');
+            if (preg_match("/ttsgo/", $tts_url)) {
 
-        } else {
-            if (preg_match("/google/", $tts_url)) {
-                $token = Tts::make_token($name);
+                $ch = curl_init();
+                //Caso tenha dificuldade com a requisição via HTTPS, descomente a linha abaixo
+                //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+                curl_setopt($ch, CURLOPT_URL, $tts_url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $retorno = curl_exec($ch);
 
-                $tts_url = preg_replace('/\$token/', $token, $tts_url);
+                $objJson = json_decode($retorno);
+
+                $agi->verbose(print_r($objJson->url, true));
+                $fp = fopen('/tmp/' . $file . '.wav', 'w');
+                fwrite($fp, file_get_contents($objJson->url));
+                fclose($fp);
+                exec('sox /tmp/' . $file . '.wav -c 1 -r 8000 /tmp/' . $file . '.sln && rm -rf /tmp/' . $file . '.wav');
+
+            } else {
+                if (preg_match("/google/", $tts_url)) {
+                    $token = Tts::make_token($name);
+
+                    $tts_url = preg_replace('/\$token/', $token, $tts_url);
+                }
+                system("wget -q -U Mozilla -O \"/tmp/$file.mp3\" \"$tts_url\"");
+                system("mpg123 -w /tmp/$file.wav /tmp/$file.mp3 && rm -rf /tmp/$file.mp3");
+                system("sox -v 2.0 /tmp/$file.wav /tmp/$file2.wav && rm -rf /tmp/$file.wav");
+                system("sox /tmp/$file2.wav -c 1 -r 8000 /tmp/$file.wav && rm -rf /tmp/$file2.wav ");
             }
-            system("wget -q -U Mozilla -O \"/tmp/$file.mp3\" \"$tts_url\"");
-            system("mpg123 -w /tmp/$file.wav /tmp/$file.mp3 && rm -rf /tmp/$file.mp3");
-            system("sox -v 2.0 /tmp/$file.wav /tmp/$file2.wav && rm -rf /tmp/$file.wav");
-            system("sox /tmp/$file2.wav -c 1 -r 8000 /tmp/$file.wav && rm -rf /tmp/$file2.wav ");
+
         }
         return '/tmp/' . $file;
     }

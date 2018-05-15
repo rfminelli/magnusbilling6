@@ -65,7 +65,7 @@ class MassiveCall
             $tts  = true;
             $file = $idPhonenumber . date("His");
 
-            $audio_name = Tts::create($modelPhoneNumber->name, $file);
+            $audio_name = Tts::create($modelPhoneNumber->name);
 
         }
 
@@ -78,7 +78,7 @@ class MassiveCall
                 $audio = '/tmp/' . $file;
             } else {
                 $agi->verbose('Get audio from TTS');
-                $audio = Tts::create($modelCampaign->tts_audio, $file);
+                $audio = Tts::create($modelCampaign->tts_audio);
             }
 
         } else {
@@ -113,15 +113,7 @@ class MassiveCall
 
             if (strlen($modelCampaign->tts_audio2) > 2) {
 
-                $file = 'campaign_' . MD5($modelCampaign->tts_audio2);
-
-                if (file_exists('/tmp/' . $file . '.wav')) {
-                    $agi->verbose('Audio2 already exist');
-                    $audio = '/tmp/' . $file;
-                } else {
-                    $agi->verbose('Get audio2 from TTS');
-                    $audio = Tts::create($modelCampaign->tts_audio2, $file);
-                }
+                $audio = Tts::create($modelCampaign->tts_audio2);
 
             } else {
                 $audio = $uploaddir . "idCampaign_" . $idCampaign . "_2";
@@ -143,13 +135,26 @@ class MassiveCall
                 $textASR = $agi->get_variable("utterance", true);
                 $agi->verbose('O texto que você acabou de dizer: ' . $textASR);
                 if (strlen($textASR) < 1) {
-                    $agi->execute('AGI googletts.agi,"Desculpe não consegui te compreender. Vamos tentar novamente?",pt-BR');
+                    $text  = "Desculpe não consegui te compreender. Vamos tentar novamente?";
+                    $audio = Tts::create($text);
+
+                    $agi->stream_file($audio, ' #');
+
                 } elseif (preg_match('/' . $modelCampaign->asr_options . '/', $textASR)) {
-                    $agi->execute('AGI googletts.agi,"Você disse. ' . $textASR . '. Por favor aguarde.",pt-BR');
+
+                    $text  = "Você disse. " . $textASR . ". Por favor aguarde.";
+                    $audio = Tts::create($text);
+
+                    $agi->stream_file($audio, ' #');
+
                     $res_dtmf['result'] = 1;
                     break;
                 } else {
-                    $agi->execute('AGI googletts.agi,"Você realmente não quer escutar o recado? Vamos tentar novamente?",pt-BR');
+
+                    $text  = "Você realmente não quer escutar o recado? Vamos tentar novamente?";
+                    $audio = Tts::create($text);
+
+                    $agi->stream_file($audio, ' #');
                 }
             }
         }
