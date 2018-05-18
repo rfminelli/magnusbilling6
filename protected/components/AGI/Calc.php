@@ -90,12 +90,11 @@ class Calc
 
         if ($id_offer == 1 && $MAGNUS->id_offer > 0 && $K == 0) {
             $modelOfferUse = OfferUse::model()->find(array(
-                'condition' => 'pkg_offer = :key AND id_user = :key1',
+                'condition' => 'id_offer = :key AND id_user = :key1',
                 'params'    => array(
                     ':key'  => $MAGNUS->id_offer,
                     ':key1' => $MAGNUS->id_user,
                 ),
-                'order'     => 'packagetype ASC',
             ));
 
             if (count($modelOfferUse)) {

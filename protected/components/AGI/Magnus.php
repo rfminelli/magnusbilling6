@@ -244,15 +244,6 @@ class Magnus
 
         $agi->verbose("USERNAME=" . $this->username . " DESTINATION=" . $this->destination . " PLAN=" . $this->id_plan . " CREDIT=" . $this->credit, 6);
 
-        if ($this->play_audio == 0) {
-            $check_credit = $this->credit + $this->creditlimit;
-            if ($check_credit <= 0) {
-                $agi->verbose("SEND :: congestion Credit < 0", 3);
-                $agi->execute((congestion), Congestion);
-                $this->hangup($agi);
-            }
-        }
-
         $agi->destination = $this->destination;
         /*call funtion for search rates*/
         $SearchTariff = new SearchTariff();
@@ -547,11 +538,11 @@ class Magnus
     public function packageUsedSeconds($agi, $id_user, $id_offer, $billingtype, $startday)
     {
         $CLAUSE_DATE = $this->checkDaysPackage($agi, $startday, $billingtype);
-        $sql         = "SELECT sum(used_secondes) AS status FROM pkg_offer_cdr " . "WHERE $CLAUSE_DATE AND id_user = '$this->id_user' AND id_offer = '$id_offer' ";
+        $sql         = "SELECT sum(used_secondes) AS used_secondes FROM pkg_offer_cdr " . "WHERE $CLAUSE_DATE AND id_user = '$this->id_user' AND id_offer = '$id_offer' ";
 
         $modelOfferCdr = OfferCdr::model()->findBySql($sql);
 
-        return count($modelOfferCdr) ? $modelOfferCdr->status : 0;
+        return count($modelOfferCdr) ? $modelOfferCdr->used_secondes : 0;
 
     }
 
