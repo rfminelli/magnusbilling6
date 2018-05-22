@@ -478,16 +478,7 @@ CREATE TABLE `pkg_cdr` (
   `terminatecauseid` int(1) DEFAULT '1',
   `agent_bill` decimal(15,6) DEFAULT '0.000000',
   PRIMARY KEY (`id`),
-  KEY `id_user` (`id_user`),
-  KEY `id_plan` (`id_plan`),
-  KEY `id_trunk` (`id_trunk`),
-  KEY `calledstation` (`calledstation`),
-  KEY `terminatecauseid` (`terminatecauseid`),
-  KEY `id_prefix` (`id_prefix`),
-  KEY `uniqueid` (`uniqueid`),
-  KEY `sessiontime` (`sessiontime`),
-  KEY `sessionbill` (`sessionbill`),
-  KEY `buycost` (`buycost`)
+  KEY `id_user` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -528,14 +519,7 @@ CREATE TABLE `pkg_cdr_archive` (
   `real_sessiontime` int(11) DEFAULT NULL,
   `terminatecauseid` int(1) DEFAULT '1',
   `agent_bill` decimal(15,5) DEFAULT '0.00000',
-  PRIMARY KEY (`id`),
-  KEY `id_user` (`id_user`),
-  KEY `id_plan` (`id_plan`),
-  KEY `id_trunk` (`id_trunk`),
-  KEY `calledstation` (`calledstation`),
-  KEY `terminatecauseid` (`terminatecauseid`),
-  KEY `id_prefix` (`id_prefix`),
-  KEY `uniqueid` (`uniqueid`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

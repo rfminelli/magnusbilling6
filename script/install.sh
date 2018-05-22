@@ -578,6 +578,7 @@ echo "
 [options]
 verbose = 0
 debug = 0
+maxfiles = 500000
 
 [compat]
 pbx_realtime=1.6
@@ -590,7 +591,14 @@ if [ ${DIST} = "CENTOS" ]; then
     rm -rf /etc/init.d/asterisk
     wget http://magnusbilling.com/scriptsSh/asterisk
     chmod +x /etc/init.d/asterisk
+
+    echo 500000 > /proc/sys/fs/file-max
+    echo "fs.file-max=500000">>/etc/sysctl.conf
+    echo '* soft nofile 500000' >> /etc/security/limits.conf
+    echo '* hard nofile 500000' >> /etc/security/limits.conf
 fi;
+
+
 
 if [ ${DIST} = "DEBIAN" ]; then
     CRONPATH='/var/spool/cron/crontabs/root'
