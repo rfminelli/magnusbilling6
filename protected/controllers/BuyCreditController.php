@@ -21,11 +21,16 @@ class BuyCreditController extends Controller
                 echo 'User or password is invalid';
                 exit;
             }
-            $methodPay         = Methodpay::model()->find('payment_method = :key', array(':key' => 'Paypal'));
-            $_GET['id_method'] = $methodPay->id;
-        } else {
-            $modelMethodPay = Methodpay::model()->findByPK((int) $_GET['id_method']);
+            if (isset($data[3])) {
+                $_GET['id_method'] = $data[3];
+            } else {
+                $methodPay         = Methodpay::model()->find('payment_method = :key', array(':key' => 'Paypal'));
+                $_GET['id_method'] = $methodPay->id;
+            }
+
         }
+
+        $modelMethodPay = Methodpay::model()->findByPK((int) $_GET['id_method']);
 
         if ($modelMethodPay->max > 0 && $_GET['amount'] > $modelMethodPay->max) {
             exit(Yii::t('yii', 'The maximum amount to') . ' ' . $modelMethodPay->show_name . ' ' . Yii::t('yii', 'is') . ' ' . Yii::app()->session['currency'] . ' ' . $modelMethodPay->max);
