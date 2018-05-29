@@ -22,7 +22,7 @@
 
 class CallFailedController extends Controller
 {
-    public $attributeOrder = 'starttime DESC';
+    public $attributeOrder = 'id DESC';
     public $extraValues    = array(
         'idUser'   => 'username',
         'idPlan'   => 'name',
