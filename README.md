@@ -1,9 +1,13 @@
 ###########
-MagnusBilling 6
+MagnusBilling 6 (BETA)
 ###########
 
+BETA VERSION Probably realease to September 2017
 
-# MagnusBilling 6
+WE LOOKING FOR DEVELOPER TO  GETTING INVOLVE IN THIS AMAZING PROJECT.
+
+
+# MagnusBilling 6 (BETA)
 
 Voip sistem to Asterisk.
 
@@ -39,7 +43,7 @@ Please read [CONTRIBUTING.md](https://github.com/magnussolution/magnusbilling6/b
 
 ## Versioning
 
-We are in MagnusBilling version 6.x.x
+We are in MagnusBilling version 6.x.x (BETA)
 
 ## Authors
 

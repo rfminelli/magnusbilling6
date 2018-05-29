@@ -29,6 +29,7 @@ class CallFailedController extends Controller
         'idTrunk'  => 'trunkcode',
         'idPrefix' => 'destination',
     );
+
     public $fieldsInvisibleClient = array(
         'username',
         'trunk',
