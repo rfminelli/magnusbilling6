@@ -22,8 +22,8 @@
 
 class CallFailedController extends Controller
 {
-    public $attributeOrder = 'id DESC';
-    public $attributeOrder = 't.id DESC';
+    public $attributeOrder = 'starttime DESC';
+
     public $extraValues    = array(
         'idUser'   => 'username',
         'idPlan'   => 'name',
