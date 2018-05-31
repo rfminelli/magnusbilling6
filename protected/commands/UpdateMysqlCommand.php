@@ -765,6 +765,7 @@ class UpdateMysqlCommand extends ConsoleCommand
         if ($version == '6.2.7') {
             $sql = "
 			ALTER TABLE pkg_cdr CHANGE `sessionid` `sessionid` VARCHAR(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '';
+			ALTER TABLE pkg_cdr_failed CHANGE `sessionid` `sessionid` VARCHAR(40) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL;
 			ALTER TABLE pkg_cdr DROP INDEX buycost;
 			ALTER TABLE pkg_cdr DROP INDEX sessionbill;
 			ALTER TABLE pkg_cdr DROP INDEX sessiontime;
