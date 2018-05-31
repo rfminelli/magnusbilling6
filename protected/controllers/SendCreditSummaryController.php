@@ -81,7 +81,7 @@ class SendCreditSummaryController extends Controller
 
     public function actionRead($asJson = true, $condition = null)
     {
-        $this->select = '*, count(*) count, sum(amount) total_sale, sum(earned) earned, DATE(date) AS day ';
+        $this->select = '*, count(*) count, sum(sell) total_sale, sum(cost) total_cost, sum(earned) earned, DATE(date) AS day ';
         $this->group  = 'day, service';
         parent::actionRead();
     }

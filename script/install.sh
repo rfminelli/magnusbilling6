@@ -148,7 +148,7 @@ mkdir /var/log/asterisk
 chown -R asterisk:asterisk /var/run/asterisk
 chown -R asterisk:asterisk /var/log/asterisk
 make clean
-./configure --with-ssl
+./configure
 make menuselect.makeopts
 menuselect/menuselect --enable res_config_mysql  menuselect.makeopts
 menuselect/menuselect --enable format_mp3  menuselect.makeopts
@@ -473,6 +473,8 @@ cd /var/www/html/mbilling
 
 echo $'[billing]
 exten => _.,1,AGI("/var/www/html/mbilling/agi.php")
+
+exten => h,1,hangup()
 
 exten => 111,1,VoiceMailMain(${SIPCHANINFO(peername)}@billing)
   same => n,Hangup()
@@ -955,6 +957,8 @@ chmod -R 750 /var/www/html/mbilling/resources/sounds
 chmod -R 770 /var/www/html/mbilling/resources/images
 chmod -R 755 /var/www/html/mbilling/assets/
 chown -R asterisk:asterisk /var/www/html/mbilling
+chmod +x /var/www/html/mbilling/resources/asterisk/mbilling.php
+chmod -R 100 /var/www/html/mbilling/resources/asterisk/
 echo
 echo
 echo ===============================================================

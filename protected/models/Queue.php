@@ -108,6 +108,7 @@ class Queue extends Model
         $command->bindValue(":key3", $uniqueid, PDO::PARAM_STR);
         $command->execute();
     }
+
     public function getQueueStatus($id)
     {
         $sql     = "SELECT * FROM pkg_queue_status WHERE id_agent = :key";

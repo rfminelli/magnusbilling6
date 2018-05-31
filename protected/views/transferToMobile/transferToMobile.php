@@ -120,7 +120,7 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
-
+<input id ='buying_price'  class="button" style="display:none; width: 80px;" onclick="getBuyingPrice()" value="R">
 </div>
 <div class="controls" id="buttondivWait"></div>
 <?php
@@ -129,6 +129,31 @@ $this->endWidget();?>
 
 
 <script type="text/javascript">
+
+	function getBuyingPrice(argument) {
+		amountValues = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
+
+		if (document.getElementById('buying_price').value != 'R') {
+			document.getElementById('buying_price').value = 'R';
+		}else{
+
+			if (amountValues > 0) {
+				var http = new XMLHttpRequest()
+
+				http.onreadystatechange = function() {
+		       		if (this.readyState == 4 && this.status == 200) {
+		       			document.getElementById('buying_price').value = this.responseText;
+		        	}
+		    	};
+
+				http.open("GET", "https://cc.onlinecallshop.com/Begin/index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
+				http.send(null);
+			}
+		}
+
+
+	}
+
 	function button2(buttonId) {
 	  	document.getElementById("sendButton").style.display = 'none';
 	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
@@ -148,6 +173,9 @@ $this->endWidget();?>
 		newText = '<font color=blue size=7><b>'+valueAmout[3]+ ' '+showprice.toFixed(2);+'</b></font>'
 		document.getElementById('divsellingPrice').style.display = 'inline';
 		document.getElementById('sellingPrice').innerHTML = newText;
+
+		document.getElementById('buying_price').style.display = 'inline';
+		document.getElementById('buying_price').value = 'R';
 	}
 </script>
 

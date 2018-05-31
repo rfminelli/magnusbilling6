@@ -46,6 +46,8 @@ Locale.load({
     'sipAccountLimit': 'Limite contas voip',
     'disk_space': 'Espaço em Disco',
     'Sip Account Limit': 'Limite contas voip',
+    'Sip Accounts': 'Contas VoIP',
+    'Sip Account': 'Conta VoIP',
     'Limit sip acount exceeded': 'Limite de contas VoIP exedido.',
     'Record call format': 'Formato da gravação',
     'UNKNOWN': 'Desconhecido',

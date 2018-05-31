@@ -38,6 +38,7 @@ class TransferToMobileController extends Controller
     private $user_profit;
     private $test = false;
     private $cost;
+    private $showprice;
 
     public function init()
     {
@@ -182,6 +183,7 @@ class TransferToMobileController extends Controller
         $modelSendCreditSummary->service   = $_POST['TransferToMobile']['method'];
         $modelSendCreditSummary->number    = $_POST['TransferToMobile']['number'];
         $modelSendCreditSummary->confirmed = $_POST['TransferToMobile']['method'] == 'internacional' ? 1 : 0;
+        $modelSendCreditSummary->cost      = $this->user_cost;
         $modelSendCreditSummary->save();
         $this->send_credit_id = $modelSendCreditSummary->id;
     }
@@ -191,9 +193,10 @@ class TransferToMobileController extends Controller
 
         $profit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
         SendCreditSummary::model()->updateByPk($this->send_credit_id, array(
-            'earned' => $this->user_profit,
             'profit' => $modelTransferToMobile->{$profit},
             'amount' => $this->cost,
+            'sell'   => $this->showprice,
+            'earned' => $this->showprice - $this->user_cost,
         ));
     }
 
@@ -315,8 +318,42 @@ class TransferToMobileController extends Controller
         }
     }
 
+    public function actionGetBuyingPrice()
+    {
+        $modelTransferToMobile = TransferToMobile::model()->findByPk((int) Yii::app()->session['id_user']);
+
+        if ($_GET['method'] == 'international') {
+            $currency = $this->config['global']['fm_transfer_currency'];
+        } else {
+            $currency = $this->config['global']['BDService_cambio'];
+        }
+
+        if ($_GET['method'] == 'international') {
+            $product = Yii::app()->session['amounts'][$_GET['amountValues']];
+            $cost    = explode($currency, $product);
+            $cost    = $cost[1];
+        } else {
+
+            $rateinitial = $modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
+            //cost to send to provider selected value + admin rate * exchange
+            $cost     = $_GET['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
+            $product  = 0;
+            $currency = '€';
+        }
+
+        $methosProfit = 'transfer_' . $_GET['method'] . '_profit';
+
+        $user_profit = $modelTransferToMobile->{$methosProfit};
+
+        $user_cost = $cost - ($cost * ($user_profit / 100));
+
+        echo $currency . ' ' . number_format($user_cost, 2);
+    }
+
     public function confirmRefill($modelTransferToMobile)
     {
+        /*print_r($_POST['TransferToMobile']);
+        exit;*/
 
         if ($_POST['TransferToMobile']['method'] == 'international') {
             $product    = $_POST['TransferToMobile']['amountValues']; //is the amout to refill
@@ -346,9 +383,10 @@ class TransferToMobileController extends Controller
             $result = $this->sendActionBDService($modelTransferToMobile);
         }
 
-        $this->updateDataBase($modelTransferToMobile);
-
         $this->checkResult($modelTransferToMobile, $result);
+
+        $this->updateDataBase($modelTransferToMobile);
+        exit;
 
     }
 
@@ -360,7 +398,7 @@ class TransferToMobileController extends Controller
 
             if (preg_match("/Transaction successful/", $result[1])) {
                 $this->releaseCredit($modelTransferToMobile, $result);
-                exit;
+
             } else {
                 echo '<div align=center id="container">';
                 echo '<font color=red>ERROR: ' . $result[1] . '</font>';
@@ -379,7 +417,7 @@ class TransferToMobileController extends Controller
                 echo '</div>';
             } elseif (preg_match("/SUCCESS/", strtoupper($result))) {
                 $this->releaseCredit($modelTransferToMobile, $result);
-                exit;
+
             }
 
         }
@@ -400,7 +438,31 @@ class TransferToMobileController extends Controller
                 )
             );
         }
-        $description = 'Send Credit to ' . $modelTransferToMobile->number . ' via ' . $modelTransferToMobile->method;
+
+        if ($this->test == true) {
+            echo $this->cost . "<br>";
+            echo $modelTransferToMobile->transfer_show_selling_price . "<br>";
+        }
+
+        $argument = $modelTransferToMobile->transfer_show_selling_price;
+        if ($argument < 10) {
+            $fee = '1.0' . $argument;
+        } else {
+            $fee = '1.' . $argument;
+        }
+
+        if ($this->test == true) {
+            echo $fee . "<br>";
+            echo $modelTransferToMobile->transfer_show_selling_price;
+        }
+
+        $this->showprice = number_format($this->cost * $fee, 2);
+
+        $description = 'Send Credit to ' . $modelTransferToMobile->number . ' via ' . $modelTransferToMobile->method . ' at ' . $this->showprice;
+
+        if ($this->test == true) {
+            echo $description;
+        }
 
         $payment = $modelTransferToMobile->method == 'international' ? 1 : 0;
         $values  = ":id_user, :costUser, :description, $payment";

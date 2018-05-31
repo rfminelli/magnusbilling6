@@ -762,6 +762,31 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.2.7') {
+            $sql = "
+			ALTER TABLE pkg_cdr CHANGE `sessionid` `sessionid` VARCHAR(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '';
+			ALTER TABLE pkg_cdr DROP INDEX buycost;
+			ALTER TABLE pkg_cdr DROP INDEX sessionbill;
+			ALTER TABLE pkg_cdr DROP INDEX sessiontime;
+			ALTER TABLE pkg_cdr DROP INDEX uniqueid;
+			ALTER TABLE pkg_cdr DROP INDEX id_prefix;
+			ALTER TABLE pkg_cdr DROP INDEX terminatecauseid;
+			ALTER TABLE pkg_cdr DROP INDEX calledstation;
+			ALTER TABLE pkg_cdr DROP INDEX id_trunk;
+			ALTER TABLE pkg_cdr DROP INDEX id_plan;
+			ALTER TABLE pkg_cdr_failed DROP INDEX id_user;
+			ALTER TABLE pkg_cdr_failed DROP INDEX id_plan;
+			ALTER TABLE pkg_cdr_failed DROP INDEX id_trunk;
+			ALTER TABLE pkg_cdr_failed DROP INDEX calledstation;
+			ALTER TABLE pkg_cdr_failed DROP INDEX terminatecauseid;
+			ALTER TABLE pkg_cdr_failed DROP INDEX id_prefix;
+			ALTER TABLE pkg_cdr_failed DROP INDEX uniqueid;
+			";
+            $this->executeDB($sql);
+            $version = '6.2.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 

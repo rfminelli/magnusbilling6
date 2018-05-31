@@ -1,0 +1,427 @@
+<?php
+/**
+ * =======================================
+ * ###################################
+ * MagnusBilling
+ *
+ * @package MagnusBilling
+ * @author Adilson Leffa Magnus.
+ * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * ###################################
+ *
+ * This software is released under the terms of the GNU Lesser General Public License v2.1
+ * A copy of which is available from http://www.gnu.org/copyleft/lesser.html
+ *
+ * Please submit bug reports, patches, etc to https://github.com/magnusbilling/mbilling/issues
+ * =======================================
+ * Magnusbilling.com <info@magnusbilling.com>
+ *
+ */
+
+class AuthenticateAgi
+{
+    public static function authenticateUser($agi, $MAGNUS)
+    {
+        $agi->verbose('AuthenticateUser ' . $MAGNUS->accountcode, 15);
+        $authentication = false;
+
+        /* TRY WITH THE CALLERID AUTHENTICATION*/
+        $authentication = AuthenticateAgi::callerIdAuthenticate($MAGNUS, $agi, $authentication);
+
+        //AUTHENTICATION VIA TECHPREFIX
+        $authentication = AuthenticateAgi::techPrefixAuthenticate($MAGNUS, $agi, $authentication);
+
+        /*TRY WITH THE ACCOUNTCODE AUTHENTICATION*/
+        $authentication = AuthenticateAgi::accountcodeAuthenticate($MAGNUS, $agi, $authentication);
+
+        /*TRY WITH THE SIPPROXY AUTHENTICATION*/
+        $authentication = AuthenticateAgi::sipProxyAuthenticate($MAGNUS, $agi, $authentication);
+
+        /* AUTHENTICATE BY PIN */
+        $authentication = AuthenticateAgi::callingCardAuthenticate($MAGNUS, $agi, $authentication);
+
+        $authentication = AuthenticateAgi::checkIfCallShopCall($MAGNUS, $agi, $authentication);
+
+        if ($authentication == false || $MAGNUS->active != 1) {
+            $prompt = "prepaid-auth-fail";
+        } else {
+            $prompt = $MAGNUS->check_expirationdate_customer($agi);
+        }
+
+        if (strlen($prompt) > 0) {
+            $MAGNUS->executePlayAudio($prompt, $agi);
+            $MAGNUS->hangup($agi);
+        }
+
+        AuthenticateAgi::checkUserCallLimit($MAGNUS, $agi);
+
+        AuthenticateAgi::checkPlanTechPrefix($MAGNUS, $agi);
+
+        AuthenticateAgi::checkPlanIntraInter($MAGNUS, $agi);
+
+        AuthenticateAgi::checkIfIsAgent($MAGNUS, $agi);
+
+        if (isset($agi->username)) {
+            $agi->username = $MAGNUS->username;
+        }
+
+        $agi->set_variable('CHANNEL(language)', $MAGNUS->language);
+
+        return $authentication;
+    }
+
+    public static function callerIdAuthenticate(&$MAGNUS, &$agi, $authentication)
+    {
+        if ($authentication == false && $MAGNUS->agiconfig['cid_enable'] == 1 && is_numeric($MAGNUS->CallerID) && $MAGNUS->CallerID > 0) {
+            $agi->verbose('Try callerID authentication ' . $MAGNUS->CallerID, 15);
+            $sql           = "SELECT * FROM pkg_callerid WHERE cid = '$MAGNUS->CallerID' LIMIT 1";
+            $modelCallerid = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelCallerid->id)) {
+                $sql       = "SELECT * FROM pkg_user WHERE id = '$modelCallerid->id_user' LIMIT 1";
+                $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
+                $agi->verbose("AUTHENTICATION BY CALLERID:" . $MAGNUS->CallerID, 6);
+                $authentication = true;
+            }
+        }
+        return $authentication;
+    }
+
+    public static function techPrefixAuthenticate(&$MAGNUS, &$agi, $authentication)
+    {
+        if ($authentication != true && strlen($MAGNUS->dnid) > 16) {
+            $tech_prefix = substr($MAGNUS->dnid, 0, 6);
+
+            $agi->verbose('Try accountcode + techprefix authentication ' . $tech_prefix, 15);
+
+            $from = $agi->get_variable("SIP_HEADER(Contact)", true);
+
+            $from = explode('@', $from);
+            $from = explode('>', $from[1]);
+            $from = explode(':', $from[0]);
+            $from = $from[0];
+
+            $sql       = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode' AND callingcard_pin = '$tech_prefix'  LIMIT 1";
+            $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelUser->id)) {
+                $sql      = "SELECT * FROM pkg_sip WHERE id_user = $modelUser->id AND host = '$from'  LIMIT 1";
+                $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            }
+
+            if (isset($modelSip->id)) {
+                AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser, $modelSip);
+                $MAGNUS->dnid = substr($MAGNUS->dnid, 6);
+                $agi->verbose("AUTHENTICATION BY TECHPREFIX $tech_prefix - Username: " . $MAGNUS->username . '  ' . $MAGNUS->dnid, 6);
+                $authentication = true;
+            }
+        }
+
+        return $authentication;
+    }
+
+    public static function accountcodeAuthenticate(&$MAGNUS, &$agi, $authentication)
+    {
+        if (strlen($MAGNUS->accountcode) >= 1 && $authentication != true) {
+            $agi->verbose('Try accountcode authentication ' . $MAGNUS->accountcode, 15);
+            $sql       = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode'  LIMIT 1";
+            $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelUser->id)) {
+                AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
+                $agi->verbose("AUTHENTICATION BY ACCOUNTCODE:" . $MAGNUS->username, 6);
+                $authentication = true;
+            }
+        }
+        return $authentication;
+    }
+
+    public static function sipProxyAuthenticate(&$MAGNUS, &$agi, $authentication)
+    {
+        if ($authentication != true && !filter_var($agi->get_variable("SIP_HEADER(X-AUTH-IP)", true), FILTER_VALIDATE_IP) === false) {
+            $agi->verbose("TRY Authentication via Proxy ");
+            $agi->verbose($agi->get_variable("SIP_HEADER(P-Accountcode)", true), 1);
+            $proxyServer = explode("@", $agi->get_variable("SIP_HEADER(to)", true));
+            $proxyServer = isset($proxyServer[1]) ? substr($proxyServer[1], 0, -1) : '';
+
+            $sql          = "SELECT id FROM pkg_servers WHERE host = '$proxyServer'  LIMIT 1";
+            $modelServers = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelServers->id)) {
+                if ($agi->get_variable("SIP_HEADER(P-Accountcode)", true) == '<null>') {
+
+                    $sql      = "SELECT * FROM pkg_sip WHERE host = '" . $agi->get_variable("SIP_HEADER(X-AUTH-IP)", true) . "'  LIMIT 1";
+                    $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                    if (isset($modelSip->id)) {
+                        $sql       = "SELECT * FROM pkg_user WHERE id = '$modelSip->id_user' LIMIT 1";
+                        $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                        AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser, $modelSip);
+                        $authentication = true;
+                        $agi->verbose("AUTHENTICATION BY X-AUTH-IP header (" . $agi->get_variable("SIP_HEADER(X-AUTH-IP)", true) . "), accountcode" . $MAGNUS->accountcode);
+                    }
+                } else {
+                    $MAGNUS->accountcode = $agi->get_variable("SIP_HEADER(P-Accountcode)", true);
+                    $sql                 = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode' LIMIT 1";
+                    $modelUser           = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                    if (isset($modelUser->id)) {
+                        AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
+                        $authentication = true;
+                        $agi->verbose("AUTHENTICATION BY P-Accountcode header " . $MAGNUS->accountcode);
+
+                    }
+                }
+            } else {
+                $agi->verbose("Try send call with X-AUTH-IP, BUT IS INVALID ", $proxyServer, 1);
+            }
+        }
+        return $authentication;
+    }
+
+    public static function pinAuthenticate(&$MAGNUS, &$agi, $authentication, $pin)
+    {
+
+        $agi->verbose('Try pin authentication ' . $pin, 15);
+        $sql       = "SELECT * FROM pkg_user WHERE callingcard_pin = '$pin' LIMIT 1";
+        $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+        if (isset($modelUser->id)) {
+            AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
+            $agi->verbose("AUTHENTICATION BY PIN:" . $pin, 6);
+            $authentication = true;
+        }
+
+        return $authentication;
+    }
+
+    public static function voucherAuthenticate(&$MAGNUS, &$agi, $authentication, $pin)
+    {
+        $agi->verbose('Check voucher Number $pin');
+        //check if the PIN is a valid voucher
+        $sql          = "SELECT * FROM pkg_voucher WHERE voucher = '$pin' AND used = 0 LIMIT 1";
+        $modelVoucher = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+        if (isset($modelVoucher->id)) {
+            $agi->verbose('Found valid voucher Number $pin');
+
+            $fields = "id_user, username, id_group, id_plan, password, credit,
+                        active, callingcard_pin, callshop, plan_day, boleto_day, language, prefix_local";
+            $values = "1,'" . Util::getNewUsername() . "', 3,'" . $modelVoucher->id_plan . "',
+                    '" . Util::generatePassword(8, true, true, true, false) . "', '" . $modelVoucher->credit . "',
+                    1, '" . $modelVoucher->voucher . "', 0, 0,0, '" . $modelVoucher->language . "',
+                    '" . $modelVoucher->prefix_local . "'";
+            $sql = "INSERT INTO pkg_user ($fields) VALUES ($values)";
+            $agi->exec($sql);
+            $MAGNUS->id_user = $agi->lastInsertId();
+
+            //Marca o voucher como usado
+            $sql = "UPDATE pkg_voucher SET id_user = $id_user, usedate = NOW(), used = 1 WHERE voucher = '$MAGNUS->username' LIMIT 1";
+            $agi->exec($sql);
+
+            $sql       = "SELECT * FROM pkg_user WHERE id = $MAGNUS->id_user LIMIT 1";
+            $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
+            $authentication = true;
+        }
+        return $authentication;
+    }
+
+    public static function callingCardAuthenticate(&$MAGNUS, &$agi, $authentication)
+    {
+        if ($authentication != true) {
+            $agi->verbose('try callingcard', 6);
+
+            for ($retries = 0; $retries < 3; $retries++) {
+                $agi->answer();
+
+                if (($retries > 0) && (strlen($prompt) > 0)) {
+                    $agi->verbose($prompt, 3);
+                    $agi->stream_file($prompt, '#');
+                }
+                if ($res < 0) {
+                    $res = -1;
+                    break;
+                }
+
+                $res      = 0;
+                $res_dtmf = $agi->get_data('prepaid-enter-pin-number', 6000, 6);
+
+                $agi->verbose('PIN callingcard ' . $res_dtmf["result"], 20);
+
+                $pin = $res_dtmf["result"];
+
+                if (!isset($pin) || strlen($pin) == 0) {
+                    $prompt = "prepaid-no-card-entered";
+                    $agi->verbose('No user entered', 6);
+                    continue;
+                }
+
+                if (strlen($pin) > 6 || strlen($pin) < 6) {
+                    $agi->verbose($prompt, 6);
+                    $prompt = "prepaid-invalid-digits";
+                    continue;
+                }
+
+                $authentication = AuthenticateAgi::pinAuthenticate($MAGNUS, $agi, $authentication, $pin);
+
+                if ($authentication == true) {
+                    break;
+                } else {
+
+                    $authentication = AuthenticateAgi::voucherAuthenticate($MAGNUS, $agi, $authentication, $pin);
+
+                    if ($authentication == true) {
+                        break;
+                    } else {
+                        $prompt = "prepaid-auth-fail";
+                        continue;
+                    }
+                }
+            }
+        }
+        return $authentication;
+    }
+
+    public static function checkPlanIntraInter(&$MAGNUS, $agi)
+    {
+        if ($MAGNUS->config['global']['intra-inter'] == '1') {
+            $agi->verbose(substr($MAGNUS->modelSip->callerid, 0, 4) . "  " . substr($MAGNUS->dnid, 0, 4), 30);
+
+            //if user callerId is equal the fist 4 digits of dialnumber, it is a intra call
+            if (substr($MAGNUS->modelSip->callerid, 0, 4) == substr($MAGNUS->dnid, 0, 4)) {
+                $sql       = "SELECT name FROM pkg_plan WHERE id = " . $MAGNUS->id_plan . "  LIMIT 1";
+                $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                $sql       = "SELECT * FROM pkg_plan WHERE name = '" . $modelPlan->name . " Intra'  LIMIT 1";
+                $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                if (isset($modelPlan->id)) {
+                    //if found plan with Intra in the name, change the plan
+                    $agi->verbose("INTRA PLAN FOUND AND CHANGED \$MAGNUS->id_plan to " . $modelPlan->name, 5);
+                    $MAGNUS->id_plan = $modelPlan->id;
+                }
+            }
+        }
+    }
+
+    public static function checkIfIsAgent(&$MAGNUS, $agi)
+    {
+        /*check if user is a agent user*/
+        if (!is_null($MAGNUS->id_agent) && $MAGNUS->id_agent > 1) {
+            $MAGNUS->id_plan_agent  = $MAGNUS->id_plan;
+            $sql                    = "SELECT * FROM pkg_plan WHERE id =" . $MAGNUS->id_agent . " LIMIT 1";
+            $MAGNUS->modelUserAgent = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            $MAGNUS->id_plan       = $MAGNUS->modelUserAgent->id_plan;
+            $MAGNUS->agentUsername = $MAGNUS->modelUserAgent->username;
+
+            $agi->verbose("Reseller id_Plan $MAGNUS->id_plan_agent, user id_plan $MAGNUS->id_plan", 6);
+        }
+    }
+
+    public static function checkPlanTechPrefix(&$MAGNUS, &$agi)
+    {
+        if (strlen($MAGNUS->dnid) > 13) {
+            //tech prefix to route
+            $sql       = "SELECT id FROM pkg_plan WHERE techprefix = '" . substr($MAGNUS->dnid, 0, 5) . "'  LIMIT 1";
+            $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelPlan->id)) {
+                $MAGNUS->id_plan = $modelPlan->id;
+                $MAGNUS->dnid    = substr($MAGNUS->dnid, 5);
+                $agi->verbose("Changed plan via TechPrefix: Plan used $MAGNUS->id_plan - Number: $MAGNUS->dnid ", 15);
+            }
+        }
+    }
+
+    public static function checkUserCallLimit(&$MAGNUS, &$agi)
+    {
+        if ($MAGNUS->mode == 'standard' && $MAGNUS->user_calllimit >= 0) {
+            //check user call limit
+            $agi->verbose('check user call limit', 15);
+            $calls = AsteriskAccess::getCallsPerUser($MAGNUS->accountcode);
+            if ($calls > $MAGNUS->user_calllimit) {
+                $agi->verbose("Send Congestion user call limit", 3);
+
+                if ($MAGNUS->modelUser->calllimit_error == 403) {
+                    $agi->execute((busy), busy);
+                } else {
+                    $agi->execute((congestion), Congestion);
+                }
+
+                $MAGNUS->hangup($agi);
+            }
+        }
+    }
+
+    public static function checkIfCallShopCall(&$MAGNUS, &$agi, $authentication)
+    {
+
+        //verfica se é cliente de callshop, e se a cabina esta ativa
+        if ($MAGNUS->callshop == 1) {
+            $sql      = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->sip_account'  LIMIT 1";
+            $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            if (isset($modelSip->status) && $modelSip->status == 0) {
+                $agi->verbose("CABINA DISABLED " . $MAGNUS->sip_account, 3);
+                $authentication = false;
+            }
+        }
+
+        return $authentication;
+    }
+
+    public static function setMagnusAttrubutes(&$MAGNUS, &$agi, $model, $modelSip = null, $modelPlan)
+    {
+        if (!isset($modelPlan->id)) {
+            $sql       = "SELECT removeinterprefix, play_audio, portabilidadeMobile, portabilidadeFixed  FROM pkg_plan WHERE id = " . $model->id_plan . " LIMIT 1";
+            $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+        }
+
+        $MAGNUS->modelUser           = $model;
+        $MAGNUS->credit              = $model->credit;
+        $MAGNUS->id_plan             = $model->id_plan;
+        $MAGNUS->active              = $model->active;
+        $MAGNUS->typepaid            = $model->typepaid;
+        $MAGNUS->creditlimit         = $model->creditlimit;
+        $MAGNUS->language            = $model->language;
+        $MAGNUS->accountcode         = $model->username;
+        $MAGNUS->username            = $model->username;
+        $MAGNUS->removeinterprefix   = $modelPlan->removeinterprefix;
+        $MAGNUS->portabilidadeMobile = $modelPlan->portabilidadeMobile;
+        $MAGNUS->portabilidadeFixed  = $modelPlan->portabilidadeFixed;
+        $MAGNUS->redial              = $model->redial;
+        $MAGNUS->enableexpire        = $model->enableexpire;
+        $MAGNUS->expirationdate      = $model->expirationdate;
+        $MAGNUS->expiredays          = $model->expiredays;
+        $MAGNUS->creationdate        = $model->creationdate;
+        $MAGNUS->id_user             = $model->id;
+        $MAGNUS->id_agent            = $model->id_user;
+        $MAGNUS->restriction         = $model->restriction;
+        $MAGNUS->callshop            = $model->callshop;
+        $MAGNUS->id_offer            = $model->id_offer;
+        $MAGNUS->prefix_local        = $model->prefix_local;
+        $MAGNUS->countryCode         = $model->country;
+        $MAGNUS->user_calllimit      = $model->calllimit;
+        $MAGNUS->play_audio          = $modelPlan->play_audio;
+        $MAGNUS->mix_monitor_format  = $model->mix_monitor_format;
+        $MAGNUS->credit              = $MAGNUS->typepaid == 1
+        ? $MAGNUS->credit + $MAGNUS->creditlimit
+        : $MAGNUS->credit;
+
+        if (!isset($modelSip->id)) {
+            $sql              = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->sip_account' LIMIT 1";
+            $MAGNUS->modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+        } else {
+            $MAGNUS->modelSip = $modelSip;
+        }
+
+        if ($MAGNUS->voicemail != 1) {
+            $MAGNUS->voicemail = isset($MAGNUS->modelSip->id) ? $MAGNUS->modelSip->voicemail : false;
+        }
+        $MAGNUS->record_call = (isset($MAGNUS->modelSip->id) && $MAGNUS->modelSip->record_call) || $MAGNUS->agiconfig['record_call'] ? true : false;
+
+    }
+
+};

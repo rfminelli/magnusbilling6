@@ -34,7 +34,6 @@ php /var/www/html/mbilling/cron.php UpdateMysql
 ## remove unnecessary directories
 rm -rf /var/www/html/mbilling/doc
 rm -rf /var/www/html/mbilling/script
-
 ## set default permissions 
 chown -R asterisk:asterisk /var/lib/php/session/
 chown -R asterisk:asterisk /var/spool/asterisk/outgoing/
@@ -55,7 +54,8 @@ chmod -R 700 /var/www/html/mbilling/tmp
 chmod -R 700 /var/www/html/mbilling/assets
 chmod -R 700 /var/www/html/mbilling/resources/sounds
 chmod -R 700 /var/www/html/mbilling/resources/images
-
+chmod +x /var/www/html/mbilling/resources/asterisk/mbilling.php
+chmod -R 100 /var/www/html/mbilling/resources/asterisk/
 if [[ -e /var/www/html/mbilling/protected/commands/update3.sh ]]; then
 	/var/www/html/mbilling/protected/commands/update3.sh
 fi
