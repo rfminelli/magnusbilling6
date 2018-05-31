@@ -50,9 +50,7 @@ class QueueAgi
 
         Queue::model()->deleteQueueStatus($MAGNUS->uniqueid);
 
-        $stopTime = time();
-
-        $answeredtime = $stopTime - $startTime;
+        $answeredtime = time() - $startTime;
 
         $siptransfer = $agi->get_variable("SIPTRANSFER");
 
@@ -77,14 +75,12 @@ class QueueAgi
 
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
-            $modelCall->sessionid        = $MAGNUS->channel;
             $modelCall->id_user          = $modelQueue->id_user;
             $modelCall->starttime        = date("Y-m-d H:i:s", time() - $answeredtime);
             $modelCall->sessiontime      = $answeredtime;
             $modelCall->real_sessiontime = intval($answeredtime);
             $modelCall->calledstation    = $MAGNUS->destination;
             $modelCall->terminatecauseid = $terminatecauseid;
-            $modelCall->stoptime         = date('Y-m-d H:i:s');
             $modelCall->sessionbill      = $DidAgi->sell_price;
             $modelCall->id_plan          = $modelQueue->idUser->id_plan;
             $modelCall->id_trunk         = null;

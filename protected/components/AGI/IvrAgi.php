@@ -231,9 +231,7 @@ class IvrAgi
 
         }
 
-        $stopTime = time();
-
-        $answeredtime = $stopTime - $startTime;
+        $answeredtime = time() - $startTime;
 
         $terminatecauseid = 1;
 

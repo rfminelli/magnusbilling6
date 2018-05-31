@@ -100,13 +100,11 @@ class SipCallAgi
 
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
-            $modelCall->sessionid        = $MAGNUS->channel;
             $modelCall->id_user          = $MAGNUS->id_user;
             $modelCall->starttime        = date("Y-m-d H:i:s", $startCall);
             $modelCall->sessiontime      = $answeredtime;
             $modelCall->calledstation    = $MAGNUS->destination;
             $modelCall->terminatecauseid = $terminatecauseid;
-            $modelCall->stoptime         = date('Y-m-d H:i:s');
             $modelCall->id_plan          = $MAGNUS->id_plan;
             $modelCall->id_trunk         = null;
             $modelCall->src              = $MAGNUS->username;
@@ -121,7 +119,6 @@ class SipCallAgi
 
             $modelCallFailed                   = new CallFailed();
             $modelCallFailed->uniqueid         = $MAGNUS->uniqueid;
-            $modelCallFailed->sessionid        = $MAGNUS->channel;
             $modelCallFailed->id_user          = $MAGNUS->id_user;
             $modelCallFailed->starttime        = date('Y-m-d H:i:s');
             $modelCallFailed->calledstation    = $MAGNUS->destination;

@@ -559,7 +559,6 @@ class DidAgi
         $modelCall->real_sessiontime = intval($answeredtime);
         $modelCall->calledstation    = $this->did;
         $modelCall->terminatecauseid = $terminatecauseid;
-        $modelCall->stoptime         = date('Y-m-d H:i:s');
         $modelCall->sessionbill      = $this->sell_price;
         $modelCall->id_plan          = $MAGNUS->id_plan;
         $modelCall->id_trunk         = null;

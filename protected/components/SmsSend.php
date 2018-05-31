@@ -184,11 +184,9 @@ class SmsSend
             $uniqueid  = "$destination-" . date('His');
 
             $modelCall                   = new Call();
-            $modelCall->sessionid        = $sessionid;
             $modelCall->uniqueid         = $uniqueid;
             $modelCall->id_user          = $modelUser->id;
             $modelCall->starttime        = $date_msn;
-            $modelCall->stoptime         = $date_msn;
             $modelCall->sessiontime      = $sessionTime;
             $modelCall->calledstation    = $destination;
             $modelCall->sessionbill      = $rateInitial;

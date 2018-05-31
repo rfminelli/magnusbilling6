@@ -520,14 +520,12 @@ class Calc
             $agi->verbose('Add CDR the DID cost to CallerID. Cost =' . $did_sell_price . ', duration' . $didDuration);
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
-            $modelCall->sessionid        = $MAGNUS->channel;
             $modelCall->id_user          = $this->did_charge_of_id_user;
             $modelCall->starttime        = date("Y-m-d H:i:s", $this->did_charge_of_answer_time);
             $modelCall->sessiontime      = $didDuration;
             $modelCall->real_sessiontime = $didDuration;
             $modelCall->calledstation    = $this->didAgi->did;
             $modelCall->terminatecauseid = $terminatecauseid;
-            $modelCall->stoptime         = date('Y-m-d H:i:s');
             $modelCall->sessionbill      = $did_sell_price;
             $modelCall->id_plan          = $MAGNUS->id_plan;
             $modelCall->id_trunk         = null;
@@ -563,7 +561,6 @@ class Calc
             $modelCall->real_sessiontime = intval($this->real_answeredtime);
             $modelCall->calledstation    = $MAGNUS->destination;
             $modelCall->terminatecauseid = $terminatecauseid;
-            $modelCall->stoptime         = date('Y-m-d H:i:s');
             $modelCall->sessionbill      = $costCdr;
             $modelCall->id_plan          = $MAGNUS->id_plan;
             $modelCall->id_trunk         = $this->usedtrunk;

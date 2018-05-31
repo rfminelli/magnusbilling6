@@ -199,7 +199,6 @@ class CallbackAgi
                 $modelCall->real_sessiontime = intval($sessiontime1fsLeg);
                 $modelCall->calledstation    = $called;
                 $modelCall->terminatecauseid = 1;
-                $modelCall->stoptime         = date('Y-m-d H:i:s');
                 $modelCall->sessionbill      = $sell30;
                 $modelCall->id_plan          = $MAGNUS->id_plan;
                 $modelCall->id_trunk         = $MAGNUS->id_trunk;
