@@ -665,7 +665,7 @@ class Magnus
         if ($this->restriction == 1 || $this->restriction == 2) {
             /*Check if Account have restriction*/
             $sql = "SELECT id FROM pkg_restrict_phone WHERE id_user = $this->id_user
-                    AND number = SUBSTRING($this->destination,1,length(number)) LENGTH(number) DESC LIMIT 1 ";
+                        AND number = SUBSTRING('" . $this->destination . "',1,length(number)) ORDER BY LENGTH(number) DESC";
             $modelRestrictedPhonenumber = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             $agi->verbose("RESTRICTED NUMBERS ", 15);
