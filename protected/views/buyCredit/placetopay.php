@@ -188,7 +188,7 @@ if (isset($_GET['id_refill'])) {
 
     $modeRefill              = Refill::model()->findByPk((int) $_GET['id_refill']);
     $modeRefill->description = $descr;
-    $modelRefill->save();
+    $modeRefill->save();
 
     $Reference = $_GET['id_refill'];
 } else {
@@ -196,13 +196,13 @@ if (isset($_GET['id_refill'])) {
     $modeRefill->id_user = $modelUser->id;
     $modeRefill->payment = 0;
     $modeRefill->credit  = $selectdAmount;
-    $modelRefill->save();
+    $modeRefill->save();
 
-    $Reference = Yii::app()->db->lastInsertID;
+    $Reference = $modeRefill->id;
 
     $descr = 'Recarga PlaceToPay <font color=blue>pendiente</font>, referencia: ' . $Reference . ' ';
 
-    Refill::model()->updateAll(array("description=$descr"), 'id = :key', array(':key' => $Reference));
+    Refill::model()->updateByPk($Reference, array('description' => $descr));
 }
 
 $paymentRequest = $p2p->getPaymentRedirect(
