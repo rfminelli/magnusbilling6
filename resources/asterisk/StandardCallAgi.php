@@ -12,7 +12,6 @@ class StandardCallAgi
 
         // CALL AUTHENTICATE AND WE HAVE ENOUGH CREDIT TO GO AHEAD
         if (AuthenticateAgi::authenticateUser($agi, $MAGNUS) == 1) {
-            $agi->verbose(print_r($MAGNUS->agiconfig, true));
             for ($i = 0; $i < $MAGNUS->agiconfig['number_try']; $i++) {
                 // CREATE A DIFFERENT UNIQUEID FOR EACH TRY
                 if ($i > 0) {

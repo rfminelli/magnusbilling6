@@ -140,7 +140,8 @@ class SearchTariff
         $modelBalance = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         if (isset($modelBalance->last_use)) {
-            if ($modelBalance->last_use == $total - 1) {
+            $ultimo = $modelBalance->last_use;
+            if ($modelBalance->last_use >= $total - 1) {
                 $sql = "UPDATE pkg_balance SET last_use = 0 WHERE id_prefix = " . $result[0]['dialprefix'];
             } else {
                 $sql = "UPDATE pkg_balance SET last_use = last_use + 1 WHERE id_prefix = " . $result[0]['dialprefix'];
@@ -149,6 +150,7 @@ class SearchTariff
         } else {
             $sql = "INSERT INTO pkg_balance (last_use, id_prefix) VALUES (0, '" . $result[0]['dialprefix'] . ")";
             $agi->exec($sql);
+            $ultimo = 0;
         }
 
         //coloca o id ultimo em primeiro

@@ -292,9 +292,6 @@ class Magnus
     {
         $minutes = intval($timeout / 60);
         $seconds = $timeout % 60;
-
-        $agi->verbose("TIMEOUT->" . $timeout . " : minutes=$minutes - seconds=$seconds", 6);
-
         if ($this->agiconfig['say_rateinitial'] == 1) {
             $this->sayRate($agi, $rate);
         }

@@ -808,19 +808,19 @@ class CalcAgi
             if ($sessiontime > 0) {
                 $sql = "SELECT * FROM pkg_rate_callshop WHERE dialprefix = SUBSTRING($MAGNUS->destination,1,length(dialprefix))
                                 AND id_user= $MAGNUS->id_user   ORDER BY LENGTH(dialprefix) DESC LIMIT 1";
-                $modelReteCallshop = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
+                $modelReteCallshop = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                 if (!isset($modelReteCallshop->id)) {
                     $agi->verbose('Not found CallShop rate => ' . $MAGNUS->destination . ' ' . $MAGNUS->id_user);
                     return;
                 }
-                $buyrate   = $modelReteCallshop[0]['buyrate'] > 0 ? $modelReteCallshop[0]['buyrate'] : $cost;
-                $initblock = $modelReteCallshop[0]['minimo'];
-                $increment = $modelReteCallshop[0]['block'];
+                $buyrate   = $modelReteCallshop->buyrate > 0 ? $modelReteCallshop->buyrate : $cost;
+                $initblock = $modelReteCallshop->minimo;
+                $increment = $modelReteCallshop->block;
 
                 $sellratecost_callshop = $MAGNUS->calculation_price($buyrate, $sessiontime, $initblock, $increment);
 
-                if ($sessiontime < $modelReteCallshop[0]['minimal_time_charge']) {
+                if ($sessiontime < $modelReteCallshop->minimal_time_charge) {
                     $agi->verbose("Minimal time to charge. Cost 0.0000", 15);
                     $sellratecost_callshop = 0;
                 }
@@ -829,7 +829,7 @@ class CalcAgi
 
                 $fields = "sessionid, id_user, status, price, buycost, calledstation, destination,price_min, cabina, sessiontime";
                 $values = "'$MAGNUS->channel', $MAGNUS->id_user, 0, $sellratecost_callshop, '$cost', '$MAGNUS->destination',
-                                " . $modelReteCallshop[0]['destination'] . ", '$buyrate', '$MAGNUS->sip_account', $sessiontime";
+                                '" . $modelReteCallshop->destination . "', '$buyrate', '$MAGNUS->sip_account', $sessiontime";
                 $sql = "INSERT INTO pkg_callshop ($fields) VALUES ($values)";
                 $agi->exec($sql);
             }

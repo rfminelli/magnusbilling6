@@ -78,7 +78,7 @@ class AuthenticateAgi
             $modelCallerid = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             if (isset($modelCallerid->id)) {
-                $sql       = "SELECT * FROM pkg_user WHERE id = '$modelCallerid->id_user' LIMIT 1";
+                $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE id = '$modelCallerid->id_user' LIMIT 1";
                 $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
                 AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
                 $agi->verbose("AUTHENTICATION BY CALLERID:" . $MAGNUS->CallerID, 6);
@@ -102,7 +102,7 @@ class AuthenticateAgi
             $from = explode(':', $from[0]);
             $from = $from[0];
 
-            $sql       = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode' AND callingcard_pin = '$tech_prefix'  LIMIT 1";
+            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE username = '$MAGNUS->accountcode' AND callingcard_pin = '$tech_prefix'  LIMIT 1";
             $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             if (isset($modelUser->id)) {
@@ -125,7 +125,7 @@ class AuthenticateAgi
     {
         if (strlen($MAGNUS->accountcode) >= 1 && $authentication != true) {
             $agi->verbose('Try accountcode authentication ' . $MAGNUS->accountcode, 15);
-            $sql       = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode'  LIMIT 1";
+            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE username = '$MAGNUS->accountcode'  LIMIT 1";
             $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             if (isset($modelUser->id)) {
@@ -155,7 +155,7 @@ class AuthenticateAgi
                     $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                     if (isset($modelSip->id)) {
-                        $sql       = "SELECT * FROM pkg_user WHERE id = '$modelSip->id_user' LIMIT 1";
+                        $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE id = '$modelSip->id_user' LIMIT 1";
                         $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                         AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser, $modelSip);
@@ -164,7 +164,7 @@ class AuthenticateAgi
                     }
                 } else {
                     $MAGNUS->accountcode = $agi->get_variable("SIP_HEADER(P-Accountcode)", true);
-                    $sql                 = "SELECT * FROM pkg_user WHERE username = '$MAGNUS->accountcode' LIMIT 1";
+                    $sql                 = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE username = '$MAGNUS->accountcode' LIMIT 1";
                     $modelUser           = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
                     if (isset($modelUser->id)) {
                         AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
@@ -184,7 +184,7 @@ class AuthenticateAgi
     {
 
         $agi->verbose('Try pin authentication ' . $pin, 15);
-        $sql       = "SELECT * FROM pkg_user WHERE callingcard_pin = '$pin' LIMIT 1";
+        $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE callingcard_pin = '$pin' LIMIT 1";
         $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         if (isset($modelUser->id)) {
@@ -219,7 +219,7 @@ class AuthenticateAgi
             $sql = "UPDATE pkg_voucher SET id_user = $id_user, usedate = NOW(), used = 1 WHERE voucher = '$MAGNUS->username' LIMIT 1";
             $agi->exec($sql);
 
-            $sql       = "SELECT * FROM pkg_user WHERE id = $MAGNUS->id_user LIMIT 1";
+            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE id = $MAGNUS->id_user LIMIT 1";
             $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser);
@@ -372,11 +372,16 @@ class AuthenticateAgi
         return $authentication;
     }
 
-    public static function setMagnusAttrubutes(&$MAGNUS, &$agi, $model, $modelSip = null, $modelPlan)
+    public static function setMagnusAttrubutes(&$MAGNUS, &$agi, $model, $modelSip = null)
     {
-        if (!isset($modelPlan->id)) {
-            $sql       = "SELECT removeinterprefix, play_audio, portabilidadeMobile, portabilidadeFixed  FROM pkg_plan WHERE id = " . $model->id_plan . " LIMIT 1";
-            $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+        if (!isset($model->removeinterprefix)) {
+            $sql                        = "SELECT removeinterprefix, play_audio, portabilidadeMobile, portabilidadeFixed  FROM pkg_plan WHERE id = " . $model->id_plan . " LIMIT 1";
+            $modelPlan                  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            $model->removeinterprefix   = $modelPlan->removeinterprefix;
+            $model->portabilidadeMobile = $modelPlan->portabilidadeMobile;
+            $model->portabilidadeFixed  = $modelPlan->portabilidadeFixed;
+            $model->play_audio          = $modelPlan->play_audio;
         }
 
         $MAGNUS->modelUser           = $model;
@@ -388,9 +393,10 @@ class AuthenticateAgi
         $MAGNUS->language            = $model->language;
         $MAGNUS->accountcode         = $model->username;
         $MAGNUS->username            = $model->username;
-        $MAGNUS->removeinterprefix   = $modelPlan->removeinterprefix;
-        $MAGNUS->portabilidadeMobile = $modelPlan->portabilidadeMobile;
-        $MAGNUS->portabilidadeFixed  = $modelPlan->portabilidadeFixed;
+        $MAGNUS->removeinterprefix   = $model->removeinterprefix;
+        $MAGNUS->portabilidadeMobile = $model->portabilidadeMobile;
+        $MAGNUS->portabilidadeFixed  = $model->portabilidadeFixed;
+        $MAGNUS->play_audio          = $model->play_audio;
         $MAGNUS->redial              = $model->redial;
         $MAGNUS->enableexpire        = $model->enableexpire;
         $MAGNUS->expirationdate      = $model->expirationdate;
@@ -404,7 +410,6 @@ class AuthenticateAgi
         $MAGNUS->prefix_local        = $model->prefix_local;
         $MAGNUS->countryCode         = $model->country;
         $MAGNUS->user_calllimit      = $model->calllimit;
-        $MAGNUS->play_audio          = $modelPlan->play_audio;
         $MAGNUS->mix_monitor_format  = $model->mix_monitor_format;
         $MAGNUS->credit              = $MAGNUS->typepaid == 1
         ? $MAGNUS->credit + $MAGNUS->creditlimit
@@ -421,7 +426,6 @@ class AuthenticateAgi
             $MAGNUS->voicemail = isset($MAGNUS->modelSip->id) ? $MAGNUS->modelSip->voicemail : false;
         }
         $MAGNUS->record_call = (isset($MAGNUS->modelSip->id) && $MAGNUS->modelSip->record_call) || $MAGNUS->agiconfig['record_call'] ? true : false;
-
     }
 
 };
