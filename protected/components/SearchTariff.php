@@ -112,7 +112,7 @@ class SearchTariff
         if (count($modelBalance)) {
             $ultimo = $modelBalance->last_use;
 
-            if ($ultimo == $total - 1) {
+            if ($ultimo >= $total - 1) {
                 $modelBalance->last_use = 0;
             } else {
                 $modelBalance->last_use += 1;

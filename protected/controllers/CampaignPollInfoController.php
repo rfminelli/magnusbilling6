@@ -74,10 +74,14 @@ class CampaignPollInfoController extends Controller
 
         $this->filter = $filter = $this->extraFilter($filter);
 
+        if (!preg_match('/id_campaign_poll/', $filter)) {
+            exit('Please filter one or more poll');
+        }
         $records = $this->abstractModel->findAll(array(
             'select'    => $this->getColumnsFromReport($columns),
             'join'      => $this->join,
-            'condition' => $filter,
+            'condition' => $this->filter,
+            'params'    => $this->paramsFilter,
             'order'     => $sort,
             'group'     => 'number',
         ));
@@ -92,18 +96,18 @@ class CampaignPollInfoController extends Controller
 
         $fieldsCsv = array();
         $t         = 0;
+
         foreach ($records as $numero) {
-            if (!Yii::app()->session['isAdmin']) {
-                $user   = "AND id_user = :id_user";
-                $filter = preg_replace("/$user/", "", $filter);
-            }
+
+            $paramsFilter2 = $this->paramsFilter;
+
+            $paramsFilter2['number'] = $numero->number;
+
             $modelCampaignPollInfo = $this->abstractModel->findAll(array(
                 'condition' => "number = :number AND $filter",
                 'order'     => 'id_campaign_poll ASC',
-                'params'    => array(
-                    ":id_user" => Yii::app()->session['id_user'],
-                    ":number"  => $numero->number,
-                ),
+                'join'      => $this->join,
+                'params'    => $paramsFilter2,
             ));
 
             $respostas = array();
@@ -113,9 +117,8 @@ class CampaignPollInfoController extends Controller
                 continue;
             }
 
-            $ids = explode('(', $filter);
-            $ids = explode(')', $ids[1]);
-            $ids = explode(',', $ids[0]);
+            $ids = $ids = $this->paramsFilter['pIn00'];
+            $ids = explode(',', $ids);
 
             for ($i = 0; $i < count($ids); $i++) {
 
@@ -127,6 +130,7 @@ class CampaignPollInfoController extends Controller
 
             }
             $result = implode(',', $respostas);
+
             if ($t == 0) {
                 $colunas = 'Fecha,Numero,city';
 
@@ -138,9 +142,18 @@ class CampaignPollInfoController extends Controller
                         unset($filter2[$key]);
                     }
                 }
-                $modelCampaignPoll = ModelName::model()->findAll(array(
+
+                foreach ($this->paramsFilter as $key => $value) {
+                    if ($key != 'pIn00') {
+                        continue;
+                    }
+                    $paramsIDPoll[$key] = $value;
+                }
+
+                $modelCampaignPoll = CampaignPoll::model()->findAll(array(
                     'condition' => $filter2[1],
                     'order'     => 'id ASC',
+                    'params'    => $paramsIDPoll,
                 ));
                 foreach ($modelCampaignPoll as $key => $coluna) {
 
