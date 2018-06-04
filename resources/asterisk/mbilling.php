@@ -133,7 +133,7 @@ if ($MAGNUS->mode == 'standard') {
         $MAGNUS->agiconfig['use_dnid'] = 1;
         $MAGNUS->destination           = $MAGNUS->extension           = $MAGNUS->dnid           = $agi->get_variable("SECCALL", true);
 
-        $sql                 = "SELECT * FROM pkg_user WHERE id = " . $agi->get_variable("IDUSER", true) . "LIMIT 1";
+        $sql                 = "SELECT * FROM pkg_user WHERE id = " . $agi->get_variable("IDUSER", true) . " LIMIT 1";
         $MAGNUS->modelUser   = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
         $MAGNUS->accountcode = isset($MAGNUS->modelUser->username) ? $MAGNUS->modelUser->username : null;
         $agi->verbose("CALL TO PSTN FROM CLIC TO CALL", 15);

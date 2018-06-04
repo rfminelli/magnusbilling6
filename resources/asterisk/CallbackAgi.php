@@ -229,18 +229,18 @@ class CallbackAgi
             && (strlen($callerID) == 10 || strlen($callerID) == 11)) {
             $callerID = "55" . $callerID;
         }
-        $work   = $MAGNUS->checkIVRSchedule($DidAgi->modelDestination->idDid);
+        $work   = $MAGNUS->checkIVRSchedule($DidAgi->modelDid);
         $status = $work != 'open' ? 4 : 1;
 
-        $sql           = "SELECT * FROM pkg_callback WHERE exten = '$callerID' AND status IN (1,4) AND id_did = $DidAgi->modelDestination->id_did LIMIT 1 ";
+        $sql           = "SELECT * FROM pkg_callback WHERE exten = '$callerID' AND status IN (1,4) AND id_did = " . $DidAgi->modelDestination[0]['id_did'] . " LIMIT 1 ";
         $modelCallBack = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         if (isset($modelCallBack->id)) {
             $sql = "UPDATE pkg_callback SET status = '$status' WHERE id = $modelCallBack->id LIMIT 1";
             $agi->exec($sql);
         } else {
-            $sql = "INSERT INTO pkg_callback (id_did,exten, id_user, status) VALUES ('$DidAgi->modelDestination->id_did',
-                    '$callerID','$DidAgi->modelDestination->id_user', $status)";
+            $sql = "INSERT INTO pkg_callback (id_did,exten, id_user, status) VALUES ('" . $DidAgi->modelDestination[0]['id_did'] . "',
+                    '$callerID','" . $DidAgi->modelDestination[0]['id_user'] . "', $status)";
             $agi->exec($sql);
         }
 
@@ -251,7 +251,7 @@ class CallbackAgi
 
             //esta dentro do hario de atencao
             $audioURA = $work == 'open' ? 'idDidAudioProWork_' : 'idDidAudioProNoWork_';
-            $audio    = $MAGNUS->magnusFilesDirectory . '/sounds/' . $audioURA . $DidAgi->modelDestination->id_did;
+            $audio    = $MAGNUS->magnusFilesDirectory . '/sounds/' . $audioURA . $DidAgi->modelDestination[0]['id_did'];
             //early_media enable
             if ($DidAgi->modelDid->cbr_em == 1) {
                 $agi->verbose('earl ok');

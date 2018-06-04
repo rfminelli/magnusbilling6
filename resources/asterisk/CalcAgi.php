@@ -528,7 +528,7 @@ class CalcAgi
         if ($terminatecauseid == 1) {
             if ($agi->get_variable("IDCALLBACK", true)) {
                 $sql = "UPDATE pkg_callback SET last_attempt_time = '" . date('Y-m-d H:i:s') . "', status = 3
-                            WHERE id '" . $agi->get_variable("IDCALLBACK", true) . "' LIMIT 1";
+                            WHERE id = '" . $agi->get_variable("IDCALLBACK", true) . "' LIMIT 1";
                 $agi->exec($sql);
             }
         }
