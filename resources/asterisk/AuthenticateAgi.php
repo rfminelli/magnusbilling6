@@ -310,7 +310,7 @@ class AuthenticateAgi
         /*check if user is a agent user*/
         if (!is_null($MAGNUS->id_agent) && $MAGNUS->id_agent > 1) {
             $MAGNUS->id_plan_agent  = $MAGNUS->id_plan;
-            $sql                    = "SELECT * FROM pkg_plan WHERE id =" . $MAGNUS->id_agent . " LIMIT 1";
+            $sql                    = "SELECT * FROM pkg_user WHERE id =" . $MAGNUS->id_agent . " LIMIT 1";
             $MAGNUS->modelUserAgent = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             $MAGNUS->id_plan       = $MAGNUS->modelUserAgent->id_plan;
@@ -339,8 +339,28 @@ class AuthenticateAgi
     {
         if ($MAGNUS->mode == 'standard' && $MAGNUS->user_calllimit >= 0) {
             //check user call limit
-            $agi->verbose('check user call limit', 15);
-            $calls = AsteriskAccess::getCallsPerUser($MAGNUS->accountcode);
+            $agi->verbose('check user call limit', 5);
+
+            $asmanager = new AGI_AsteriskManager();
+            $asmanager->connect('localhost', 'magnus', 'magnussolution');
+
+            $channelsData = $asmanager->command("core show channels concise");
+            $channelsData = explode("\n", $channelsData["data"]);
+            $asmanager->disconnect();
+            $sql         = "SELECT name FROM pkg_sip WHERE accountcode = '$accountcode'";
+            $modelSip    = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            $sipAccounts = '';
+            foreach ($modelSip as $key => $sip) {
+                $sipAccounts .= $sip->name . '|';
+            }
+
+            $sipAccounts = substr($sipAccounts, 0, -1);
+            $calls       = 0;
+            foreach ($channelsData as $key => $line) {
+                if (preg_match("/^SIP\/($sipAccounts)-/", $line)) {
+                    $calls++;
+                }
+            }
             if ($calls > $MAGNUS->user_calllimit) {
                 $agi->verbose("Send Congestion user call limit", 3);
 
@@ -352,12 +372,12 @@ class AuthenticateAgi
 
                 $MAGNUS->hangup($agi);
             }
+
         }
     }
 
     public static function checkIfCallShopCall(&$MAGNUS, &$agi, $authentication)
     {
-
         //verfica se é cliente de callshop, e se a cabina esta ativa
         if ($MAGNUS->callshop == 1) {
             $sql      = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->sip_account'  LIMIT 1";
