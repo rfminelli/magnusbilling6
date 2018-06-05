@@ -856,7 +856,6 @@ class CalcAgi
         $CalcAgi->buycost          = 0;
         $CalcAgi->id_prefix        = null;
         $CalcAgi->saveCDR($agi, $MAGNUS);
-
          */
 
         if ($this->terminatecauseid == 1) {
@@ -894,17 +893,20 @@ class CalcAgi
                 return $agi->lastInsertId();
             }
         } else {
-            $fields = "uniqueid,id_user,calledstation,id_plan,id_trunk,src,
+
+            if (file_exists(dirname(__FILE__) . '/CallCache.php')) {
+                include '/CallCache.php';
+            } else {
+                $fields = "uniqueid,id_user,calledstation,id_plan,id_trunk,src,
                         starttime, terminatecauseid,sipiax,id_prefix";
 
-            $values = "'$MAGNUS->uniqueid', '$MAGNUS->id_user','$MAGNUS->destination','$MAGNUS->id_plan',
+                $values = "'$MAGNUS->uniqueid', '$MAGNUS->id_user','$MAGNUS->destination','$MAGNUS->id_plan',
                         '$MAGNUS->id_trunk', '$MAGNUS->sip_account',
                         '$this->starttime', '$this->terminatecauseid','$this->sipiax','$this->id_prefix'";
 
-            $sql = "INSERT INTO pkg_cdr_failed ($fields) VALUES ($values) ";
-            $agi->exec($sql);
-
+                $sql = "INSERT INTO pkg_cdr_failed ($fields) VALUES ($values) ";
+                $agi->exec($sql);
+            }
         }
-
     }
 }
