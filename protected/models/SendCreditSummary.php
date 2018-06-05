@@ -24,6 +24,7 @@ class SendCreditSummary extends Model
 
     protected $_module = 'sendcreditsummary';
     public $day;
+    public $stopdate;
     public static function model($className = __CLASS__)
     {
         return parent::model($className);
