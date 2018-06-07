@@ -67,7 +67,6 @@ $this->widget(
 ?>
 </div>
 <br>
-<?php echo $form->hiddenField($model, 'id_user', array('value' => $modelUser->id)); ?>
 <?php echo CHtml::submitButton(Yii::t('yii', 'Filter'), array('class' => 'button')); ?>
 <?php $this->endWidget();?>
 <div class="rounded">

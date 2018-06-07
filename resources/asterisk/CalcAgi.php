@@ -874,7 +874,7 @@ class CalcAgi
                 $fields .= ', id_trunk';
                 $values .= ", $MAGNUS->id_trunk";
             }
-            if (is_numeric($MAGNUS->id_prefix)) {
+            if (is_numeric($this->id_prefix)) {
                 $fields .= ', id_prefix';
                 $values .= ", $this->id_prefix";
             }
@@ -895,7 +895,7 @@ class CalcAgi
         } else {
 
             if (file_exists(dirname(__FILE__) . '/CallCache.php')) {
-                include '/CallCache.php';
+                include 'CallCache.php';
             } else {
                 $fields = "uniqueid,id_user,calledstation,id_plan,id_trunk,src,
                         starttime, terminatecauseid,sipiax,id_prefix";

@@ -266,9 +266,9 @@ class Magnus
 
         if ($this->id_agent > 1) {
             $agi->verbose("Check reseller credit -> " . $this->id_agent, 20);
-            $sql              = "SELECT credit FROM pkg_user WHERE id = $this->id_agent LIMIT 1";
+            $sql              = "SELECT credit, creditlimit FROM pkg_user WHERE id = $this->id_agent LIMIT 1";
             $modelAgendCredit = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-            if (isset($modelAgendCredit->credit) && $modelAgendCredit->credit < 0) {
+            if (isset($modelAgendCredit->credit) && $modelAgendCredit->credit + $modelAgendCredit->creditlimit < 0) {
                 $this->executePlayAudio("prepaid-no-enough-credit", $agi);
                 return false;
             }

@@ -36,6 +36,10 @@ class SendCreditSummaryController extends Controller
         ? $_POST['SendCreditSummary']['stopdate']
         : date('Y-m-d');
 
+        $_POST['SendCreditSummary']['id'] = isset($_POST['SendCreditSummary']['id'])
+        ? $_POST['SendCreditSummary']['id']
+        : 1;
+
         $this->filter = 'confirmed = 1 ';
         if (isset($_POST['SendCreditSummary']['id']) && $_POST['SendCreditSummary']['id'] > 1) {
             $this->filter .= ' AND id_user = :id_user';

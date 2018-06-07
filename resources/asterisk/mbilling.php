@@ -25,6 +25,7 @@ if (function_exists('pcntl_signal')) {
 error_reporting(E_ALL ^ (E_NOTICE | E_WARNING));
 
 require_once 'AGI.Class.php';
+require_once 'AGI_AsteriskManager.Class.php';
 require_once 'AuthenticateAgi.php';
 require_once 'CalcAgi.php';
 require_once 'CallbackAgi.php';
