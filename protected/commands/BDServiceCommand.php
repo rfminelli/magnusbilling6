@@ -57,7 +57,7 @@ class BDServiceCommand extends CConsoleCommand
         Configuration::model()->updateAll(array('config_value' => $result), 'config_key = :key',
             array(':key' => 'BDService_credit_provider'));
 
-        $modelSendCreditSummary = SendCreditSummary::model()->findAll('confirmed = 0');
+        $modelSendCreditSummary = SendCreditSummary::model()->findAll('confirmed = 0 AND service != "international"');
 
         foreach ($modelSendCreditSummary as $key => $sendCredit) {
 

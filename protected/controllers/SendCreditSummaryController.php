@@ -31,14 +31,18 @@ class SendCreditSummaryController extends Controller
 
         $model->date = isset($_POST['SendCreditSummary']['date'])
         ? $_POST['SendCreditSummary']['date']
-        : date('Y-m-d ', strtotime("-1 month", time()));
+        : date('Y-m-d');
         $model->stopdate = isset($_POST['SendCreditSummary']['stopdate'])
         ? $_POST['SendCreditSummary']['stopdate']
         : date('Y-m-d');
 
-        $_POST['SendCreditSummary']['id'] = isset($_POST['SendCreditSummary']['id'])
-        ? $_POST['SendCreditSummary']['id']
-        : 1;
+        if (Yii::app()->session['isAdmin'] != 1) {
+            $_POST['SendCreditSummary']['id'] = Yii::app()->session['id_user'];
+        } else {
+            $_POST['SendCreditSummary']['id'] = isset($_POST['SendCreditSummary']['id'])
+            ? $_POST['SendCreditSummary']['id']
+            : 1;
+        }
 
         $this->filter = 'confirmed = 1 ';
         if (isset($_POST['SendCreditSummary']['id']) && $_POST['SendCreditSummary']['id'] > 1) {

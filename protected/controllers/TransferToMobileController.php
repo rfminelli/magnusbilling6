@@ -182,7 +182,7 @@ class TransferToMobileController extends Controller
         $modelSendCreditSummary->id_user   = Yii::app()->session['id_user'];
         $modelSendCreditSummary->service   = $_POST['TransferToMobile']['method'];
         $modelSendCreditSummary->number    = $_POST['TransferToMobile']['number'];
-        $modelSendCreditSummary->confirmed = $_POST['TransferToMobile']['method'] == 'internacional' ? 1 : 0;
+        $modelSendCreditSummary->confirmed = $_POST['TransferToMobile']['method'] == 'international' ? 1 : 0;
         $modelSendCreditSummary->cost      = $this->user_cost;
         $modelSendCreditSummary->save();
         $this->send_credit_id = $modelSendCreditSummary->id;
