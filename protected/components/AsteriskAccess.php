@@ -73,8 +73,15 @@ class AsteriskAccess
 
     public function hangupRequest($channel)
     {
-        $modelServers = Servers::model()->getAllAsteriskServers();
-        $channels     = array();
+        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+        $channels = array();
         foreach ($modelServers as $key => $server) {
             AsteriskAccess::instance($server['host'], $server['username'], $server['password']);
             $this->asmanager->Command("hangup request " . $channel);
@@ -229,7 +236,7 @@ class AsteriskAccess
         LinuxAccess::system("mv $arquivo_call /var/spool/asterisk/outgoing/$aleatorio.call");
     }
 
-    public function getCallsPerDid($did)
+    public function getCallsPerDid($did, $agi = null)
     {
         $channelsData = AsteriskAccess::instance()->coreShowChannelsConcise();
         $channelsData = explode("\n", $channelsData["data"]);
@@ -269,7 +276,7 @@ class AsteriskAccess
     {
         if ($maxuse > 0) {
 
-            $agi->verbose('Trunk have channels limit', 8);
+            $agi->verbose('Trunk have channels limit', 15);
             //Set group to count the trunk call use
             $agi->set_variable("GROUP()", $ipaddress);
 
@@ -283,8 +290,8 @@ class AsteriskAccess
                     $linha = explode("  ", $temp);
 
                     if (trim($linha[4]) == $ipaddress) {
-                        $channel = AsteriskAccess::getCoreShowChannel($linha[0]);
-                        $agi->verbose(print_r($channel['State'], true));
+                        $channel = AsteriskAccess::getCoreShowChannel($linha[0], $agi);
+                        $agi->verbose(print_r($channel['State'], true), 15);
 
                         if (preg_match("/Up |Ring /", $channel['State'])) {
                             $count++;
@@ -294,7 +301,7 @@ class AsteriskAccess
                 }
             }
             if ($count > $maxuse) {
-                $agi->verbose('Trunk ' . $ipaddress . ' have  ' . $count . ' calls, and the maximun call is ' . $maxuse, 2);
+                $agi->verbose('Trunk ' . $ipaddress . ' have  ' . $count . ' calls, and the maximun call is ' . $maxuse, 1);
                 return false;
             } else {
                 return true;
@@ -306,8 +313,15 @@ class AsteriskAccess
 
     public static function getSipShowPeers()
     {
-        $modelServers = Servers::model()->getAllAsteriskServers();
-        $result       = array();
+        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+        $result = array();
         foreach ($modelServers as $key => $server) {
             $data = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->sipShowPeers();
 
@@ -343,8 +357,16 @@ class AsteriskAccess
     public static function getCoreShowChannels()
     {
 
-        $modelServers = Servers::model()->getAllAsteriskServers();
-        $channels     = array();
+        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+
+        $channels = array();
         foreach ($modelServers as $key => $server) {
 
             $columns = array('Channel', 'Context', 'Exten', 'Priority', 'Stats', 'Application', 'Data', 'CallerID', 'Accountcode', 'Amaflags', 'Duration', 'Bridged');
@@ -373,11 +395,22 @@ class AsteriskAccess
         }
         return $channels;
     }
-    public static function getCoreShowChannel($channel)
+    public static function getCoreShowChannel($channel, $agi = null)
     {
 
-        $modelServers = Servers::model()->getAllAsteriskServers();
-        $channels     = array();
+        $sql = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        if (is_null($agi)) {
+            $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+        } else {
+            $modelServers = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+        $channels = array();
         foreach ($modelServers as $key => $server) {
 
             $data = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->coreShowChannel($channel);

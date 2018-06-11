@@ -553,7 +553,7 @@ class CalcAgi
             "LEFT JOIN pkg_prefix ON pkg_rate_agent.id_prefix=pkg_prefix.id " .
             "WHERE prefix = SUBSTRING($calledstation,1,length(prefix)) and " .
             "pkg_plan.id= $MAGNUS->id_plan_agent ORDER BY LENGTH(prefix) DESC LIMIT 3";
-        $modelRateAgent = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
+        $modelRateAgent = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
         if (!isset($modelRateAgent[0]->rateinitial)) {
             $agi->verbose('NOT FOUND AGENT TARRIF, USE AGENT COST PRICE');
