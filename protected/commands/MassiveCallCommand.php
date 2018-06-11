@@ -210,7 +210,7 @@ class MassiveCallCommand extends ConsoleCommand
                 // gerar os arquivos .call
                 $call = "Action: Originate\n";
                 $call = "Channel: " . $dialstr . "\n";
-                $call .= "Callerid: " . $modelSip->callerid . "\n";
+                $call .= "Callerid: " . $modelSip->callerid . ' ' . $phone->name . "\n";
                 $call .= "Account:  MC!" . $campaign->name . "\n";
                 //$call .= "MaxRetries: 1\n";
                 //$call .= "RetryTime: 100\n";
