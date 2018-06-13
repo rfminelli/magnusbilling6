@@ -176,8 +176,8 @@ class MassiveCall
         if (strlen($forward_number) > 2 && ($res_dtmf['result'] == $modelCampaign->digit_authorize || $modelCampaign->digit_authorize == '-1')) {
 
             $agi->verbose("have Forward number $forward_number");
-            $modelPhoneNumber->info = 'Forward DTMF 1';
-            $modelPhoneNumber->save();
+            $sql = "UPDATE pkg_phonenumber SET info = 'Forward DTMF 1' WHERE id = $idPhonenumber LIMIT 1";
+            $agi->exec($sql);
 
             $MAGNUS->record_call = $modelCampaign->record_call;
 
@@ -206,17 +206,26 @@ class MassiveCall
                 }
             } elseif ($forwardOptionType == 'queue') {
 
-                $modelDiddestination             = new Diddestination();
-                $modelDiddestination->id_queue   = $forwardOption[1];
-                $modelDiddestination->idDid->did = $destination;
-                $agi->set_variable("CALLERID(num)", $destination);
-                $agi->set_callerid($destination);
-                QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $modelDiddestination, null, 'torpedo');
+                $DidAgi                                  = new DidAgi();
+                $DidAgi->modelDestination[0]['id_queue'] = $forwardOption[1];
+                $DidAgi->modelDid->did                   = $destination;
+
+                $agi->set_variable("CALLERID(num)", $destination . ' ' . $modelPhoneNumber->name);
+                $agi->set_callerid($destination . ' ' . $modelPhoneNumber->name);
+                $MAGNUS->CallerID = $destination . ' ' . $modelPhoneNumber->name;
+
+                QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $DidAgi, 'torpedo');
             } elseif ($forwardOptionType == 'ivr') {
-                $modelDiddestination             = new Diddestination();
-                $modelDiddestination->id_ivr     = $forwardOption[1];
-                $modelDiddestination->idDid->did = $destination;
-                IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $modelDiddestination, null, 'torpedo');
+
+                $DidAgi                                = new DidAgi();
+                $DidAgi->modelDestination[0]['id_ivr'] = $forwardOption[1];
+                $DidAgi->modelDid->did                 = $destination;
+
+                $agi->set_variable("CALLERID(num)", $destination . ' ' . $modelPhoneNumber->name);
+                $agi->set_callerid($destination . ' ' . $modelPhoneNumber->name);
+                $MAGNUS->CallerID = $destination . ' ' . $modelPhoneNumber->name;
+
+                IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $DidAgi, 'torpedo');
             } elseif ($forwardOptionType == 'group') {
 
                 $agi->verbose("Call group $group ", 25);
@@ -239,7 +248,10 @@ class MassiveCall
                 }
 
             } elseif ($forwardOptionType == 'custom') {
-                $agi->set_variable("CALLERID(num)", $destination);
+                $agi->set_variable("CALLERID(num)", $destination . ' ' . $modelPhoneNumber->name);
+                $agi->set_callerid($destination . ' ' . $modelPhoneNumber->name);
+                $MAGNUS->CallerID = $destination . ' ' . $modelPhoneNumber->name;
+
                 if (preg_match('/AGI/', $forwardOption[1])) {
                     $agi = explode("|", $forwardOption[1]);
                     $agi->exec_agi($agi[1] . ",$destination,$idCampaign,$idPhonenumber");
@@ -248,7 +260,9 @@ class MassiveCall
                 }
             }
 
-            $agi->set_variable("CALLERID(num)", $destination);
+            $agi->set_variable("CALLERID(num)", $destination . ' ' . $modelPhoneNumber->name);
+            $agi->set_callerid($destination . ' ' . $modelPhoneNumber->name);
+            $MAGNUS->CallerID = $destination . ' ' . $modelPhoneNumber->name;
 
             if ($MAGNUS->agiconfig['record_call'] == 1 || $MAGNUS->record_call == 1) {
                 $myres = $agi->execute("StopMixMonitor");
@@ -424,8 +438,9 @@ class MassiveCall
 
                             $dialstr = $poll->{'option' . $res_dtmf['result']};
                             $dialstr = preg_replace("/number/", $destination, $dialstr);
-                            $agi->set_variable("CALLERID(num)", $destination);
-                            $agi->set_callerid($destination);
+                            $agi->set_variable("CALLERID(num)", $destination . ' ' . $modelPhoneNumber->name);
+                            $agi->set_callerid($destination . ' ' . $modelPhoneNumber->name);
+                            $MAGNUS->CallerID = $destination . ' ' . $modelPhoneNumber->name;
                             $agi->verbose('CALL SEND TO SIP IN POLL -> ' . $dialstr, 25);
 
                             $myres = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_sipiax_friend']);
