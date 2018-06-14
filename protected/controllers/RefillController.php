@@ -102,6 +102,36 @@ class RefillController extends Controller
     {
         if ($this->isNewRecord) {
             UserCreditManager::releaseUserCredit($model->id_user, $model->credit, $model->description, 2);
+            if (preg_match("/Send Credit to /", $model->description)) {
+                //Send Credit to 01788988066 via bkash at 107.50
+                //Send Credit to 01717768732 via flexiload at 11.83. Ref: BD06120019120095
+
+                if ($model->credit < 0) {
+                    $credit = $model->credit * -1;
+                } else {
+                    $credit = $model->credit;
+                }
+                $service = explode(' ', $model->description);
+
+                $number  = $service[3];
+                $sell    = substr($service[7], 0, -1);
+                $service = $service[5];
+
+                $modelSendCreditSummary            = new SendCreditSummary();
+                $modelSendCreditSummary->id_user   = $model->id_user;
+                $modelSendCreditSummary->service   = $service;
+                $modelSendCreditSummary->number    = $number;
+                $modelSendCreditSummary->confirmed = $model->payment;
+                $modelSendCreditSummary->cost      = $credit;
+                $modelSendCreditSummary->sell      = $sell;
+                $modelSendCreditSummary->amount    = $credit;
+
+                $modelSendCreditSummary->earned = $sell - $credit;
+                $modelSendCreditSummary->save();
+
+                $model->invoice_number = $modelSendCreditSummary->id;
+                $model->save();
+            }
         }
         return;
     }
