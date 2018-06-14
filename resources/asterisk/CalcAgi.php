@@ -555,7 +555,7 @@ class CalcAgi
             "pkg_plan.id= $MAGNUS->id_plan_agent ORDER BY LENGTH(prefix) DESC LIMIT 3";
         $modelRateAgent = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-        if (!isset($modelRateAgent[0]->rateinitial)) {
+        if (!isset($modelRateAgent[0]['rateinitial'])) {
             $agi->verbose('NOT FOUND AGENT TARRIF, USE AGENT COST PRICE');
             $cost_customer = $cost;
         } else {
