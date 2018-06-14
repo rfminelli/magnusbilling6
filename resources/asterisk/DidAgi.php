@@ -202,7 +202,7 @@ class DidAgi
             } else {
 
                 $MAGNUS->record_call = $MAGNUS->modelUser->record_call;
-                $agi->verbose(print_r($inst_listdestination, true));
+
                 /* IF SIP CALL*/
                 if ($inst_listdestination['voip_call'] == 1) {
                     $agi->verbose("DID call friend: IS LOCAL !!!", 10);
@@ -296,7 +296,6 @@ class DidAgi
                         }
 
                         SmsSend::send($MAGNUS->modelUser, $MAGNUS->destination, $text);
-                        $agi->verbose(print_r($result, true));
                         $answeredtime = 60;
                         $dialstatus   = 'ANSWER';
 
@@ -379,7 +378,7 @@ class DidAgi
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);
 
-        $agi->verbose('answeredtime =' . $answeredtime);
+        $agi->verbose('DID answeredtime =' . $answeredtime, 25);
         if ($answeredtime > 0) {
             $this->call_did_billing($agi, $MAGNUS, $CalcAgi, $answeredtime, $dialstatus);
             return 1;
@@ -401,11 +400,11 @@ class DidAgi
         $expression_3 = $this->modelDid->expression_3;
 
         if ($block_expression_1 == 1 || $send_to_callback_1) {
-            $agi->verbose("try blocked number match with expression 1, " . $MAGNUS->CallerID . ' ' . $expression_2, 1);
+            $agi->verbose("try blocked number match with expression 1, " . $MAGNUS->CallerID . ' ' . $expression_2, 10);
             if (strlen($expression_1) > 1 && ereg($expression_1, $MAGNUS->CallerID)) {
 
                 if ($block_expression_1 == 1) {
-                    $agi->verbose("Call blocked becouse this number match with expression 1, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 1);
+                    $agi->verbose("Call blocked becouse this number match with expression 1, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
                     $MAGNUS->hangup($agi);
                 } elseif ($send_to_callback_1 == 1) {
                     $agi->verbose('Send to Callback expression 1', 10);
@@ -418,7 +417,7 @@ class DidAgi
             $agi->verbose("try blocked number match with expression 2, " . $MAGNUS->CallerID . ' ' . $expression_2, 1);
             if (strlen($expression_2) > 1 && ereg($expression_2, $MAGNUS->CallerID)) {
                 if ($block_expression_2 == 1) {
-                    $agi->verbose("Call blocked becouse this number match with expression 2, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 1);
+                    $agi->verbose("Call blocked becouse this number match with expression 2, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
                     $MAGNUS->hangup($agi);
                 } elseif ($send_to_callback_2 == 1) {
                     $agi->verbose('Send to Callback expression 2', 10);
@@ -428,14 +427,14 @@ class DidAgi
         }
 
         if ($block_expression_3 == 1 || $send_to_callback_3) {
-            $agi->verbose("try blocked number match with expression 3, " . $MAGNUS->CallerID . ' ' . $expression_3, 1);
+            $agi->verbose("try blocked number match with expression 3, " . $MAGNUS->CallerID . ' ' . $expression_3, 10);
             if (strlen($expression_3) > 0 && (ereg($expression_3, $MAGNUS->CallerID) || $expression_3 == '*') &&
                 strlen($expression_1) > 1 && !ereg($expression_1, $MAGNUS->CallerID) &&
                 strlen($expression_2) > 1 && !ereg($expression_2, $MAGNUS->CallerID)
             ) {
 
                 if ($block_expression_1 == 3) {
-                    $agi->verbose("Call blocked becouse this number match with expression 3, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 1);
+                    $agi->verbose("Call blocked becouse this number match with expression 3, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
                     $MAGNUS->hangup($agi);
                 } elseif ($send_to_callback_3 == 1) {
                     $agi->verbose('Send to Callback expression 3', 10);
@@ -506,7 +505,7 @@ class DidAgi
 
     public function billDidCall(&$agi, &$MAGNUS, $answeredtime)
     {
-        $agi->verbose('billDidCall, sell_price=' . $this->sell_price, 1);
+        $agi->verbose('billDidCall, sell_price=' . $this->sell_price, 10);
 
         $this->sell_price = $MAGNUS->roudRatePrice($answeredtime, $this->sell_price, $this->modelDid->initblock, $this->modelDid->increment);
 
@@ -516,7 +515,7 @@ class DidAgi
             $this->sell_price = 0;
         }
 
-        $agi->verbose(' answeredtime = ' . $answeredtime . ' sell_price = ' . $this->sell_price . ' connection_sell = ' . $this->modelDid->connection_sell, 1);
+        $agi->verbose(' answeredtime = ' . $answeredtime . ' sell_price = ' . $this->sell_price . ' connection_sell = ' . $this->modelDid->connection_sell, 10);
     }
 
     public function call_did_billing(&$agi, &$MAGNUS, &$CalcAgi, $answeredtime, $dialstatus)
@@ -563,7 +562,6 @@ class DidAgi
                  WHERE  id = " . $MAGNUS->modelUser->id . " LIMIT 1";
             $agi->exec($sql);
         }
-        $agi->verbose('$this->did ' . $this->did);
 
         $CalcAgi->starttime        = date("Y-m-d H:i:s", time() - $answeredtime);
         $CalcAgi->sessiontime      = $answeredtime;
