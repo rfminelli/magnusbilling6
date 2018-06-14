@@ -25,40 +25,39 @@ if (strlen($modelTransferToMobile->country) > 2):
 endif;
 ?>
 
-<?php if (strlen($modelTransferToMobile->country) > 2): ?>
-	<div class="field">
-	<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-	<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
-	<?php echo $form->error($modelTransferToMobile, 'method') ?>
-	<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
-</div>
+<?php if (strlen($modelTransferToMobile->country) > 2): //select the method ?>
+																												<div class="field">
+																												<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																												<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
+																												<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																												<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
+																											</div>
 
-<?php else: ?>
+																											<?php else: //methos already selected?>
 
-<div class="field">
-	<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-	<div class="styled-select">
-		<?php
+																											<div class="field">
+																												<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																												<div class="styled-select">
+																													<?php
 
-echo $form->dropDownList($modelTransferToMobile, 'method',
-    $methods,
-    array(
-        'empty'    => Yii::t('yii', 'Select the method'),
-        'disabled' => strlen($modelTransferToMobile->country) > 2,
-    ));
-?>
-	<?php echo $form->error($modelTransferToMobile, 'method') ?>
+    echo $form->dropDownList($modelTransferToMobile, 'method',
+        $methods,
+        array(
+            'empty'    => Yii::t('yii', 'Select the method'),
+            'disabled' => strlen($modelTransferToMobile->country) > 2,
+        ));
+    ?>
+																												<?php echo $form->error($modelTransferToMobile, 'method') ?>
 
-	</div>
-</div>
+																												</div>
+																											</div>
 
 
 
-<?php endif?>
+																											<?php endif?>
 
 
 <br>
-
 
 
 <div class="field">
@@ -67,6 +66,8 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	<?php echo $form->error($modelTransferToMobile, 'number') ?>
 	<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'number') ?></p>
 </div>
+
+
 
 <?php if (strlen($modelTransferToMobile->country) > 2): ?>
 	<div class="field">
@@ -77,16 +78,36 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	</div>
 
 
-	<div class="field">
-		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'operator')) ?>
-		<?php echo $form->textField($modelTransferToMobile, 'operator', $fieldOption) ?>
-		<?php echo $form->error($modelTransferToMobile, 'operator') ?>
-		<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'operator') ?></p>
-	</div>
+
+	<?php
+
+$modelSendCreditProducts = SendCreditProducts::model()->findAll(array(
+    'condition' => 'country = :key',
+    'params'    => array(':key' => $modelTransferToMobile->country),
+    'group'     => 'operator_name',
+));
+
+$operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operator_name');?>
+	    <div class="field">
+	        <?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'operator')) ?>
+	        <div class="styled-select">
+	            <?php echo $form->dropDownList($modelTransferToMobile,
+    'operator',
+    $operators,
+    array(
+        'empty'    => Yii::t('yii', 'Select the operator'),
+        'options'  => array($_POST['TransferToMobile']['operator_name'] => array('selected' => true)),
+        'onchange' => 'showProducts()',
+        'id'       => 'operatorfield',
+    )
+); ?>
+	        </div>
+	    </div>
 
 
 
-	<div class="field">
+
+	<div class="field" id="divamount">
 		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Amount')) ?>
 		<div class="styled-select">
 			<?php
@@ -106,8 +127,9 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
 
 		</div>
 	</div>
+	<?php endif?>
 
-<?php endif?>
+
 <div class='field' id="divsellingPrice" style="display:none; border:0">
 	<label>Selling Price</label>
 	<div id="sellingPrice" class="input" style="border:0; width:650px" ></div>
@@ -146,12 +168,10 @@ $this->endWidget();?>
 		        	}
 		    	};
 
-				http.open("GET", "https://cc.onlinecallshop.com/Begin/index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
+				http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
 				http.send(null);
 			}
 		}
-
-
 	}
 
 	function button2(buttonId) {
@@ -176,6 +196,24 @@ $this->endWidget();?>
 
 		document.getElementById('buying_price').style.display = 'inline';
 		document.getElementById('buying_price').value = 'R';
+	}
+
+	function showProducts(argument) {
+
+		operator = document.getElementById('operatorfield').options[document.getElementById('operatorfield').selectedIndex].text;
+		var http = new XMLHttpRequest()
+		http.onreadystatechange = function() {
+       		if (this.readyState == 4 && this.status == 200) {
+       			document.getElementById("amountfiel").innerHTML = this.responseText;
+       		}
+        	}
+
+		http.open("GET", "../../index.php/transferToMobile/getProducts?operator="+operator);
+		http.send(null);
+
+		document.getElementById('divsellingPrice').style.display = 'none';
+		document.getElementById('buying_price').style.display = 'none';
+
 	}
 </script>
 

@@ -39,6 +39,7 @@ class TransferToMobileController extends Controller
     private $test = false;
     private $cost;
     private $showprice;
+    public $modelTransferToMobile = array();
 
     public function init()
     {
@@ -65,44 +66,45 @@ class TransferToMobileController extends Controller
                 $this->url      = $this->config['global']['BDService_url'];
             }
         }
+
+        $this->modelTransferToMobile = TransferToMobile::model()->findByPk((int) Yii::app()->session['id_user']);
     }
 
     public function actionRead($asJson = true, $condition = null)
     {
 
-        $modelTransferToMobile = TransferToMobile::model()->findByPk((int) Yii::app()->session['id_user']);
         //if we already request the number info, check if select a valid amount
         if (isset($_POST['TransferToMobile']['amountValues'])) {
 
-            $modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
-            $modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
-            if ($modelTransferToMobile->method == 'international') {
-                $modelTransferToMobile->country  = $_POST['TransferToMobile']['country'];
-                $modelTransferToMobile->operator = $_POST['TransferToMobile']['operator'];
+            $this->modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
+            $this->modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
+            if ($this->modelTransferToMobile->method == 'international') {
+                $this->modelTransferToMobile->country  = $_POST['TransferToMobile']['country'];
+                $this->modelTransferToMobile->operator = $_POST['TransferToMobile']['operator'];
             }
-            $modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
+            $this->modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
 
-            if ($modelTransferToMobile->method != 'international') {
+            if ($this->modelTransferToMobile->method != 'international') {
                 //check min max
                 $min = Yii::app()->session['allowedAmount'][0];
                 $max = Yii::app()->session['allowedAmount'][1];
 
                 if ($_POST['TransferToMobile']['amountValues'] < $min) {
-                    $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is < then minimal allowed'));
+                    $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is < then minimal allowed'));
 
                 } else if ($_POST['TransferToMobile']['amountValues'] > $max) {
-                    $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is > then maximum allowed'));
+                    $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is > then maximum allowed'));
                 }
 
             }
 
             if (!is_numeric($_POST['TransferToMobile']['amountValues'])) {
 
-                $modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Invalid amount'));
+                $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Invalid amount'));
 
-            } elseif (!count($modelTransferToMobile->getErrors())) {
+            } elseif (!count($this->modelTransferToMobile->getErrors())) {
 
-                $this->confirmRefill($modelTransferToMobile);
+                $this->confirmRefill();
 
             }
 
@@ -110,37 +112,37 @@ class TransferToMobileController extends Controller
         //check the number and methods.
         elseif (isset($_POST['TransferToMobile']['method'])) {
             if ($_POST['TransferToMobile']['method'] == '') {
-                $modelTransferToMobile->addError('method', Yii::t('yii', 'Please select a method'));
+                $this->modelTransferToMobile->addError('method', Yii::t('yii', 'Please select a method'));
             }
 
             if ($_POST['TransferToMobile']['number'] == '' || !is_numeric($_POST['TransferToMobile']['number'])
                 || strlen($_POST['TransferToMobile']['number']) < 8
                 || preg_match('/ /', $_POST['TransferToMobile']['number'])) {
-                $modelTransferToMobile->addError('number', Yii::t('yii', 'Number invalid, try again'));
+                $this->modelTransferToMobile->addError('number', Yii::t('yii', 'Number invalid, try again'));
             }
 
-            $modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
-            $modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
+            $this->modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
+            $this->modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
 
             if ($_POST['TransferToMobile']['method'] == 'international') {
                 //if ok, request number information
-                if (!count($modelTransferToMobile->getErrors())) {
-                    $this->actionMsisdn_info($modelTransferToMobile);
+                if (!count($this->modelTransferToMobile->getErrors())) {
+                    $this->actionMsisdn_info();
                 }
             }
         }
 
         $methods = [];
-        if ($modelTransferToMobile->transfer_international) {
+        if ($this->modelTransferToMobile->transfer_international) {
             $methods["international"] = "International";
         }
-        if ($modelTransferToMobile->transfer_flexiload) {
+        if ($this->modelTransferToMobile->transfer_flexiload) {
             $methods["flexiload"] = "Flexiload";
         }
-        if ($modelTransferToMobile->transfer_bkash) {
+        if ($this->modelTransferToMobile->transfer_bkash) {
             $methods["bkash"] = "Bkash";
         }
-        if ($modelTransferToMobile->transfer_dbbl_rocket) {
+        if ($this->modelTransferToMobile->transfer_dbbl_rocket) {
             $methods["dbbl_rocket"] = "DBBL/Rocket";
         }
 
@@ -163,7 +165,7 @@ class TransferToMobileController extends Controller
         }
         if (count($methods)) {
             $this->render($view, array(
-                'modelTransferToMobile' => $modelTransferToMobile,
+                'modelTransferToMobile' => $this->modelTransferToMobile,
                 'methods'               => $methods,
                 'amountDetails'         => $amountDetails,
             ));
@@ -188,26 +190,32 @@ class TransferToMobileController extends Controller
         $this->send_credit_id = $modelSendCreditSummary->id;
     }
 
-    public function updateDataBase($modelTransferToMobile)
+    public function updateDataBase()
     {
 
         $profit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
         SendCreditSummary::model()->updateByPk($this->send_credit_id, array(
-            'profit' => $modelTransferToMobile->{$profit},
+            'profit' => $this->modelTransferToMobile->{$profit},
             'amount' => $this->cost,
             'sell'   => $this->showprice,
             'earned' => $this->showprice - $this->user_cost,
         ));
     }
 
-    public function sendActionTransferToMobile($modelTransferToMobile, $action, $product = null)
+    public function sendActionTransferToMobile($action, $product = null)
     {
-        $number = $modelTransferToMobile->number;
+
+        $number = $this->modelTransferToMobile->number;
         $key    = time();
         $md5    = md5($this->login . $this->token . $key);
 
         if ($action == 'topup') {
-            $action .= '&msisdn=$number&delivered_amount_info=1&product=' . $product;
+            $modelSendCreditProducts = SendCreditProducts::model()->find(array(
+                'condition' => 'operator_name = :key',
+                'params'    => array(':key' => $this->modelTransferToMobile->operator),
+            ));
+            $this->url = "https://airtime.transferto.com/cgi-bin/shop/topup?";
+            $action .= '&msisdn=number&delivered_amount_info=1&product=' . $product . '&operatorid=' . $modelSendCreditProducts->operator_id . '&sms_sent=yes';
         }
 
         $url               = $this->url . "login=" . $this->login . "&key=$key&md5=$md5&destination_msisdn=$number&action=" . $action;
@@ -217,11 +225,15 @@ class TransferToMobileController extends Controller
                 "verify_peer_name" => false,
             ),
         );
-
+        // echo $url;
+        if ($action == 'topup') {
+            exit;
+        }
         if ($this->test == true && preg_match('/topup/', $action)) {
             return $result = 'transactionid=629609814 msisdn=number destination_msisdn=5551981768534 country=Brazil countryid=691 operator=TIM Brazil operatorid=610 reference_operator= originating_currency=EUR destination_currency=BRL product_requested=10 actual_product_sent=10 wholesale_price=3.50 retail_price=3.50 balance=764.12 sms_sent=yes sms= cid1= cid2= cid3= local_info_value=10 local_info_amount=10 local_info_currency=BRL authentication_key=1519755909 error_code=0 error_txt=Transaction successful';
 
         } else {
+
             if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
                 $result = '';
             }
@@ -229,12 +241,12 @@ class TransferToMobileController extends Controller
 
         return $result;
     }
-    public function sendActionBDService($modelTransferToMobile)
+    public function sendActionBDService()
     {
 
-        $type = $modelTransferToMobile->method == 'dbbl_rocket' ? 'DBBL' : $modelTransferToMobile->method;
+        $type = $this->modelTransferToMobile->method == 'dbbl_rocket' ? 'DBBL' : $this->modelTransferToMobile->method;
 
-        $url = $this->url . "/ezzeapi/request/" . $type . "?number=" . $modelTransferToMobile->number . "&amount=" . $modelTransferToMobile->amountValues . "&type=1&id=" . $this->send_credit_id . "&user=" . $this->login . "&key=" . $this->token;
+        $url = $this->url . "/ezzeapi/request/" . $type . "?number=" . $this->modelTransferToMobile->number . "&amount=" . $this->modelTransferToMobile->amountValues . "&type=1&id=" . $this->send_credit_id . "&user=" . $this->login . "&key=" . $this->token;
 
         if ($this->test == true) {
             $result = 'SUCCESS';
@@ -247,7 +259,7 @@ class TransferToMobileController extends Controller
         return $result;
     }
 
-    public function calculateCost($modelTransferToMobile, $product = 0)
+    public function calculateCost($product = 0)
     {
         if ($this->test == true) {
             echo 'cost=' . $this->cost . ' - prodict=' . $product . "<br>";
@@ -255,7 +267,7 @@ class TransferToMobileController extends Controller
 
         $methosProfit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
 
-        if ($modelTransferToMobile->credit + $modelTransferToMobile->creditlimit < $this->cost) {
+        if ($this->modelTransferToMobile->credit + $this->modelTransferToMobile->creditlimit < $this->cost) {
 
             echo '<div id="container"><div id="form"> <div id="box-4"><div class="control-group">';
             echo '<form action="" id="form1" method="POST">';
@@ -265,7 +277,7 @@ class TransferToMobileController extends Controller
             exit;
         }
 
-        $user_profit = $modelTransferToMobile->{$methosProfit};
+        $user_profit = $this->modelTransferToMobile->{$methosProfit};
 
         $this->user_cost = $this->cost - ($this->cost * ($user_profit / 100));
 
@@ -275,11 +287,11 @@ class TransferToMobileController extends Controller
             echo 'cost=' . $this->cost . ', user_profit= ' . $this->cost * ($this->user_profit / 100) . ' user_profit=' . $this->user_profit . "<BR>";
         }
 
-        if ($modelTransferToMobile->id_user > 1) {
+        if ($this->modelTransferToMobile->id_user > 1) {
 
             //check if agent have credit
 
-            $modelAgent = User::model()->findByPk($modelTransferToMobile->id_user);
+            $modelAgent = User::model()->findByPk($this->modelTransferToMobile->id_user);
 
             if ($modelAgent->credit + $modelAgent->creditlimit < $this->cost) {
 
@@ -292,7 +304,7 @@ class TransferToMobileController extends Controller
 
             }
 
-            $modelAgent  = User::model()->findByPk($modelTransferToMobile->id_user);
+            $modelAgent  = User::model()->findByPk($this->modelTransferToMobile->id_user);
             $agentProfit = $modelAgent->{$methosProfit};
 
             if ($_POST['TransferToMobile']['method'] == 'international') {
@@ -320,7 +332,6 @@ class TransferToMobileController extends Controller
 
     public function actionGetBuyingPrice()
     {
-        $modelTransferToMobile = TransferToMobile::model()->findByPk((int) Yii::app()->session['id_user']);
 
         if ($_GET['method'] == 'international') {
             $currency = $this->config['global']['fm_transfer_currency'];
@@ -334,7 +345,7 @@ class TransferToMobileController extends Controller
             $cost    = $cost[1];
         } else {
 
-            $rateinitial = $modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
+            $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
             //cost to send to provider selected value + admin rate * exchange
             $cost     = $_GET['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
             $product  = 0;
@@ -343,14 +354,14 @@ class TransferToMobileController extends Controller
 
         $methosProfit = 'transfer_' . $_GET['method'] . '_profit';
 
-        $user_profit = $modelTransferToMobile->{$methosProfit};
+        $user_profit = $this->modelTransferToMobile->{$methosProfit};
 
         $user_cost = $cost - ($cost * ($user_profit / 100));
 
         echo $currency . ' ' . number_format($user_cost, 2);
     }
 
-    public function confirmRefill($modelTransferToMobile)
+    public function confirmRefill()
     {
         /*print_r($_POST['TransferToMobile']);
         exit;*/
@@ -363,46 +374,47 @@ class TransferToMobileController extends Controller
 
         } else {
 
-            $rateinitial = $modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
+            $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
             //cost to send to provider selected value + admin rate * exchange
             $this->cost = $_POST['TransferToMobile']['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
             $product    = 0;
 
         }
 
-        $this->calculateCost($modelTransferToMobile, $product);
+        $this->calculateCost($product);
 
         if ($this->test == true) {
-            echo "REMOVE " . $this->user_cost . " from user " . $modelTransferToMobile->username;
+            echo "REMOVE " . $this->user_cost . " from user " . $this->modelTransferToMobile->username;
         }
 
         $this->addInDataBase();
-        if ($modelTransferToMobile->method == 'international') {
-            $result = $this->sendActionTransferToMobile($modelTransferToMobile, 'topup', $product);
+        if ($this->modelTransferToMobile->method == 'international') {
+            $result = $this->sendActionTransferToMobile('topup', $product);
         } else {
-            $result = $this->sendActionBDService($modelTransferToMobile);
+            $result = $this->sendActionBDService($this->modelTransferToMobile);
         }
 
-        $this->checkResult($modelTransferToMobile, $result);
+        $this->checkResult($result);
 
-        $this->updateDataBase($modelTransferToMobile);
+        $this->updateDataBase();
         exit;
 
     }
 
-    public function checkResult($modelTransferToMobile, $result)
+    public function checkResult($result)
     {
 
-        if ($modelTransferToMobile->method == 'international') {
-            $result = explode("error_txt=", $result);
+        if ($this->modelTransferToMobile->method == 'international') {
 
+            $result = explode("error_txt=", $result);
             if (preg_match("/Transaction successful/", $result[1])) {
-                $this->releaseCredit($modelTransferToMobile, $result);
+                $this->releaseCredit($result);
 
             } else {
                 echo '<div align=center id="container">';
                 echo '<font color=red>ERROR: ' . $result[1] . '</font>';
                 echo '</div>';
+                exit;
             }
 
         } else {
@@ -416,22 +428,22 @@ class TransferToMobileController extends Controller
                 echo "<font color=red>" . $result . "</font>";
                 echo '</div>';
             } elseif (preg_match("/SUCCESS/", strtoupper($result))) {
-                $this->releaseCredit($modelTransferToMobile, $result);
+                $this->releaseCredit($result);
 
             }
 
         }
     }
 
-    public function releaseCredit($modelTransferToMobile, $result)
+    public function releaseCredit($result)
     {
 
-        $msg = $modelTransferToMobile->method == 'international' ? $result[1] : $result;
+        $msg = $this->modelTransferToMobile->method == 'international' ? $result[1] : $result;
         echo '<div align=center id="container">';
         echo '<font color=green>Success: ' . $msg . '</font>';
         echo '</div>';
 
-        if ($modelTransferToMobile->method == 'international') {
+        if ($this->modelTransferToMobile->method == 'international') {
             User::model()->updateByPk(Yii::app()->session['id_user'],
                 array(
                     'credit' => new CDbExpression('credit - ' . $this->user_cost),
@@ -441,10 +453,10 @@ class TransferToMobileController extends Controller
 
         if ($this->test == true) {
             echo $this->cost . "<br>";
-            echo $modelTransferToMobile->transfer_show_selling_price . "<br>";
+            echo $this->modelTransferToMobile->transfer_show_selling_price . "<br>";
         }
 
-        $argument = $modelTransferToMobile->transfer_show_selling_price;
+        $argument = $this->modelTransferToMobile->transfer_show_selling_price;
         if ($argument < 10) {
             $fee = '1.0' . $argument;
         } else {
@@ -453,25 +465,25 @@ class TransferToMobileController extends Controller
 
         if ($this->test == true) {
             echo $fee . "<br>";
-            echo $modelTransferToMobile->transfer_show_selling_price;
+            echo $this->modelTransferToMobile->transfer_show_selling_price;
         }
 
         $this->showprice = number_format($this->cost * $fee, 2);
 
-        $description = 'Send Credit to ' . $modelTransferToMobile->number . ' via ' . $modelTransferToMobile->method . ' at ' . $this->showprice;
+        $description = 'Send Credit to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->showprice;
 
         if ($this->test == true) {
             echo $description;
         }
 
-        $payment = $modelTransferToMobile->method == 'international' ? 1 : 0;
+        $payment = $this->modelTransferToMobile->method == 'international' ? 1 : 0;
         $values  = ":id_user, :costUser, :description, $payment";
         $field   = 'id_user,credit,description,payment';
 
-        if ($modelTransferToMobile->method != 'international') {
-            $values .= "," . $this->send_credit_id;
-            $field .= ',invoice_number';
-        }
+        // if ($this->modelTransferToMobile->method != 'international') {
+        $values .= "," . $this->send_credit_id;
+        $field .= ',invoice_number';
+        // }
 
         $sql     = "INSERT INTO pkg_refill ($field) VALUES ($values)";
         $command = Yii::app()->db->createCommand($sql);
@@ -484,23 +496,23 @@ class TransferToMobileController extends Controller
             echo $sql . "<br>";
         }
 
-        if ($modelTransferToMobile->id_user > 1) {
-            if ($modelTransferToMobile->method == 'international') {
+        if ($this->modelTransferToMobile->id_user > 1) {
+            if ($this->modelTransferToMobile->method == 'international') {
                 $sql     = "UPDATE  pkg_user SET credit = credit - :costAgent WHERE id = :id";
                 $command = Yii::app()->db->createCommand($sql);
-                $command->bindValue(":id", $modelTransferToMobile->id_user, PDO::PARAM_INT);
+                $command->bindValue(":id", $this->modelTransferToMobile->id_user, PDO::PARAM_INT);
                 $command->bindValue(":costAgent", $this->agent_cost, PDO::PARAM_STR);
                 $command->execute();
             }
 
-            $payment = $modelTransferToMobile->method == 'international' ? 1 : 0;
+            $payment = $this->modelTransferToMobile->method == 'international' ? 1 : 0;
             $values  = ":id_user, :costAgent, :description, $payment";
             $field   = 'id_user,credit,description,payment';
 
-            if ($modelTransferToMobile->method != 'international') {
-                $values .= ",$this->send_credit_id";
-                $field .= ',invoice_number';
-            }
+            //if ($modelTransferToMobile->method != 'international') {
+            $values .= ",$this->send_credit_id";
+            $field .= ',invoice_number';
+            //}
 
             if ($this->test == true) {
                 echo $sql . "<br>";
@@ -508,7 +520,7 @@ class TransferToMobileController extends Controller
 
             $sql     = "INSERT INTO pkg_refill ($field) VALUES ($values)";
             $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":id_user", $modelTransferToMobile->id_user, PDO::PARAM_INT);
+            $command->bindValue(":id_user", $this->modelTransferToMobile->id_user, PDO::PARAM_INT);
             $command->bindValue(":costAgent", $this->agent_cost * -1, PDO::PARAM_STR);
             $command->bindValue(":description", $description, PDO::PARAM_STR);
             $command->execute();
@@ -520,7 +532,7 @@ class TransferToMobileController extends Controller
         }
     }
 
-    public function actionMsisdn_info($modelTransferToMobile)
+    public function actionMsisdn_info()
     {
 
         if (isset($_POST['TransferToMobile']['number'])) {
@@ -545,7 +557,7 @@ class TransferToMobileController extends Controller
                     exit;
                 }
 
-                $result = $this->sendActionTransferToMobile($modelTransferToMobile, 'msisdn_info');
+                $result = $this->sendActionTransferToMobile('msisdn_info');
 
                 if (preg_match("/Transaction successful/", $result)) {
 
@@ -574,7 +586,7 @@ class TransferToMobileController extends Controller
                     $operatorId       = explode("=", $result[3]);
                     $operatorId       = trim($operatorId[1]);
                     $rateinitialAdmin = 1;
-                    if ($modelTransferToMobile->id_user > 1) {
+                    if ($this->modelTransferToMobile->id_user > 1) {
                         $modelRate = RateAgent::model()->find(array(
                             'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
                             'params' => array(':key' => '888' . $operatorId),
@@ -624,12 +636,12 @@ class TransferToMobileController extends Controller
                         $i++;
                     }
 
-                    Yii::app()->session['amounts']   = $values;
-                    Yii::app()->session['sellAdmin'] = $sellAdmin;
-                    $modelTransferToMobile->country  = $country;
-                    $modelTransferToMobile->operator = $operator;
+                    Yii::app()->session['amounts']         = $values;
+                    Yii::app()->session['sellAdmin']       = $sellAdmin;
+                    $this->modelTransferToMobile->country  = $country;
+                    $this->modelTransferToMobile->operator = $operator;
 
-                    return $modelTransferToMobile;
+                    return $this->modelTransferToMobile;
 
                 } else {
                     $result = explode("error_txt=", $result);
@@ -673,5 +685,53 @@ class TransferToMobileController extends Controller
         } else {
             echo ' Invalid reffil';
         }
+    }
+
+    public function actionGetProducts()
+    {
+
+        $modelSendCreditProducts = SendCreditProducts::model()->findAll(array(
+            'condition' => 'operator_name = :key',
+            'params'    => array(':key' => $_GET['operator']),
+        ));
+
+        $operatorId       = $modelSendCreditProducts[0]->operator_id;
+        $rateinitialAdmin = 1;
+        if ($this->modelTransferToMobile->id_user > 1) {
+            $modelRate = RateAgent::model()->find(array(
+                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                'params' => array(':key' => '888' . $operatorId),
+            ));
+
+            $modelRateAdmin = Rate::model()->find(array(
+                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                'params' => array(':key' => '888' . $operatorId),
+            ));
+
+            $rateinitialAdmin = isset($modelRate->modelRateAdmin) ? $modelRate->modelRateAdmin / 100 + 1 : 1;
+
+        } else {
+            $modelRate = Rate::model()->find(array(
+                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
+                'params' => array(':key' => '888' . $operatorId),
+            ));
+        }
+
+        $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
+        $values      = $sellAdmin      = array();
+
+        echo '<select onchange="showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
+        echo '<option value="">Select the amount</option>';
+        foreach ($modelSendCreditProducts as $key => $product) {
+            $currency_orig = $product->currency_orig == 'EUR' ? '€' : $product->currency_orig;
+            echo '<option value="' . $product->product . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $currency_orig . ' ' . $product->retail_price * $rateinitial . '</option>';
+            $sellAdmin[trim($product->product)] = trim($product->retail_price * $rateinitialAdmin);
+        }
+
+        echo '</select>';
+
+        Yii::app()->session['amounts']   = $values;
+        Yii::app()->session['sellAdmin'] = $sellAdmin;
+
     }
 }
