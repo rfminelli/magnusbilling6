@@ -26,19 +26,19 @@ endif;
 ?>
 
 <?php if (strlen($modelTransferToMobile->country) > 2): //select the method ?>
-																												<div class="field">
-																												<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																												<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
-																												<?php echo $form->error($modelTransferToMobile, 'method') ?>
-																												<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
-																											</div>
+																														<div class="field">
+																														<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																														<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
+																														<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																														<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
+																													</div>
 
-																											<?php else: //methos already selected?>
+																													<?php else: //methos already selected?>
 
-																											<div class="field">
-																												<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																												<div class="styled-select">
-																													<?php
+																													<div class="field">
+																														<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																														<div class="styled-select">
+																															<?php
 
     echo $form->dropDownList($modelTransferToMobile, 'method',
         $methods,
@@ -47,14 +47,14 @@ endif;
             'disabled' => strlen($modelTransferToMobile->country) > 2,
         ));
     ?>
-																												<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																														<?php echo $form->error($modelTransferToMobile, 'method') ?>
 
-																												</div>
-																											</div>
+																														</div>
+																													</div>
 
 
 
-																											<?php endif?>
+																													<?php endif?>
 
 
 <br>
@@ -96,7 +96,7 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
     $operators,
     array(
         'empty'    => Yii::t('yii', 'Select the operator'),
-        'options'  => array($_POST['TransferToMobile']['operator_name'] => array('selected' => true)),
+        'options'  => array(isset($_POST['TransferToMobile']['operator_name']) ? $_POST['TransferToMobile']['operator_name'] : null => array('selected' => true)),
         'onchange' => 'showProducts()',
         'id'       => 'operatorfield',
     )

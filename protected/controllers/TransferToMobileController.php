@@ -720,7 +720,7 @@ class TransferToMobileController extends Controller
         $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
         $values      = $sellAdmin      = array();
 
-        echo '<select onchange="showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
+        echo '<select onchange="showPrice(' . $this->modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
         echo '<option value="">Select the amount</option>';
         foreach ($modelSendCreditProducts as $key => $product) {
             $currency_orig = $product->currency_orig == 'EUR' ? '€' : $product->currency_orig;
