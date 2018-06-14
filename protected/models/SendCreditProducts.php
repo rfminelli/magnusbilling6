@@ -53,9 +53,10 @@ class SendCreditProducts extends Model
     public function rules()
     {
         return array(
-            array('operator_id', 'numerical', 'integerOnly' => true),
+            array('operator_id,country_code', 'numerical', 'integerOnly' => true),
             array('country,operator_name', 'length', 'max' => 100),
-            array('country_code,currency_dest,product,currency_orig,retail_price', 'length', 'max' => 50),
+            array('product,retail_price', 'length', 'max' => 50),
+            array('currency_dest,currency_orig', 'length', 'max' => 3),
         );
     }
 

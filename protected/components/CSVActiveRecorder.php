@@ -92,6 +92,8 @@ class CSVActiveRecorder
         $csvColumns    = $this->data['columns'];
         $resultColumns = [];
         foreach ($csvColumns as $csvColumn) {
+            $csvColumn        = trim($csvColumn);
+            $csvColumn        = preg_replace('/ /', '_', $csvColumn);
             $foundTranslation = false;
             foreach ($this->translations as $translateColumn => $translations) {
                 if (in_array($csvColumn, $translations)) {
