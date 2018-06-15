@@ -19,9 +19,10 @@
  * 19/09/2012
  */
 
-class SendCreditProducts extends Model
+class SendCreditRates extends Model
 {
-    protected $_module = 'sendcreditproducts';
+    public $sell_price;
+    protected $_module = 'sendcreditrates';
     /**
      * Retorna a classe estatica da model.
      * @return Prefix classe estatica da model.

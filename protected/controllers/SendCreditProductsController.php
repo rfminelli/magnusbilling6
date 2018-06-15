@@ -31,5 +31,4 @@ class SendCreditProductsController extends Controller
         $this->titleReport   = Yii::t('yii', 'SendCreditProducts');
         parent::init();
     }
-
 }

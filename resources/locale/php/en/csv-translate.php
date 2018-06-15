@@ -17,5 +17,6 @@
     'currency_orig' => ['Originating_Currency', 'Currency_Origem'],
     'retail_price'  => ['Retail_Price'],
     'product'       => ['Product'],
+    'sell_price'    => ['Sell_Price'],
 
 ]?>
