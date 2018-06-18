@@ -51,6 +51,11 @@ class SendCreditRatesController extends Controller
 
     public function extraFilterCustomClient($filter)
     {
+
+        //se for cliente filtrar pelo pkg_user.id
+        $filter .= ' AND p.id_user = :clfby';
+        $this->paramsFilter[':clfby'] = Yii::app()->session['id_user'];
+
         return $filter;
     }
 
@@ -127,7 +132,10 @@ class SendCreditRatesController extends Controller
     {
 
         for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
-            $sql     = "SELECT sell_price FROM pkg_send_credit_rates WHERE operator_id = :key AND product = " . (int) $attributes[$i]['product'] . " LIMIT 1";
+            $sql = "SELECT sell_price FROM pkg_send_credit_rates WHERE
+                    id_user = " . (int) Yii::app()->session['id_user'] . "  AND
+                    operator_id = :key AND
+                    product = " . (int) $attributes[$i]['product'] . " LIMIT 1";
             $command = Yii::app()->db->createCommand($sql);
             $command->bindValue(":key", $attributes[$i]['operator_id'], PDO::PARAM_INT);
             $result = $command->queryAll();

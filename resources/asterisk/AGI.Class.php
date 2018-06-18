@@ -139,7 +139,7 @@ class AGI extends PDO
      */
     public $audio = null;
 
-    private $engine;
+    public $engine;
     private $host;
     private $database;
     private $user;

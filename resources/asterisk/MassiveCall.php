@@ -42,7 +42,7 @@ class MassiveCall
         $MAGNUS->id_agent = $agi->get_variable("AGENT_ID", true);
         $destination      = $MAGNUS->dnid;
 
-        $sql = "SELECT * FROM pkg_campaign
+        $sql = "SELECT *, pkg_campaign.id id FROM pkg_campaign
                             LEFT JOIN pkg_user ON pkg_campaign.id_user = pkg_user.id
                             WHERE pkg_campaign.id = $idCampaign LIMIT 1";
         $modelCampaign = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -501,7 +501,7 @@ class MassiveCall
             $CalcAgi->sessiontime      = $duration;
             $CalcAgi->real_sessiontime = intval($duration);
             $MAGNUS->destination       = $destination;
-            $CalcAgi->terminatecauseid = $terminatecauseid;
+            $CalcAgi->terminatecauseid = 1;
             $CalcAgi->sessionbill      = $sellratecost;
             $MAGNUS->id_trunk          = $id_trunk;
             $CalcAgi->sipiax           = 5;
@@ -509,7 +509,7 @@ class MassiveCall
             $CalcAgi->id_prefix        = $id_prefix;
             $CalcAgi->id_campaign      = $idCampaign;
 
-            $id_call = $modelCall->saveCDR($agi, $MAGNUS, true);
+            $id_call = $CalcAgi->saveCDR($agi, $MAGNUS, true);
 
             if (!is_null($MAGNUS->id_agent) && $MAGNUS->id_agent > 1) {
 
@@ -520,7 +520,7 @@ class MassiveCall
                 $CalcAgi->sessiontime = $duration;
                 $CalcAgi->updateSystemAgent($agi, $MAGNUS, $destination, $sellratecost);
             } else {
-                $sql = "UPDATE pkg_user SET credit = credit - $MAGNUS->round_precision(abs($sellratecost))
+                $sql = "UPDATE pkg_user SET credit = credit - " . $MAGNUS->round_precision(abs($sellratecost)) . "
                         WHERE id =  $MAGNUS->id_user LIMIT 1";
                 $agi->exec($sql);
             }

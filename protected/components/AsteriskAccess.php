@@ -360,11 +360,11 @@ class AsteriskAccess
         $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
         $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
 
-        array_push($modelServers, array(
-            'host'     => 'localhost',
-            'username' => 'magnus',
-            'password' => 'magnussolution',
-        ));
+        if (isset($agi->engine)) {
+            $modelServers = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+        }
 
         $channels = array();
         foreach ($modelServers as $key => $server) {
