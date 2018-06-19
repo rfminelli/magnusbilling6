@@ -39,6 +39,7 @@ class TransferToMobileController extends Controller
     private $test = false;
     private $cost;
     private $showprice;
+    private $local_currency;
     public $modelTransferToMobile = array();
 
     public function init()
@@ -225,18 +226,43 @@ class TransferToMobileController extends Controller
                 "verify_peer_name" => false,
             ),
         );
-        // echo $url;
-        if ($action == 'topup') {
-            exit;
-        }
-        if ($this->test == true && preg_match('/topup/', $action)) {
-            return $result = 'transactionid=629609814 msisdn=number destination_msisdn=5551981768534 country=Brazil countryid=691 operator=TIM Brazil operatorid=610 reference_operator= originating_currency=EUR destination_currency=BRL product_requested=10 actual_product_sent=10 wholesale_price=3.50 retail_price=3.50 balance=764.12 sms_sent=yes sms= cid1= cid2= cid3= local_info_value=10 local_info_amount=10 local_info_currency=BRL authentication_key=1519755909 error_code=0 error_txt=Transaction successful';
 
+        if ($this->test == true && preg_match('/topup/', $action)) {
+            return $result = 'transactionid=662680426
+msisdn=number
+destination_msisdn=5551982464731
+country=Brazil
+countryid=691
+operator=Vivo Brazil
+operatorid=708
+reference_operator=55674
+originating_currency=EUR
+destination_currency=BRL
+product_requested=7
+actual_product_sent=7
+wholesale_price=2.40
+retail_price=2.40
+balance=1320.90
+sms_sent=yes
+sms=
+cid1=
+cid2=
+cid3=
+local_info_value=7
+local_info_amount=7
+local_info_currency=BRL
+authentication_key=1529417078
+error_code=0
+error_txt=Transaction successful';
         } else {
 
             if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
                 $result = '';
             }
+        }
+
+        if ($this->test == true) {
+            echo $url . "<br>";
         }
 
         return $result;
@@ -340,9 +366,15 @@ class TransferToMobileController extends Controller
         }
 
         if ($_GET['method'] == 'international') {
-            $product = Yii::app()->session['amounts'][$_GET['amountValues']];
-            $cost    = explode($currency, $product);
-            $cost    = $cost[1];
+            Yii::app()->session['operatorId'] = $_GET['operatorid'];
+            $modelSendCreditProducts          = SendCreditProducts::model()->find(array(
+                'condition' => 'operator_id = :key AND product = :key1',
+                'params'    => array(
+                    ':key'  => Yii::app()->session['operatorId'],
+                    ':key1' => $_GET['amountValues'],
+                ),
+            ));
+            $cost = $modelSendCreditProducts->retail_price;
         } else {
 
             $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
@@ -353,12 +385,11 @@ class TransferToMobileController extends Controller
         }
 
         $methosProfit = 'transfer_' . $_GET['method'] . '_profit';
-
-        $user_profit = $this->modelTransferToMobile->{$methosProfit};
+        $user_profit  = $this->modelTransferToMobile->{$methosProfit};
 
         $user_cost = $cost - ($cost * ($user_profit / 100));
-
         echo $currency . ' ' . number_format($user_cost, 2);
+
     }
 
     public function confirmRefill()
@@ -367,11 +398,17 @@ class TransferToMobileController extends Controller
         exit;*/
 
         if ($_POST['TransferToMobile']['method'] == 'international') {
-            $product    = $_POST['TransferToMobile']['amountValues']; //is the amout to refill
-            $this->cost = Yii::app()->session['amounts'][$product];
-            $this->cost = explode($this->currency, $this->cost);
-            $this->cost = $this->cost[1];
+            $product = $_POST['TransferToMobile']['amountValues']; //is the amout to refill
 
+            $modelSendCreditProducts = SendCreditProducts::model()->find(array(
+                'condition' => 'operator_id = :key AND product = :key1',
+                'params'    => array(
+                    ':key'  => Yii::app()->session['operatorId'],
+                    ':key1' => $product,
+                ),
+            ));
+            $this->cost           = $modelSendCreditProducts->retail_price;
+            $this->local_currency = $modelSendCreditProducts->currency_dest;
         } else {
 
             $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
@@ -407,6 +444,7 @@ class TransferToMobileController extends Controller
         if ($this->modelTransferToMobile->method == 'international') {
 
             $result = explode("error_txt=", $result);
+
             if (preg_match("/Transaction successful/", $result[1])) {
                 $this->releaseCredit($result);
 
@@ -452,7 +490,7 @@ class TransferToMobileController extends Controller
         }
 
         if ($this->test == true) {
-            echo $this->cost . "<br>";
+            echo 'cost=' . $this->cost . '. user_cost=' . $this->user_cost . "<br>";
             echo $this->modelTransferToMobile->transfer_show_selling_price . "<br>";
         }
 
@@ -470,7 +508,10 @@ class TransferToMobileController extends Controller
 
         $this->showprice = number_format($this->cost * $fee, 2);
 
-        $description = 'Send Credit to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->showprice;
+        $result = explode("reference_operator=", $result[0]);
+        $result = explode("\n", $result[1]);
+
+        $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->showprice . '. ref: ' . $result[0];
 
         if ($this->test == true) {
             echo $description;
@@ -563,6 +604,20 @@ class TransferToMobileController extends Controller
 
                     $result = explode("\n", $result);
 
+                    $operatorId = explode("=", $result[3]);
+                    $operatorId = trim($operatorId[1]);
+
+                    $modelSendCreditProducts = SendCreditProducts::model()->findAll(' operator_id = ' . $operatorId,
+                        array(
+                            ':key1' => $operatorId,
+                        ));
+
+                    $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = :key1";
+                    $command = Yii::app()->db->createCommand($sql);
+                    $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
+                    $command->bindValue(":key1", $operatorId, PDO::PARAM_INT);
+                    $resultRates = $command->queryAll();
+
                     /*
                     Array
                     (
@@ -583,63 +638,24 @@ class TransferToMobileController extends Controller
                     )
                      */
 
-                    $operatorId       = explode("=", $result[3]);
-                    $operatorId       = trim($operatorId[1]);
-                    $rateinitialAdmin = 1;
-                    if ($this->modelTransferToMobile->id_user > 1) {
-                        $modelRate = RateAgent::model()->find(array(
-                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                            'params' => array(':key' => '888' . $operatorId),
-                        ));
-
-                        $modelRateAdmin = Rate::model()->find(array(
-                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                            'params' => array(':key' => '888' . $operatorId),
-                        ));
-
-                        $rateinitialAdmin = isset($modelRate->modelRateAdmin) ? $modelRate->modelRateAdmin / 100 + 1 : 1;
-
-                    } else {
-                        $modelRate = Rate::model()->find(array(
-                            'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                            'params' => array(':key' => '888' . $operatorId),
-                        ));
-                    }
-                    if ($this->test == true) {
-                        echo '$operatorId = ' . $operatorId . "<br>";
-                    }
-
-                    $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
-                    //echo "admin profit " . $modelRate->rateinitial . "% <br>";
-                    $product_list      = explode(",", substr($result[7], 13));
-                    $retail_price_list = explode(",", substr($result[8], 18));
-
-                    $local_currency = explode("=", $result[6]);
-                    $local_currency = trim($local_currency[1]);
-
-                    $country = explode("=", $result[0]);
-                    $country = trim($country[1]);
-
-                    $operator = explode("=", $result[2]);
-                    $operator = trim($operator[1]);
-
-                    $values = $sellAdmin = array();
+                    $values = array();
                     $i      = 0;
 
-                    foreach ($product_list as $key => $product) {
+                    foreach ($modelSendCreditProducts as $key => $product) {
+
                         if ($this->test == true) {
-                            echo $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial) . " -> admin price = " . trim($retail_price_list[$i] * $rateinitialAdmin) . "<BR>";
+                            echo $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($resultRates[$i]['sell_price']) . "<BR>";
 
                         }
-                        $values[trim($product)]    = $local_currency . ' ' . trim($product) . ' = ' . $this->currency . ' ' . trim($retail_price_list[$i] * $rateinitial);
-                        $sellAdmin[trim($product)] = trim($retail_price_list[$i] * $rateinitialAdmin);
+                        $values[trim($product->product)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($resultRates[$i]['sell_price']);
                         $i++;
                     }
 
-                    Yii::app()->session['amounts']         = $values;
-                    Yii::app()->session['sellAdmin']       = $sellAdmin;
-                    $this->modelTransferToMobile->country  = $country;
-                    $this->modelTransferToMobile->operator = $operator;
+                    Yii::app()->session['amounts']    = $values;
+                    Yii::app()->session['operatorId'] = $operatorId;
+
+                    $this->modelTransferToMobile->country  = $modelSendCreditProducts[0]->country;
+                    $this->modelTransferToMobile->operator = $modelSendCreditProducts[0]->operator_name;
 
                     return $this->modelTransferToMobile;
 
@@ -695,43 +711,28 @@ class TransferToMobileController extends Controller
             'params'    => array(':key' => $_GET['operator']),
         ));
 
-        $operatorId       = $modelSendCreditProducts[0]->operator_id;
-        $rateinitialAdmin = 1;
-        if ($this->modelTransferToMobile->id_user > 1) {
-            $modelRate = RateAgent::model()->find(array(
-                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                'params' => array(':key' => '888' . $operatorId),
-            ));
+        $operatorId = $modelSendCreditProducts[0]->operator_id;
 
-            $modelRateAdmin = Rate::model()->find(array(
-                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                'params' => array(':key' => '888' . $operatorId),
-            ));
+        $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = :key1";
+        $command = Yii::app()->db->createCommand($sql);
+        $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
+        $command->bindValue(":key1", $operatorId, PDO::PARAM_INT);
+        $resultRates = $command->queryAll();
 
-            $rateinitialAdmin = isset($modelRate->modelRateAdmin) ? $modelRate->modelRateAdmin / 100 + 1 : 1;
-
-        } else {
-            $modelRate = Rate::model()->find(array(
-                'with'   => array('idPrefix' => array('condition' => "idPrefix.prefix = :key")),
-                'params' => array(':key' => '888' . $operatorId),
-            ));
-        }
-
-        $rateinitial = isset($modelRate->rateinitial) ? $modelRate->rateinitial / 100 + 1 : 1;
-        $values      = $sellAdmin      = array();
-
+        $values = array();
+        $i      = 0;
         echo '<select onchange="showPrice(' . $this->modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
         echo '<option value="">Select the amount</option>';
         foreach ($modelSendCreditProducts as $key => $product) {
-            $currency_orig = $product->currency_orig == 'EUR' ? '€' : $product->currency_orig;
-            echo '<option value="' . $product->product . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $currency_orig . ' ' . $product->retail_price * $rateinitial . '</option>';
-            $sellAdmin[trim($product->product)] = trim($product->retail_price * $rateinitialAdmin);
+
+            echo '<option value="' . $product->product . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . $resultRates[$i]['sell_price'] . '</option>';
+
+            $i++;
         }
 
         echo '</select>';
 
-        Yii::app()->session['amounts']   = $values;
-        Yii::app()->session['sellAdmin'] = $sellAdmin;
-
+        Yii::app()->session['amounts']    = $values;
+        Yii::app()->session['operatorId'] = $operatorId;
     }
 }

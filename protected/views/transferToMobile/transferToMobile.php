@@ -20,41 +20,41 @@ $buttonName = 'Next';
 
 $fieldOption = array('class' => 'input');
 
-if (strlen($modelTransferToMobile->country) > 2):
+if (strlen($modelTransferToMobile->country) > 3):
     $fieldOption['readonly'] = true;
 endif;
 ?>
 
-<?php if (strlen($modelTransferToMobile->country) > 2): //select the method ?>
-																														<div class="field">
-																														<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																														<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
-																														<?php echo $form->error($modelTransferToMobile, 'method') ?>
-																														<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
-																													</div>
+<?php if (strlen($modelTransferToMobile->country) > 3): //select the method ?>
+															<div class="field">
+															<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+															<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
+															<?php echo $form->error($modelTransferToMobile, 'method') ?>
+															<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
+														</div>
 
-																													<?php else: //methos already selected?>
+														<?php else: //methos already selected?>
 
-																													<div class="field">
-																														<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																														<div class="styled-select">
-																															<?php
+														<div class="field">
+															<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+															<div class="styled-select">
+																<?php
 
     echo $form->dropDownList($modelTransferToMobile, 'method',
         $methods,
         array(
             'empty'    => Yii::t('yii', 'Select the method'),
-            'disabled' => strlen($modelTransferToMobile->country) > 2,
+            'disabled' => strlen($modelTransferToMobile->country) > 3,
         ));
     ?>
-																														<?php echo $form->error($modelTransferToMobile, 'method') ?>
+															<?php echo $form->error($modelTransferToMobile, 'method') ?>
 
-																														</div>
-																													</div>
+															</div>
+														</div>
 
 
 
-																													<?php endif?>
+														<?php endif?>
 
 
 <br>
@@ -69,7 +69,7 @@ endif;
 
 
 
-<?php if (strlen($modelTransferToMobile->country) > 2): ?>
+<?php if (strlen($modelTransferToMobile->country) > 3): ?>
 	<div class="field">
 		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'country')) ?>
 		<?php echo $form->textField($modelTransferToMobile, 'country', $fieldOption) ?>
@@ -121,6 +121,7 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
         'disabled' => false,
         'onchange' => 'showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')',
         'id'       => 'amountfiel',
+        'style'    => 'color:blue; font-size:20',
     ));
 ?>
 		<?php echo $form->error($modelTransferToMobile, 'amount') ?>
@@ -160,16 +161,16 @@ $this->endWidget();?>
 		}else{
 
 			if (amountValues > 0) {
-				var http = new XMLHttpRequest()
+		var http = new XMLHttpRequest()
 
-				http.onreadystatechange = function() {
+		http.onreadystatechange = function() {
 		       		if (this.readyState == 4 && this.status == 200) {
 		       			document.getElementById('buying_price').value = this.responseText;
 		        	}
 		    	};
 
-				http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
-				http.send(null);
+		http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>&operatorid=<?php echo Yii::app()->session['operatorId']; ?>",true)
+		http.send(null);
 			}
 		}
 	}
@@ -179,21 +180,6 @@ $this->endWidget();?>
 	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 	}
 	function showPrice(argument) {
-
-		text = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].text;
-
-		var valueAmout = text.split(' ');
-		if (argument < 10) {
-			fee = Number('1.0'+argument);
-		}else{
-			fee = Number('1.'+argument);
-		}
-		var showprice = Number(valueAmout[4] * fee);
-
-		newText = '<font color=blue size=7><b>'+valueAmout[3]+ ' '+showprice.toFixed(2);+'</b></font>'
-		document.getElementById('divsellingPrice').style.display = 'inline';
-		document.getElementById('sellingPrice').innerHTML = newText;
-
 		document.getElementById('buying_price').style.display = 'inline';
 		document.getElementById('buying_price').value = 'R';
 	}
