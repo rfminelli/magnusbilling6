@@ -100,6 +100,7 @@ class QueueDashBoardController extends Controller
                     $totalCalls  = $this->get_string_between($line, 'has taken ', 'calls');
                     $totalCalls  = is_numeric($totalCalls) ? $totalCalls : 0;
                     $agentStatus = preg_replace("/\(|\)/", '', $this->get_string_between($line, 'realtime) (', ' has taken'));
+                    $agentStatus = substr($agentStatus, 0, 7) == 'in call' ? 'in call' : $agentStatus;
                     $last_call   = $this->get_string_between($line, '(last was ', ' secs ago)');
                     $last_call   = is_numeric($last_call) ? $last_call : 0;
                     $resultSIP   = Sip::model()->findAll(array('condition' => "name = '$username'"));
@@ -109,6 +110,13 @@ class QueueDashBoardController extends Controller
                     echo $totalCalls."\n";
                     echo $id_user."\n";
                     echo $username."\n";*/
+
+                    if (isset($_GET['log5'])) {
+                        $valuesInsert = "$id_user, '$$username', '$agentStatus', '$totalCalls', '$last_call', '$queue->id";
+                        echo "INSERT INTO pkg_queue_agent_status
+                                (id_user, agentName, agentStatus, totalCalls, last_call, id_queue)
+                                VALUES ($valuesInsert) <br>";
+                    }
                     $valuesInsert = ":id_user, :username, :agentStatus, :totalCalls, :last_call, :queueId";
                     $sql          = "INSERT INTO pkg_queue_agent_status
                                 (id_user, agentName, agentStatus, totalCalls, last_call, id_queue)
@@ -137,19 +145,8 @@ class QueueDashBoardController extends Controller
     {
 
         for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
-            if ($attributes[$i]['id_agent'] > 0) {
-                $result = Queue::model()->getQueueAgentStatus($attributes[$i]['id_agent']);
-
-                $agentName = $result[0]['agentName'];
-
-            } else {
-                $agentName = '';
-            }
-
-            $duration = time() - strtotime($attributes[$i]['time']) - $attributes[$i]['oldtime'];
-
-            $attributes[$i]['agentName'] = $agentName;
-            $attributes[$i]['duration']  = $duration;
+            $duration                   = time() - strtotime($attributes[$i]['time']) - $attributes[$i]['holdtime'];
+            $attributes[$i]['duration'] = $duration;
         }
         return $attributes;
     }

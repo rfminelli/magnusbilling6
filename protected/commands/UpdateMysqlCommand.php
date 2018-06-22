@@ -789,6 +789,16 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.2.8') {
+            $sql = "ALTER TABLE `pkg_sip` ADD `block_call_reg` VARCHAR(100) NOT NULL DEFAULT '' AFTER `url_events`;
+
+            ALTER TABLE `pkg_queue_status` ADD `agentName` VARCHAR(50) NOT NULL DEFAULT '' AFTER `oldtime`;";
+
+            $this->executeDB($sql);
+            $version = '6.2.9';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
     }
 
     public function executeDB($sql)

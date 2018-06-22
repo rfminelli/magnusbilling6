@@ -115,14 +115,14 @@ class QueueAgi
         $MAGNUS->accountcode = $agi->get_variable("USERNAME", true);
         $id_queue            = $agi->get_variable("IDQUEUE", true);
         $callerid            = $agi->get_variable("QUEUCALLERID", true);
-        $oldtime             = $agi->get_variable("QEHOLDTIME", true);
+        $holdtime            = $agi->get_variable("QEHOLDTIME", true);
 
         $modelSip = Sip::model()->find('name = :key', array(':key' => $operator));
         if (count($modelSip) && strlen($modelSip->mohsuggest) > 1) {
             $agi->execute('SetMusicOnHold', $modelSip->mohsuggest);
         }
 
-        Queue::model()->updateQueueStatus($operator, $id_queue, $oldtime, $MAGNUS->uniqueid);
+        Queue::model()->updateQueueStatus($operator, $holdtime, $MAGNUS->uniqueid);
 
         $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator answer the call from QUEUE \n\n", 6);
 

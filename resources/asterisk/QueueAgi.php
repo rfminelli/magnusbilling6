@@ -32,7 +32,7 @@ class QueueAgi
         $startTime           = time();
         $MAGNUS->destination = $DidAgi->modelDid->did;
 
-        $sql = "SELECT * FROM pkg_queue
+        $sql = "SELECT  *, pkg_queue.id AS id  FROM pkg_queue
                             LEFT JOIN pkg_user ON pkg_queue.id_user = pkg_user.id
                             WHERE pkg_queue.id = " . $DidAgi->modelDestination[0]['id_queue'] . " LIMIT 1 ";
         $modelQueue = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -52,8 +52,8 @@ class QueueAgi
         $agi->exec($sql);
 
         $ring_or_moh = $modelQueue->ring_or_moh == 'ring' ? 'r' : '';
-        $agi->verbose("Queue", $queueName . ',' . $ring_or_moh . 'tc,,,,/var/www/html/mbilling/agi.php');
-        $agi->execute("Queue", $queueName . ',' . $ring_or_moh . 'tc,,,,/var/www/html/mbilling/agi.php');
+        $agi->verbose("Queue", $queueName . ',' . $ring_or_moh . 'tc,,,,/var/www/html/mbilling/resources/asterisk/mbilling.php');
+        $agi->execute("Queue", $queueName . ',' . $ring_or_moh . 'tc,,,,/var/www/html/mbilling/resources/asterisk/mbilling.php');
 
         $MAGNUS->stopRecordCall($agi);
 
@@ -120,7 +120,7 @@ class QueueAgi
         $MAGNUS->accountcode = $agi->get_variable("USERNAME", true);
         $id_queue            = $agi->get_variable("IDQUEUE", true);
         $callerid            = $agi->get_variable("QUEUCALLERID", true);
-        $oldtime             = $agi->get_variable("QEHOLDTIME", true);
+        $holdtime            = $agi->get_variable("QEHOLDTIME", true);
 
         $sql      = "SELECT mohsuggest, record_call FROM pkg_sip WHERE name = '$operator' LIMIT 1";
         $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -128,9 +128,8 @@ class QueueAgi
             $agi->execute('SetMusicOnHold', $modelSip->mohsuggest);
         }
 
-        $sql = "UPDATE pkg_queue_status SET status = 'answered', id_agent =
-                (SELECT id FROM pkg_queue_agent_status WHERE agentName = '$operator' AND id_queue = $id_queue),
-                    oldtime = '$oldtime'  WHERE callId = '$uniqueid' ";
+        $sql = "UPDATE pkg_queue_status SET status = 'answered', agentName = '$operator' ,
+                    holdtime = '$holdtime'  WHERE callId = '$MAGNUS->uniqueid' ";
         $agi->exec($sql);
 
         $agi->verbose("\n\n" . $MAGNUS->uniqueid . " $operator answer the call from QUEUE \n\n", 6);

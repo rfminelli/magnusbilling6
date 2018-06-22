@@ -96,24 +96,22 @@ class Queue extends Model
         Yii::app()->db->createCommand($sql)->execute();
     }
 
-    public function updateQueueStatus($operator, $id_queue, $oldtime, $uniqueid)
+    public function updateQueueStatus($operator, $holdtime, $uniqueid)
     {
-        $sql = "UPDATE pkg_queue_status SET status = 'answered', id_agent =
-                (SELECT id FROM pkg_queue_agent_status WHERE agentName = :key AND id_queue = :key1),
-                    oldtime = :key2  WHERE callId = :key3 ";
+        $sql = "UPDATE pkg_queue_status SET status = 'answered', agentName = :key,
+                    holdtime = :key2  WHERE callId = :key3 ";
         $command = Yii::app()->db->createCommand($sql);
         $command->bindValue(":key", $operator, PDO::PARAM_STR);
-        $command->bindValue(":key1", $id_queue, PDO::PARAM_INT);
-        $command->bindValue(":key2", $oldtime, PDO::PARAM_STR);
+        $command->bindValue(":key2", $holdtime, PDO::PARAM_STR);
         $command->bindValue(":key3", $uniqueid, PDO::PARAM_STR);
         $command->execute();
     }
-
-    public function getQueueStatus($id)
+    public function getQueueStatus($agentName, $id_queue)
     {
-        $sql     = "SELECT * FROM pkg_queue_status WHERE id_agent = :key";
+        $sql     = "SELECT * FROM pkg_queue_status WHERE agentName = :key AND id_queue = :key1";
         $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":key", $id, PDO::PARAM_STR);
+        $command->bindValue(":key", $agentName, PDO::PARAM_STR);
+        $command->bindValue(":key1", $id_queue, PDO::PARAM_STR);
         return $command->queryAll();
     }
 

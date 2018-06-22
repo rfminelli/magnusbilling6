@@ -3,6 +3,7 @@ Help.load({
     'trunk.encryption': 'Whether to offer SRTP encrypted media (ONLY TO SRTP)',
     'trunk.port': 'Only port 5060 is open on IPTABLES.',
     'sip.calllimit': 'Use 0 to unlimit',
+    'sip.block_call_reg': 'Use a php regular expression to block matched with calls',
     'user.prefix_local': 'It is used to change the dialing number.',
     'user.typepaid': 'To postpaid is necessary add credit limit.',
     'trunk.user': 'Only use if authentication is via user and pass.',
