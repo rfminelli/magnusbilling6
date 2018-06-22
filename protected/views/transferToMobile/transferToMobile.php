@@ -26,19 +26,19 @@ endif;
 ?>
 
 <?php if (strlen($modelTransferToMobile->country) > 3): //select the method ?>
-															<div class="field">
-															<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-															<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
-															<?php echo $form->error($modelTransferToMobile, 'method') ?>
-															<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
-														</div>
+																		<div class="field">
+																		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																		<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
+																		<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																		<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
+																	</div>
 
-														<?php else: //methos already selected?>
+																	<?php else: //methos already selected?>
 
-														<div class="field">
-															<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-															<div class="styled-select">
-																<?php
+																	<div class="field">
+																		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																		<div class="styled-select">
+																			<?php
 
     echo $form->dropDownList($modelTransferToMobile, 'method',
         $methods,
@@ -47,14 +47,14 @@ endif;
             'disabled' => strlen($modelTransferToMobile->country) > 3,
         ));
     ?>
-															<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																		<?php echo $form->error($modelTransferToMobile, 'method') ?>
 
-															</div>
-														</div>
+																		</div>
+																	</div>
 
 
 
-														<?php endif?>
+																	<?php endif?>
 
 
 <br>
@@ -155,7 +155,7 @@ $this->endWidget();?>
 
 	function getBuyingPrice(argument) {
 		amountValues = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
-
+		operator = document.getElementById('operatorfield').options[document.getElementById('operatorfield').selectedIndex].text;
 		if (document.getElementById('buying_price').value != 'R') {
 			document.getElementById('buying_price').value = 'R';
 		}else{
@@ -169,7 +169,7 @@ $this->endWidget();?>
 		        	}
 		    	};
 
-		http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>&operatorid=<?php echo Yii::app()->session['operatorId']; ?>",true)
+		http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>&operatorname="+operator,true)
 		http.send(null);
 			}
 		}
