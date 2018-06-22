@@ -1,4 +1,9 @@
 Locale.load({
+    'On Phone': 'Em chamada',
+    'Receiving': 'Recebendo',
+    'Waiting': 'Esperando',
+    'Unavailable': 'Indisponível',
+    'Ringing': 'Tocando',
     'ONE TIME PASSWORD': 'Código Token',
     'Code Name': 'Nome código',
     'Please enter Google Authenticator code': 'Completo com o token do Google Authenticator',
