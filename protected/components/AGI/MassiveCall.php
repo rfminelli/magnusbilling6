@@ -175,77 +175,81 @@ class MassiveCall
             $modelPhoneNumber->info = 'Forward DTMF 1';
             $modelPhoneNumber->save();
 
-            $MAGNUS->record_call = $modelCampaign->idUser->record_call;
+            $chanStatus = $agi->channel_status($MAGNUS->channel);
+            if ($chanStatus['result'] == 6) {
 
-            $forwardOption     = explode("|", $forward_number);
-            $forwardOptionType = $forwardOption[0];
+                $MAGNUS->record_call = $modelCampaign->idUser->record_call;
 
-            $agi->verbose(print_r($forwardOption, true));
+                $forwardOption     = explode("|", $forward_number);
+                $forwardOptionType = $forwardOption[0];
 
-            if ($forwardOptionType == 'sip') {
+                $agi->verbose(print_r($forwardOption, true));
 
-                $modelSip = Sip::model()->findByPk((int) $forwardOption[1]);
+                if ($forwardOptionType == 'sip') {
 
-                $dialstr = 'SIP/' . $modelSip->name;
+                    $modelSip = Sip::model()->findByPk((int) $forwardOption[1]);
 
-                $MAGNUS->startRecordCall($agi);
+                    $dialstr = 'SIP/' . $modelSip->name;
 
-                $myres      = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_sipiax_friend']);
-                $dialstatus = $agi->get_variable("DIALSTATUS");
-                $dialstatus = $dialstatus['data'];
+                    $MAGNUS->startRecordCall($agi);
 
-                if ($dialstatus == "NOANSWER") {
-                    $agi->stream_file('prepaid-callfollowme', '#');
-                } elseif (($dialstatus == "BUSY" || $dialstatus == "CHANUNAVAIL") || ($dialstatus == "CONGESTION")) {
-                    $agi->stream_file('prepaid-isbusy', '#');
-                }
-            } elseif ($forwardOptionType == 'queue') {
+                    $myres      = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_sipiax_friend']);
+                    $dialstatus = $agi->get_variable("DIALSTATUS");
+                    $dialstatus = $dialstatus['data'];
 
-                $modelDiddestination             = new Diddestination();
-                $modelDiddestination->id_queue   = $forwardOption[1];
-                $modelDiddestination->idDid->did = $destination;
-                $agi->set_variable("CALLERID(num)", $destination);
-                $agi->set_callerid($destination);
-                QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
-            } elseif ($forwardOptionType == 'ivr') {
-                $modelDiddestination             = new Diddestination();
-                $modelDiddestination->id_ivr     = $forwardOption[1];
-                $modelDiddestination->idDid->did = $destination;
-                IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
-            } elseif ($forwardOptionType == 'group') {
+                    if ($dialstatus == "NOANSWER") {
+                        $agi->stream_file('prepaid-callfollowme', '#');
+                    } elseif (($dialstatus == "BUSY" || $dialstatus == "CHANUNAVAIL") || ($dialstatus == "CONGESTION")) {
+                        $agi->stream_file('prepaid-isbusy', '#');
+                    }
+                } elseif ($forwardOptionType == 'queue') {
 
-                $agi->verbose("Call group $group ", 25);
-                $modelSip = Sip::model()->findAll('`group` = :key', array('key' => $forwardOption[1]));
+                    $modelDiddestination             = new Diddestination();
+                    $modelDiddestination->id_queue   = $forwardOption[1];
+                    $modelDiddestination->idDid->did = $destination;
+                    $agi->set_variable("CALLERID(num)", $destination);
+                    $agi->set_callerid($destination);
+                    QueueAgi::callQueue($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
+                } elseif ($forwardOptionType == 'ivr') {
+                    $modelDiddestination             = new Diddestination();
+                    $modelDiddestination->id_ivr     = $forwardOption[1];
+                    $modelDiddestination->idDid->did = $destination;
+                    IvrAgi::callIvr($agi, $MAGNUS, $Calc, $modelDiddestination, null, 'torpedo');
+                } elseif ($forwardOptionType == 'group') {
 
-                if (count($modelSip) == 0) {
-                    $agi->verbose('GROUP NOT FOUND');
-                    $agi->stream_file('prepaid-invalid-digits', '#');
+                    $agi->verbose("Call group " . $forwardOption[1], 25);
+                    $modelSip = Sip::model()->findAll('`group` = :key', array('key' => $forwardOption[1]));
 
-                } else {
-                    $group = '';
-                    foreach ($modelSip as $key => $value) {
-                        $group .= "SIP/" . $value->name . "&";
+                    if (count($modelSip) == 0) {
+                        $agi->verbose('GROUP NOT FOUND');
+                        $agi->stream_file('prepaid-invalid-digits', '#');
+
+                    } else {
+                        $group = '';
+                        foreach ($modelSip as $key => $value) {
+                            $group .= "SIP/" . $value->name . "&";
+                        }
+
+                        $dialstr = substr($group, 0, -1);
+                        $agi->verbose("DIAL $dialstr", 25);
+                        $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_sipiax_friend']);
                     }
 
-                    $dialstr = substr($group, 0, -1);
-                    $agi->verbose("DIAL $dialstr", 25);
-                    $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_sipiax_friend']);
+                } elseif ($forwardOptionType == 'custom') {
+                    $agi->set_variable("CALLERID(num)", $destination);
+                    if (preg_match('/AGI/', $forwardOption[1])) {
+                        $agi = explode("|", $forwardOption[1]);
+                        $agi->exec_agi($agi[1] . ",$destination,$idCampaign,$idPhonenumber");
+                    } else {
+                        $MAGNUS->run_dial($agi, $forwardOption[1]);
+                    }
                 }
 
-            } elseif ($forwardOptionType == 'custom') {
                 $agi->set_variable("CALLERID(num)", $destination);
-                if (preg_match('/AGI/', $forwardOption[1])) {
-                    $agi = explode("|", $forwardOption[1]);
-                    $agi->exec_agi($agi[1] . ",$destination,$idCampaign,$idPhonenumber");
-                } else {
-                    $MAGNUS->run_dial($agi, $forwardOption[1]);
+
+                if ($MAGNUS->agiconfig['record_call'] == 1 || $MAGNUS->record_call == 1) {
+                    $myres = $agi->execute("StopMixMonitor");
                 }
-            }
-
-            $agi->set_variable("CALLERID(num)", $destination);
-
-            if ($MAGNUS->agiconfig['record_call'] == 1 || $MAGNUS->record_call == 1) {
-                $myres = $agi->execute("StopMixMonitor");
             }
 
         }
