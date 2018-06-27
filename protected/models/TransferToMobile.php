@@ -28,6 +28,8 @@ class TransferToMobile extends Model
     public $fm_transfer_fee;
     public $amountValues;
     public $amount;
+    public $amountValuesEUR;
+    public $amountValuesBDT;
     /**
      * Return the static class of model.
      *

@@ -102,7 +102,7 @@ class SendCreditRatesController extends Controller
 
             $modelSendCreditProducts = SendCreditProducts::model()->findByPk((int) $values['id']);
 
-            $sql     = "UPDATE pkg_send_credit_rates SET sell_price = :key WHERE id_user = " . (int) Yii::app()->session['id_user'] . " AND product = " . (int) $modelSendCreditProducts->product . " AND operator_id = " . (int) $modelSendCreditProducts->operator_id . " LIMIT 1";
+            $sql     = "UPDATE pkg_send_credit_rates SET sell_price = :key WHERE id_user = " . (int) Yii::app()->session['id_user'] . " AND product = '" . $modelSendCreditProducts->product . "' AND operator_id = " . (int) $modelSendCreditProducts->operator_id . " LIMIT 1";
             $command = Yii::app()->db->createCommand($sql);
             $command->bindValue(":key", $values['sell_price'], PDO::PARAM_STR);
             $command->execute();

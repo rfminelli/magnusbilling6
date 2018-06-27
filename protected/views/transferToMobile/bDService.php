@@ -66,16 +66,29 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 <?php if (strlen($modelTransferToMobile->number) > 10): ?>
 	<div class="field">
-		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Amount')) ?>
-		<?php echo $form->numberField($modelTransferToMobile, 'amountValues',
+		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Paid Amount (EUR)')) ?>
+		<?php echo $form->textField($modelTransferToMobile, 'amountValuesEUR',
     array(
         'class'   => 'input',
-        'id'      => 'amountfiel',
-        'onkeyup' => 'showPrice("' . $modelTransferToMobile->transfer_show_selling_price . '","' . $this->config['global']['BDService_cambio'] . '","' . $this->config['global']['fm_transfer_currency'] . '")',
+        'id'      => 'amountfielEUR',
+        'onkeyup' => 'showPriceEUR()',
     )) ?>
-		<?php echo $form->error($modelTransferToMobile, 'amountValues') ?>
+		<?php echo $form->error($modelTransferToMobile, 'amountValuesEUR') ?>
+
+	</div>
+
+	<div class="field">
+		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Receive Amount (BDT)')) ?>
+		<?php echo $form->textField($modelTransferToMobile, 'amountValuesBDT',
+    array(
+        'class'   => 'input',
+        'id'      => 'amountfielBDT',
+        'onkeyup' => 'showPriceBDT()',
+    )) ?>
+		<?php echo $form->error($modelTransferToMobile, 'amountValuesBDT') ?>
 		<p class="hint"><?php echo $amountDetails ?></p>
 	</div>
+
 <?php endif?>
 <br>
 <div class='field' id="divsellingPrice" style="display:none; border:0">
@@ -86,7 +99,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', $buttonName), array(
     'class'   => 'button',
-    'onclick' => 'button2()',
+    'onclick' => 'button2(event)',
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
@@ -101,14 +114,13 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 <script type="text/javascript">
 
 	function getBuyingPrice(argument) {
-		amountValues = document.getElementById('amountfiel').value;
-		console.log(amountValues);
-
+		amountValuesEUR = document.getElementById('amountfielEUR').value;
+		valueAmoutBDT = document.getElementById('amountfielBDT').value;
 		if (document.getElementById('buying_price').value != 'R') {
 			document.getElementById('buying_price').value = 'R';
 		}else{
 
-			if (amountValues > 0) {
+			if (amountValuesEUR > 0) {
 				var http = new XMLHttpRequest()
 
 				http.onreadystatechange = function() {
@@ -117,7 +129,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 		        	}
 		    	};
 
-				http.open("GET", "https://cc.onlinecallshop.com/Begin/index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
+				http.open("GET", "../../index.php/transferToMobile/getBuyingPriceDBService?valueAmoutBDT="+valueAmoutBDT+"&valueAmoutEUR="+amountValuesEUR+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>",true)
 				http.send(null);
 			}
 		}
@@ -125,31 +137,68 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 	}
 
+	function button2(e) {
 
-	function button2(buttonId) {
-	  	document.getElementById("sendButton").style.display = 'none';
-	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
-	}
-	function showPrice(transfer_show_selling_price,exchange,currency) {
+		valueAmoutEUR = document.getElementById('amountfielEUR').value;
 
-		valueAmout = document.getElementById('amountfiel').value;
-
-		//convert to eur
-		valueAmout = valueAmout * exchange;
-
-		if (transfer_show_selling_price < 10) {
-			fee = Number('1.0'+transfer_show_selling_price);
+		if (valueAmoutEUR > 0) {
+			if(!confirm('Are you sure to send this request?')){
+				e.preventDefault();
+			}else{
+				document.getElementById("sendButton").style.display = 'none';
+		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+			}
 		}else{
-			fee = Number('1.'+transfer_show_selling_price);
+			document.getElementById("sendButton").style.display = 'none';
+		  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 		}
 
-		var showprice = Number(valueAmout * fee);
+	}
+	function showPriceEUR() {
 
-		newText = '<font color=blue size=7><b>'+currency+' '+showprice.toFixed(2);+'</b></font>'
-		document.getElementById('divsellingPrice').style.display = 'inline';
-		document.getElementById('sellingPrice').innerHTML = newText;
-		document.getElementById('buying_price').style.display = 'inline';
-		document.getElementById('buying_price').value = 'R';
+		valueAmoutEUR = document.getElementById('amountfielEUR').value;
+
+
+		if (valueAmoutEUR > 0) {
+			var http = new XMLHttpRequest()
+
+			http.onreadystatechange = function() {
+	       		if (this.readyState == 4 && this.status == 200) {
+	       			document.getElementById('buying_price').style.display = 'inline';
+					document.getElementById('buying_price').value = 'R';
+	       			document.getElementById('amountfielBDT').value = this.responseText;
+	        		}
+	    		};
+
+			http.open("GET", "../../index.php/transferToMobile/convertCurrency?currency=EUR&amount="+valueAmoutEUR+"&method=<?php echo $_POST['TransferToMobile']['method']; ?>",true)
+			http.send(null);
+		}
+
+
+	}
+
+	function showPriceBDT() {
+
+		valueAmoutBDT = document.getElementById('amountfielBDT').value;
+
+
+		if (valueAmoutBDT > 0) {
+			var http = new XMLHttpRequest()
+
+			http.onreadystatechange = function() {
+	       		if (this.readyState == 4 && this.status == 200) {
+
+	       			document.getElementById('amountfielEUR').value = this.responseText;
+	       			document.getElementById('buying_price').style.display = 'inline';
+					document.getElementById('buying_price').value = 'R';
+	        		}
+	    		};
+
+			http.open("GET", "../../index.php/transferToMobile/convertCurrency?currency=BDT&amount="+valueAmoutBDT+"&method=<?php echo $_POST['TransferToMobile']['method']; ?>",true)
+			http.send(null);
+		}
+
+
 	}
 </script>
 

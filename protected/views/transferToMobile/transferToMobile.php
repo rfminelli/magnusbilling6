@@ -26,19 +26,19 @@ endif;
 ?>
 
 <?php if (strlen($modelTransferToMobile->country) > 3): //select the method ?>
-																		<div class="field">
-																		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																		<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
-																		<?php echo $form->error($modelTransferToMobile, 'method') ?>
-																		<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
-																	</div>
+																									<div class="field">
+																									<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																									<?php echo $form->textField($modelTransferToMobile, 'method', $fieldOption) ?>
+																									<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																									<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Method') ?></p>
+																								</div>
 
-																	<?php else: //methos already selected?>
+																								<?php else: //methos already selected?>
 
-																	<div class="field">
-																		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
-																		<div class="styled-select">
-																			<?php
+																								<div class="field">
+																									<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Method')) ?>
+																									<div class="styled-select">
+																										<?php
 
     echo $form->dropDownList($modelTransferToMobile, 'method',
         $methods,
@@ -47,14 +47,14 @@ endif;
             'disabled' => strlen($modelTransferToMobile->country) > 3,
         ));
     ?>
-																		<?php echo $form->error($modelTransferToMobile, 'method') ?>
+																									<?php echo $form->error($modelTransferToMobile, 'method') ?>
 
-																		</div>
-																	</div>
+																									</div>
+																								</div>
 
 
 
-																	<?php endif?>
+																								<?php endif?>
 
 
 <br>
@@ -139,7 +139,7 @@ echo $form->dropDownList($modelTransferToMobile, 'amountValues',
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', $buttonName), array(
     'class'   => 'button',
-    'onclick' => "button2()",
+    'onclick' => "button2(event)",
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
@@ -176,8 +176,22 @@ $this->endWidget();?>
 	}
 
 	function button2(buttonId) {
-	  	document.getElementById("sendButton").style.display = 'none';
-	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+
+			valueAmoutEUR = document.getElementById('amountfielEUR').value;
+
+		if (valueAmoutEUR > 0) {
+			if(!confirm('Are you sure to send this request?')){
+				e.preventDefault();
+			}else{
+				document.getElementById("sendButton").style.display = 'none';
+		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+			}
+		}else{
+			document.getElementById("sendButton").style.display = 'none';
+		  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+		}
+
+
 	}
 	function showPrice(argument) {
 		document.getElementById('buying_price').style.display = 'inline';

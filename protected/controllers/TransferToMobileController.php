@@ -46,8 +46,9 @@ class TransferToMobileController extends Controller
     public function init()
     {
 
-        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
+        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '016305935932') {
             $this->test = true;
+
             echo 'teste';
         }
         $this->instanceModel = new User;
@@ -74,9 +75,8 @@ class TransferToMobileController extends Controller
 
     public function actionRead($asJson = true, $condition = null)
     {
-
         //if we already request the number info, check if select a valid amount
-        if (isset($_POST['TransferToMobile']['amountValues'])) {
+        if (isset($_POST['TransferToMobile']['amountValues']) || isset($_POST['TransferToMobile']['amountValuesEUR'])) {
 
             $this->modelTransferToMobile->method = $_POST['TransferToMobile']['method'];
             $this->modelTransferToMobile->number = $_POST['TransferToMobile']['number'];
@@ -84,26 +84,31 @@ class TransferToMobileController extends Controller
                 $this->modelTransferToMobile->country  = $_POST['TransferToMobile']['country'];
                 $this->modelTransferToMobile->operator = $_POST['TransferToMobile']['operator'];
             }
-            $this->modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
+            if ($this->modelTransferToMobile->method == 'international') {
+                $this->modelTransferToMobile->amountValues = $_POST['TransferToMobile']['amountValues'];
+            }
 
             if ($this->modelTransferToMobile->method != 'international') {
                 //check min max
                 $min = Yii::app()->session['allowedAmount'][0];
                 $max = Yii::app()->session['allowedAmount'][1];
+                // echo '<pre>';
 
-                if ($_POST['TransferToMobile']['amountValues'] < $min) {
-                    $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is < then minimal allowed'));
+                if ($_POST['TransferToMobile']['amountValuesBDT'] < $min) {
+                    $this->modelTransferToMobile->addError('amountValuesBDT', Yii::t('yii', 'Amount is < then minimal allowed'));
 
-                } else if ($_POST['TransferToMobile']['amountValues'] > $max) {
-                    $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Amount is > then maximum allowed'));
+                } else if ($_POST['TransferToMobile']['amountValuesBDT'] > $max) {
+                    $this->modelTransferToMobile->addError('amountValuesBDT', Yii::t('yii', 'Amount is > then maximum allowed'));
                 }
+                $this->modelTransferToMobile->amountValuesEUR = $_POST['TransferToMobile']['amountValuesEUR'];
+                $this->modelTransferToMobile->amountValuesBDT = $_POST['TransferToMobile']['amountValuesBDT'];
 
             }
 
-            if (!is_numeric($_POST['TransferToMobile']['amountValues'])) {
-
+            if ($this->modelTransferToMobile->method != 'international' && preg_match('/[A-Z][a-z]/', $_POST['TransferToMobile']['amountValuesBDT'])) {
+                $this->modelTransferToMobile->addError('amountValuesBDT', Yii::t('yii', 'Invalid amount'));
+            } elseif ($this->modelTransferToMobile->method == 'international' && !is_numeric($_POST['TransferToMobile']['amountValues'])) {
                 $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Invalid amount'));
-
             } elseif (!count($this->modelTransferToMobile->getErrors())) {
 
                 $this->confirmRefill();
@@ -273,7 +278,7 @@ error_txt=Transaction successful';
 
         $type = $this->modelTransferToMobile->method == 'dbbl_rocket' ? 'DBBL' : $this->modelTransferToMobile->method;
 
-        $url = $this->url . "/ezzeapi/request/" . $type . "?number=" . $this->modelTransferToMobile->number . "&amount=" . $this->modelTransferToMobile->amountValues . "&type=1&id=" . $this->send_credit_id . "&user=" . $this->login . "&key=" . $this->token;
+        $url = $this->url . "/ezzeapi/request/" . $type . "?number=" . $this->modelTransferToMobile->number . "&amount=" . $_POST['TransferToMobile']['amountValuesBDT'] . "&type=1&id=" . $this->send_credit_id . "&user=" . $this->login . "&key=" . $this->token;
 
         if ($this->test == true) {
             $result = 'SUCCESS';
@@ -288,11 +293,12 @@ error_txt=Transaction successful';
 
     public function calculateCost($product = 0)
     {
-        if ($this->test == true) {
-            echo 'cost=' . $this->cost . ' - prodict=' . $product . "<br>";
-        }
 
         $methosProfit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
+
+        if ($this->test == true) {
+            echo "<br>" . 'cost=' . $this->cost . ' - prodict=' . $product . "<br>";
+        }
 
         if ($this->modelTransferToMobile->credit + $this->modelTransferToMobile->creditlimit < $this->cost) {
 
@@ -414,9 +420,7 @@ error_txt=Transaction successful';
 
         } else {
 
-            $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
-            //cost to send to provider selected value + admin rate * exchange
-            $this->cost = $_POST['TransferToMobile']['amountValues'] * $rateinitial * $this->config['global']['BDService_cambio'];
+            $this->cost = $this->actionGetBuyingPriceDBService($_POST['TransferToMobile']['method'], $_POST['TransferToMobile']['amountValuesEUR'], $_POST['TransferToMobile']['amountValuesBDT']);
             $product    = 0;
 
         }
@@ -424,7 +428,7 @@ error_txt=Transaction successful';
         $this->calculateCost($product);
 
         if ($this->test == true) {
-            echo "REMOVE " . $this->user_cost . " from user " . $this->modelTransferToMobile->username;
+            echo "REMOVE " . $this->user_cost . " from user " . $this->modelTransferToMobile->username . "<br>";
         }
 
         $this->addInDataBase();
@@ -453,7 +457,8 @@ error_txt=Transaction successful';
 
             } else {
                 echo '<div align=center id="container">';
-                echo '<font color=red>ERROR: ' . $result[1] . '</font>';
+                echo '<font color=red>ERROR: ' . $result[1] . '</font><br><br>';
+                echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
                 echo '</div>';
                 exit;
             }
@@ -467,7 +472,8 @@ error_txt=Transaction successful';
                 exit;
             } else if (preg_match("/ERROR|error/", $result)) {
                 echo '<div align=center id="container">';
-                echo "<font color=red>" . $result . "</font>";
+                echo "<font color=red>" . $result . "</font><br><br>";
+                echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
                 echo '</div>';
                 exit;
             } elseif (preg_match("/SUCCESS/", strtoupper($result))) {
@@ -480,11 +486,6 @@ error_txt=Transaction successful';
 
     public function releaseCredit($result)
     {
-
-        $msg = $this->modelTransferToMobile->method == 'international' ? $result[1] : $result;
-        echo '<div align=center id="container">';
-        echo '<font color=green>Success: ' . $msg . '</font>';
-        echo '</div>';
 
         if ($this->modelTransferToMobile->method == 'international') {
             User::model()->updateByPk(Yii::app()->session['id_user'],
@@ -520,7 +521,8 @@ error_txt=Transaction successful';
             $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->sell_price . '. ref: ' . $result[0];
 
         } else {
-            $description = 'Send Credit to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->showprice;
+            //Send Credit BDT 150 to 01630593593 via flexiload at 2.25"
+            $description = 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
 
         }
 
@@ -543,6 +545,13 @@ error_txt=Transaction successful';
         $command->bindValue(":costUser", $this->user_cost * -1, PDO::PARAM_STR);
         $command->bindValue(":description", $description, PDO::PARAM_STR);
         $command->execute();
+
+        $msg = $this->modelTransferToMobile->method == 'international' ? $result[1] : $result;
+        echo '<div align=center id="container">';
+        echo '<font color=green>Success: ' . $msg . '</font>' . "<br><br>";
+        echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
+        echo '<a href="../../index.php/transferToMobile/printRefill?id=' . Yii::app()->db->lastInsertID . '">Print Refill </a>' . "<br><br>";
+        echo '</div>';
 
         if ($this->test == true) {
             echo $sql . "<br>";
@@ -699,6 +708,7 @@ error_txt=Transaction successful';
     {
 
         if (isset($_GET['id'])) {
+            echo '<center>';
             $config    = LoadConfig::getConfig();
             $id_refill = $_GET['id'];
 
@@ -713,13 +723,20 @@ error_txt=Transaction successful';
             echo $modelRefill->date . "<br>";
 
             $number = explode(" ", $modelRefill->description);
-            echo "Mobile No.: " . $number[3] . "<br>";
-            $amount = number_format($modelRefill->credit, 2) * -1;
-            echo "Amount: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
+
+            echo "Mobile No.: " . $number[5] . "<br>";
+
+            if (!preg_match('/international/', $modelRefill->description)) {
+                echo 'Product: BDT ' . $number[3] . "<br>";
+            }
+
+            $amount = end($number);
+            echo "Amount Paid: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
 
             echo $config['global']['fm_transfer_print_footer'] . "<br><br>";
 
             echo '<td><a href="javascript:window.print()">Print</a></td>';
+            echo '</center>';
         } else {
             echo ' Invalid reffil';
         }
@@ -757,5 +774,113 @@ error_txt=Transaction successful';
         Yii::app()->session['amounts']    = $values;
         Yii::app()->session['operatorId'] = $operatorId;
 
+    }
+
+    public function actionGetBuyingPriceDBService($method = '', $valueAmoutEUR = '', $valueAmoutBDT = '')
+    {
+        $method    = $method == '' ? $_GET['method'] : $method;
+        $methodOld = $method;
+        $method    = $method == 'dbbl_rocket' ? 'Rocket' : $method;
+
+        $amountEUR = $valueAmoutEUR == '' ? $_GET['valueAmoutEUR'] : $valueAmoutEUR;
+        $amountBDT = $valueAmoutBDT == '' ? $_GET['valueAmoutBDT'] : $valueAmoutBDT;
+
+        $modelSendCreditProducts = SendCreditProducts::model()->findAll(array(
+            'condition' => 'operator_name = :key AND operator_id = 0',
+            'params'    => array(':key' => 'Bangladesh ' . $method),
+        ));
+
+        foreach ($modelSendCreditProducts as $key => $value) {
+            $product = explode('-', $value->product);
+            if ($amountBDT >= $product[0] && $amountBDT <= $product[1]) {
+                $product = $value;
+                break;
+            }
+        }
+
+        $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
+        $command = Yii::app()->db->createCommand($sql);
+        $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
+        $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
+        $resultRates = $command->queryAll();
+
+        $amount = $amountEUR - $resultRates[0]['sell_price'];
+
+        $methosProfit = 'transfer_' . $methodOld . '_profit';
+
+        $user_profit = $this->modelTransferToMobile->{$methosProfit};
+
+        $amountR = $amount - ($amount * ($user_profit / 100));
+
+        //$user_profit = $amount * ($user_profit / 100);
+
+        if (isset($_GET['method'])) {
+            echo 'EUR ' . $amountR;
+        } else {
+            return $amount;
+        }
+
+    }
+
+    public function actionConvertCurrency()
+    {
+        $method = $_GET['method'];
+        $method = $method == 'dbbl_rocket' ? 'Rocket' : $method;
+
+        $modelSendCreditProducts = SendCreditProducts::model()->findAll(array(
+            'condition' => 'operator_name = :key AND operator_id = 0',
+            'params'    => array(':key' => 'Bangladesh ' . $method),
+        ));
+
+        if ($_GET['currency'] == 'EUR') {
+
+            /*
+            Request 2: to Send EUR 2.00, will show Selling price EUR 2.00 and BDT amount converted to BDT 125 to
+            send(2.00-0.75/0.01).
+            If click on "R", will show EUR 1.25.
+             */
+
+            $amountEUR = $_GET['amount'];
+
+            $amountBDT = $amountEUR / ($modelSendCreditProducts[0]->retail_price);
+
+            foreach ($modelSendCreditProducts as $key => $value) {
+                $product = explode('-', $value->product);
+                if ($amountBDT >= $product[0] && $amountBDT <= $product[1]) {
+                    $product = $value;
+                    break;
+                }
+            }
+
+            $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
+            $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
+            $resultRates = $command->queryAll();
+
+            echo $amount = ($amountEUR - $resultRates[0]['sell_price']) / $modelSendCreditProducts[0]->retail_price;
+        } else {
+
+            /*
+            Request 1: to Send BDT 150, will show Selling price EUR 2.25(150*0.01+0.75). If click on "R", will show EUR 1.5.
+             */
+            $amountBDT = $_GET['amount'];
+
+            foreach ($modelSendCreditProducts as $key => $value) {
+                $product = explode('-', $value->product);
+                if ($amountBDT >= $product[0] && $amountBDT <= $product[1]) {
+                    $product = $value;
+                    break;
+                }
+            }
+            $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
+            $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
+            $resultRates = $command->queryAll();
+
+            echo $amount = ($amountBDT * $modelSendCreditProducts[0]->retail_price) + $resultRates[0]['sell_price'];
+
+        }
     }
 }
