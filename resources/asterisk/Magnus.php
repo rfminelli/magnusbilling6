@@ -667,8 +667,12 @@ class Magnus
 
             if (preg_match("/" . $this->modelSip->block_call_reg . "/", $this->destination)) {
                 $agi->verbose("NUMBER NOT AUHTORIZED - NOT ALLOW TO CALL BY REGEX SIP ACCOUNT " . $this->sip_account, 1);
-                $agi->answer();
-                $agi->stream_file('prepaid-dest-unreachable', '#');
+                if ($this->play_audio == 1) {
+                    $agi->answer();
+                    $agi->stream_file('prepaid-dest-unreachable', '#');
+                } else {
+                    $agi->execute((congestion), Congestion);
+                }
                 $this->hangup($agi);
             }
         }
@@ -685,8 +689,12 @@ class Magnus
                 if (isset($modelRestrictedPhonenumber->id)) {
                     /* NUMBER NOT AUHTORIZED*/
                     $agi->verbose("NUMBER NOT AUHTORIZED - NOT ALLOW TO CALL RESTRICTED NUMBERS", 1);
-                    $agi->answer();
-                    $agi->stream_file('prepaid-dest-unreachable', '#');
+                    if ($this->play_audio == 1) {
+                        $agi->answer();
+                        $agi->stream_file('prepaid-dest-unreachable', '#');
+                    } else {
+                        $agi->execute((congestion), Congestion);
+                    }
                     $this->hangup($agi);
                 }
             } else if ($this->restriction == 2) {
@@ -694,8 +702,12 @@ class Magnus
                 if (!isset($modelRestrictedPhonenumber->id)) {
                     /*NUMBER NOT AUHTORIZED*/
                     $agi->verbose("NUMBER NOT AUHTORIZED - ALLOW TO CALL ONLY RESTRICTED NUMBERS", 1);
-                    $agi->answer();
-                    $agi->stream_file('prepaid-dest-unreachable', '#');
+                    if ($this->play_audio == 1) {
+                        $agi->answer();
+                        $agi->stream_file('prepaid-dest-unreachable', '#');
+                    } else {
+                        $agi->execute((congestion), Congestion);
+                    }
                     $this->hangup($agi);
                 }
             }
