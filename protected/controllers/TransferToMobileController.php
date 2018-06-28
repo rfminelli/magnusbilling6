@@ -879,7 +879,7 @@ error_txt=Transaction successful';
             $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
             $resultRates = $command->queryAll();
 
-            echo $amount = ($amountBDT * $modelSendCreditProducts[0]->retail_price) + $resultRates[0]['sell_price'];
+            echo $amount = ($amountBDT * $product->retail_price) + $resultRates[0]['sell_price'];
 
         }
     }

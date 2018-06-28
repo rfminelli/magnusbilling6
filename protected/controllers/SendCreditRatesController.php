@@ -49,6 +49,11 @@ class SendCreditRatesController extends Controller
         parent::actionRead($asJson = true, $condition = null);
     }
 
+    public function readCountRecord()
+    {
+        return SendCreditRates::model()->count();
+    }
+
     public function extraFilterCustomClient($filter)
     {
 

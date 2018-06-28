@@ -66,7 +66,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 <?php if (strlen($modelTransferToMobile->number) > 10): ?>
 	<div class="field">
-		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Paid Amount (EUR)')) ?>
+		<?php echo $form->labelEx($modelTransferToMobile, 'amountValuesEUR', array('label' => 'Paid Amount (EUR)')); ?>
 		<?php echo $form->textField($modelTransferToMobile, 'amountValuesEUR',
     array(
         'class'   => 'input',
@@ -78,7 +78,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	</div>
 
 	<div class="field">
-		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Receive Amount (BDT)')) ?>
+		<?php echo $form->labelEx($modelTransferToMobile, 'amountValuesBDT', array('label' => 'Receive Amount (BDT)')); ?>
 		<?php echo $form->textField($modelTransferToMobile, 'amountValuesBDT',
     array(
         'class'   => 'input',
@@ -103,7 +103,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
-<input id ='buying_price'  class="button" style="display:none; width: 80px;" onclick="getBuyingPrice()" value="R">
+<input id ='buying_price'  class="button" style="display:none; width: 100px;" onclick="getBuyingPrice()" value="R" readonly>
 
 </div>
 <div class="controls" id="buttondivWait"></div>
@@ -144,6 +144,8 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 		if (valueAmoutEUR > 0) {
 			if(!confirm('Are you sure to send this request?')){
 				e.preventDefault();
+				document.getElementById("sendButton").style.display = 'none';
+		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 			}else{
 				document.getElementById("sendButton").style.display = 'none';
 		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
