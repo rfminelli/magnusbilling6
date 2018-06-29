@@ -512,6 +512,7 @@ class MassiveCall
             $CalcAgi->buycost          = $buyratecost;
             $CalcAgi->id_prefix        = $id_prefix;
             $CalcAgi->id_campaign      = $idCampaign;
+            $MAGNUS->CallerID          = intval($destination);
 
             $id_call = $CalcAgi->saveCDR($agi, $MAGNUS, true);
 

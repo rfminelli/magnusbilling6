@@ -116,7 +116,7 @@ class IvrAgi
             $dtmf        = explode(("|"), $modelIvr->{$optionName . $option});
             $optionType  = $dtmf[0];
             $optionValue = $dtmf[1];
-            $agi->verbose("CUSTOMER PRESS $optionType -> $optionValue");
+            $agi->verbose("CUSTOMER PRESS $optionType -> $optionValue", 10);
 
             if ($optionType == 'sip') // QUEUE
             {
@@ -235,7 +235,7 @@ class IvrAgi
                 $DidAgi->call_did($agi, $MAGNUS, $CalcAgi, $optionValue);
             }
 
-            $agi->verbose("FIM do loop");
+            $agi->verbose("FIM do loop", 25);
 
             $continue  = false;
             $insertCDR = true;

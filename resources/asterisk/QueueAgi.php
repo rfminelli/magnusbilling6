@@ -44,7 +44,6 @@ class QueueAgi
         $agi->set_variable('CHANNEL(language)', $modelQueue->language);
 
         $queueName = $modelQueue->name;
-        $agi->verbose($queueName);
 
         $sql = "INSERT INTO pkg_queue_status (id_queue, callId, queue_name, callerId, time, channel, status)
                         VALUES (" . $modelQueue->id . ", '" . $MAGNUS->uniqueid . "', '$queueName', '" . $MAGNUS->CallerID . "',

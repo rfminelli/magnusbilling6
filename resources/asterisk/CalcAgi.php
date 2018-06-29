@@ -860,7 +860,7 @@ class CalcAgi
 
         if ($this->terminatecauseid == 1) {
 
-            $fields = "uniqueid,id_user,calledstation,id_plan,src,callerid,
+            $fields = "uniqueid,id_user,calledstation,id_plan,callerid,src,
                         starttime,sessiontime,real_sessiontime, terminatecauseid,sessionbill,
                         sipiax,buycost";
 
