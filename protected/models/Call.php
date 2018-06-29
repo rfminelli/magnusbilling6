@@ -63,7 +63,7 @@ class Call extends Model
             array('id_user, id_plan, calledstation', 'required'),
             array('id_user, id_plan, id_campaign, id_trunk, sessiontime, real_sessiontime, sipiax', 'numerical', 'integerOnly' => true),
             array('sessionid, uniqueid, starttime, src, calledstation,
-                terminatecauseid, buycost, sessionbill,  agent_bill', 'length', 'max' => 50),
+                terminatecauseid, buycost, sessionbill,  agent_bill, callerid', 'length', 'max' => 50),
         );
     }
 

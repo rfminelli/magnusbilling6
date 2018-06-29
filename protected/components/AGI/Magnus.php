@@ -661,6 +661,17 @@ class Magnus
 
     public function checkRestrictPhoneNumber($agi)
     {
+
+        if ($this->modelSip->block_call_reg != '') {
+
+            if (preg_match("/" . $this->modelSip->block_call_reg . "/", $this->destination)) {
+                $agi->verbose("NUMBER NOT AUHTORIZED - NOT ALLOW TO CALL BY REGEX SIP ACCOUNT " . $this->sip_account, 1);
+                $agi->answer();
+                $agi->stream_file('prepaid-dest-unreachable', '#');
+                $this->hangup($agi);
+            }
+        }
+
         if ($this->restriction == 1 || $this->restriction == 2) {
             /*Check if Account have restriction*/
             $modelRestrictedPhonenumber = RestrictedPhonenumber::model()->findAll(array(

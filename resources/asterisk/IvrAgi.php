@@ -30,7 +30,7 @@ class IvrAgi
 
         $MAGNUS->destination = $DidAgi->modelDid->did;
 
-        $sql      = "SELECT * FROM pkg_ivr LEFT JOIN pkg_user ON pkg_ivr.id_user = pkg_user.id WHERE pkg_ivr.id = " . $DidAgi->modelDestination[0]['id_ivr'] . " LIMIT 1";
+        $sql      = "SELECT *, pkg_ivr.id id, pkg_ivr.id_user id_user FROM pkg_ivr LEFT JOIN pkg_user ON pkg_ivr.id_user = pkg_user.id WHERE pkg_ivr.id = " . $DidAgi->modelDestination[0]['id_ivr'] . " LIMIT 1";
         $modelIvr = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         $username            = $modelIvr->username;
@@ -101,8 +101,10 @@ class IvrAgi
             //se nao marcou
             if (strlen($option) < 1) {
                 $agi->verbose('DEFAULT OPTION');
-                $option   = '10';
-                $continue = false;
+                $dialstatus = 'ANSWER';
+                $option     = '10';
+                $continue   = false;
+                $insertCDR  = true;
             }
             //se marca uma opÃ§ao que esta em branco
             else if ($modelIvr->{$optionName . $option} == '') {
@@ -128,7 +130,7 @@ class IvrAgi
                 $dialparams = str_replace("%timeoutsec%", 3600, $dialparams);
                 $dialstr    = 'SIP/' . $modelSip->name . $dialparams;
                 $agi->verbose($dialstr, 25);
-
+                $MAGNUS->sip_account = $modelSip->name;
                 $MAGNUS->startRecordCall($agi);
                 $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
                 $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->config["agi-conf1"]['dialcommand_param_sipiax_friend']);
@@ -193,7 +195,8 @@ class IvrAgi
                     $agi->stream_file('prepaid-invalid-digits', '#');
                     continue;
                 }
-                $group = '';
+                $MAGNUS->sip_account = $modelSip[0]->name;
+                $group               = '';
 
                 foreach ($modelSip as $key => $value) {
                     $group .= "SIP/" . $value->name . "&";

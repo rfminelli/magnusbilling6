@@ -42,7 +42,7 @@ class MassiveCall
         $MAGNUS->id_agent = $agi->get_variable("AGENT_ID", true);
         $destination      = $MAGNUS->dnid;
 
-        $sql = "SELECT *, pkg_campaign.id id FROM pkg_campaign
+        $sql = "SELECT *, pkg_campaign.id AS id, pkg_campaign.id_user AS id_user  FROM pkg_campaign
                             LEFT JOIN pkg_user ON pkg_campaign.id_user = pkg_user.id
                             WHERE pkg_campaign.id = $idCampaign LIMIT 1";
         $modelCampaign = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -65,7 +65,7 @@ class MassiveCall
         $modelCampaignPoll = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
 
         if (isset($modelCampaign->audio_2) && strlen($modelPhoneNumber->name) > 3 && (strlen($modelCampaign->audio_2) > 5) || strlen($modelCampaign->tts_audio2) > 2) {
-            $agi->verbose('get phonenumber name from TTS');
+            $agi->verbose('get phonenumber name from TTS', 10);
             $tts  = true;
             $file = $idPhonenumber . date("His");
 
@@ -106,7 +106,7 @@ class MassiveCall
         if (isset($tts)) {
             $agi->stream_file($audio_name, ' #');
             if (!preg_match('/campaign/', $audio_name)) {
-                $agi->verbose('delete audio name ' . $audio_name);
+                $agi->verbose('delete audio name ' . $audio_name, 10);
                 exec("rm -rf $audio_name*");
             }
         }
@@ -187,7 +187,7 @@ class MassiveCall
                 $forwardOption     = explode("|", $forward_number);
                 $forwardOptionType = $forwardOption[0];
 
-                $agi->verbose(print_r($forwardOption, true));
+                $agi->verbose(print_r($forwardOption, true), 15);
 
                 if ($forwardOptionType == 'sip') {
 

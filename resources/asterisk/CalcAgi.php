@@ -860,11 +860,11 @@ class CalcAgi
 
         if ($this->terminatecauseid == 1) {
 
-            $fields = "uniqueid,id_user,calledstation,id_plan,src,
+            $fields = "uniqueid,id_user,calledstation,id_plan,src,callerid,
                         starttime,sessiontime,real_sessiontime, terminatecauseid,sessionbill,
                         sipiax,buycost";
 
-            $values = "'$MAGNUS->uniqueid', $MAGNUS->id_user, '$MAGNUS->destination', $MAGNUS->id_plan,
+            $values = "'$MAGNUS->uniqueid', $MAGNUS->id_user, '$MAGNUS->destination', $MAGNUS->id_plan, $MAGNUS->CallerID,
                         '$MAGNUS->sip_account',
                         '$this->starttime', '$this->sessiontime',
                         '$this->real_sessiontime', '$this->terminatecauseid', '$this->sessionbill',

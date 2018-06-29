@@ -467,7 +467,6 @@ CREATE TABLE `pkg_cdr` (
   `sessionid` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `uniqueid` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `starttime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `stoptime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `sessiontime` int(11) DEFAULT NULL,
   `calledstation` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `sessionbill` float DEFAULT NULL,

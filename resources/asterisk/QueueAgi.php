@@ -32,7 +32,7 @@ class QueueAgi
         $startTime           = time();
         $MAGNUS->destination = $DidAgi->modelDid->did;
 
-        $sql = "SELECT  *, pkg_queue.id AS id  FROM pkg_queue
+        $sql = "SELECT  *, pkg_queue.id AS id, pkg_queue.id_user AS id_user  FROM pkg_queue
                             LEFT JOIN pkg_user ON pkg_queue.id_user = pkg_user.id
                             WHERE pkg_queue.id = " . $DidAgi->modelDestination[0]['id_queue'] . " LIMIT 1 ";
         $modelQueue = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -70,6 +70,12 @@ class QueueAgi
         $linha = explode('|', $linha);
 
         $agi->verbose(print_r($linha, true), 25);
+
+        if ($linha[4] == 'ABANDON') {
+            $MAGNUS->sip_account = $linha[4];
+        } else {
+            $MAGNUS->sip_account = substr($linha[3], 4);
+        }
 
         if ($linha[4] == 'ABANDON' || $linha[4] == 'EXITEMPTY' || $linha[4] == 'EXITWITHTIMEOUT') {
             $CalcAgi->terminatecauseid = 7;
@@ -122,7 +128,7 @@ class QueueAgi
         $callerid            = $agi->get_variable("QUEUCALLERID", true);
         $holdtime            = $agi->get_variable("QEHOLDTIME", true);
 
-        $sql      = "SELECT mohsuggest, record_call FROM pkg_sip WHERE name = '$operator' LIMIT 1";
+        $sql      = "SELECT id_user, mohsuggest, record_call FROM pkg_sip WHERE name = '$operator' LIMIT 1";
         $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
         if (isset($modelSip->mohsuggest) && strlen($modelSip->mohsuggest) > 1) {
             $agi->execute('SetMusicOnHold', $modelSip->mohsuggest);
