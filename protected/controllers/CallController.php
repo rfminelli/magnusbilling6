@@ -272,7 +272,7 @@ class CallController extends Controller
 
                 $columns = array(
                     array('header' => "100%", 'dataIndex' => 'real_sessiontime'),
-                    array('header' => "80% a 99% ", 'dataIndex' => 'sessionid'),
+                    array('header' => "80% a 99% ", 'dataIndex' => 'uniqueid'),
                     array('header' => "60% a 79%", 'dataIndex' => 'id_plan'),
                     array('header' => "40% a 59% ", 'dataIndex' => 'id_did'),
                     array('header' => "20% a 39% ", 'dataIndex' => 'id_prefix'),
@@ -286,7 +286,7 @@ class CallController extends Controller
 
                 $this->select = "
                 ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign  ) AS real_sessiontime,
-                ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign80 AND sessiontime < $timeCampaign ) AS sessionid,
+                ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign80 AND sessiontime < $timeCampaign ) AS uniqueid,
                 ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign60 AND sessiontime < $timeCampaign80) AS id_plan,
                 ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign40 AND sessiontime < $timeCampaign60 ) AS id_did,
                 ( SELECT COUNT(sessiontime) FROM pkg_cdr t $this->join WHERE $this->filter AND sessiontime >= $timeCampaign20 AND sessiontime < $timeCampaign40 ) AS id_prefix,

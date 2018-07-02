@@ -554,7 +554,6 @@ class Calc
             $agi->verbose('Insert call on CDR', 10);
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $MAGNUS->uniqueid;
-            $modelCall->sessionid        = $MAGNUS->channel;
             $modelCall->id_user          = $MAGNUS->id_user;
             $modelCall->starttime        = date("Y-m-d H:i:s", time() - $this->real_answeredtime);
             $modelCall->sessiontime      = intval($sessiontime);
@@ -583,7 +582,6 @@ class Calc
                 $agi->verbose('Insert failed call', 1);
                 $modelCallFailed                   = new CallFailed();
                 $modelCallFailed->uniqueid         = $MAGNUS->uniqueid;
-                $modelCallFailed->sessionid        = $MAGNUS->channel;
                 $modelCallFailed->id_user          = $MAGNUS->id_user;
                 $modelCallFailed->starttime        = date('Y-m-d H:i:s');
                 $modelCallFailed->calledstation    = $MAGNUS->destination;
@@ -878,7 +876,6 @@ class Calc
                 }
                 //save in CDRCALLSHOP the
                 $modelCallShop                = new CallShopCdr();
-                $modelCallShop->sessionid     = $MAGNUS->channel;
                 $modelCallShop->id_user       = $MAGNUS->id_user;
                 $modelCallShop->status        = 0;
                 $modelCallShop->price         = $sellratecost_callshop;

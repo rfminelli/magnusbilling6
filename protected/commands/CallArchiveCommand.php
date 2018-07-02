@@ -37,9 +37,9 @@ class CallArchiveCommand extends ConsoleCommand
             $loop = number_format($result[0]['count'] / 10000, 0);
 
             if ($table == 'pkg_cdr') {
-                $func_fields = "id_user, id_plan, id_prefix, id_trunk, sessionid, uniqueid, starttime, sessiontime, calledstation, sessionbill, sipiax, src, buycost, real_sessiontime, terminatecauseid, agent_bill";
+                $func_fields = "id_user, id_plan, id_prefix, id_trunk, uniqueid, starttime, sessiontime, calledstation, sessionbill, sipiax, src, buycost, real_sessiontime, terminatecauseid, agent_bill";
             } else {
-                $func_fields = "id_user, id_plan, id_prefix, id_trunk, sessionid, uniqueid, starttime, calledstation, sipiax, src, terminatecauseid";
+                $func_fields = "id_user, id_plan, id_prefix, id_trunk, uniqueid, starttime, calledstation, sipiax, src, terminatecauseid";
             }
 
             if ($c == 0) {

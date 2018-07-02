@@ -552,7 +552,6 @@ class DidAgi
 
         $modelCall                   = new Call();
         $modelCall->uniqueid         = $MAGNUS->uniqueid;
-        $modelCall->sessionid        = $MAGNUS->channel;
         $modelCall->id_user          = $MAGNUS->id_user;
         $modelCall->starttime        = date("Y-m-d H:i:s", time() - $answeredtime);
         $modelCall->sessiontime      = $answeredtime;

@@ -30,9 +30,8 @@ class SipTransferAgi
             $MAGNUS->agiconfig['cid_enable']     = 0;
             $MAGNUS->agiconfig['say_timetocall'] = 0;
             if (strlen($MAGNUS->CallerID) < 6) {
-                $modelCall = Call::model()->find('sessionid = :key AND uniqueid = :key1 AND starttime = :key2',
+                $modelCall = Call::model()->find('uniqueid = :key1 AND starttime = :key2',
                     array(
-                        ':key'  => $MAGNUS->channel,
                         ':key1' => $MAGNUS->uniqueid,
                         ';Key2' => date("Y-m-d"),
                     ));
