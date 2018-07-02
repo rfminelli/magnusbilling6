@@ -8,29 +8,7 @@ class PagSeguroController extends Controller
 {
     public function actionIndex()
     {
-
-        /*$_POST = array(
-        'ProdValor_1'     => '50.00',
-        'TransacaoID'     => 'WVJ3YK6545HDVC',
-        'tax'             => '0.00',
-        'StatusTransacao' => 'Aprovado',
-        'payment_status'  => 'Completed',
-        'charset'         => 'windows-1252',
-        'first_name'      => 'Anibal',
-        'mc_fee'          => '4.00',
-        'notify_version'  => '3.7',
-        'custom'          => '',
-        'payer_status'    => 'verified',
-        'txn_id'          => '4Y190387AG109562T',
-        'receiver_email'  => 'magnusadilsom@gmail.com',
-        'payment_fee'     => '4.00',
-        'receiver_id'     => 'HVUEC4FXXDVDB',
-        'Referencia'      => '1458545545-user-110',
-        );*/
-
-        if (!isset($_POST) || count($_POST) < 5) {
-            exit;
-        }
+        Yii::log(print_r($_POST, true), 'error');
 
         $filter = "payment_method = 'Pagseguro'";
         $params = array();
@@ -49,83 +27,74 @@ class PagSeguroController extends Controller
         ));
 
         if (!count($modelMethodpay)) {
-            exit;
+            exit('error 30');
         }
 
-        $identification = Util::getDataFromMethodPay($_POST['Referencia']);
-        if (!is_array($identification)) {
-            exit;
-        }
-
-        $username = $identification['username'];
-        $id_user  = $identification['id_user'];
-
+        $email = $modelMethodpay->username;
         $TOKEN = $modelMethodpay->pagseguro_TOKEN;
-        define('TOKEN', $TOKEN);
+        if (isset($_POST['notificationCode'])) {
+            $notificationCode = $_POST['notificationCode'];
 
-        if (count($_POST) > 0) {
-            // POST recebido, indica que é a requisição do NPI.
-            $npi         = new PagSeguroNpi();
-            $result      = $npi->notificationPost();
-            $transacaoID = isset($_POST['TransacaoID']) ? $_POST['TransacaoID'] : '';
+            $url  = "https://ws.pagseguro.uol.com.br/v2/transactions/notifications/" . $notificationCode . "?email=" . $email . "&token=" . $TOKEN;
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($curl);
+            $http     = curl_getinfo($curl);
 
-            if ($result == "VERIFICADO") {
-                $StatusTransacao = $_POST['StatusTransacao'];
-                $monto           = str_replace(",", ".", $_POST['ProdValor_1']);
-                $description     = "Pagamento confirmado, PAGSEGURO:" . $transacaoID;
+            if ($response == 'Unauthorized') {
+                Yii::log(print_r($response, true), 'error');
+                exit;
+            }
+            curl_close($curl);
+            $response = simplexml_load_string($response);
 
-                if ($StatusTransacao == 'Aprovado') {
+            if (count($response->error) > 0) {
+                Yii::log(print_r($response, true), 'error');
+                exit;
+            }
+            $referencia  = $response->items->item->id;
+            $transacaoID = $response->code;
+            $status      = $response->status;
+            $amount      = $response->grossAmount;
+            /*
+            Código  Significado
+            1   Aguardando pagamento: o comprador iniciou a transação, mas até o momento o PagSeguro não recebeu nenhuma informação sobre o pagamento.
+            2   Em análise: o comprador optou por pagar com um cartão de crédito e o PagSeguro está analisando o risco da transação.
+            3   Paga: a transação foi paga pelo comprador e o PagSeguro já recebeu uma confirmação da instituição financeira responsável pelo processamento.
+            4   Disponível: a transação foi paga e chegou ao final de seu prazo de liberação sem ter sido retornada e sem que haja nenhuma disputa aberta.
+            5   Em disputa: o comprador, dentro do prazo de liberação da transação, abriu uma disputa.
+            6   Devolvida: o valor da transação foi devolvido para o comprador.
+            7   Cancelada: a transação foi cancelada sem ter sido finalizada.
+             */
 
-                    $modelUser = User::model()->findByPk((int) $id_user);
+            $identification = Util::getDataFromMethodPay($referencia);
+            if (!is_array($identification)) {
+                exit;
+            }
 
-                    if (count($modelUser) && Refill::model()->countRefill($transacaoID, $modelUser->id) == 0) {
-                        Yii::log($modelUser->id . ' ' . $monto . ' ' . $description . ' ' . $transacaoID, 'error');
-                        UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $transacaoID);
-                        header("HTTP/1.1 200 OK");
-                    }
+            $username = $identification['username'];
+            $id_user  = $identification['id_user'];
+
+            if ($status == 3) {
+                $description = "Pagamento confirmado, PAGSEGURO:" . $transacaoID;
+
+                $modelUser = User::model()->findByPk((int) $id_user);
+
+                if (count($modelUser) && Refill::model()->countRefill($transacaoID, $modelUser->id) == 0) {
+                    Yii::log($modelUser->id . ' ' . $amount . ' ' . $description . ' ' . $transacaoID, 'error');
+                    UserCreditManager::releaseUserCredit($modelUser->id, $amount, $description, 1, $transacaoID);
+                    header("HTTP/1.1 200 OK");
+                } else {
+                    Yii::log(print_r('Existe uma pagamento com a referencia ' . $transacaoID, true), 'error');
                 }
+
             } else {
                 echo 'error';
             }
         } else {
-            echo '<h3>Obrigado por efetuar a compra.</h3>';
+            echo 'Obrigado por sua compra.';
         }
-    }
-}
 
-class PagSeguroNpi
-{
-    private $timeout = 20; // Timeout em segundos
-    public function notificationPost()
-    {
-        $postdata = 'Comando=validar&Token=' . TOKEN;
-        foreach ($_POST as $key => $value) {
-            $valued = $this->clearStr($value);
-            $postdata .= "&$key=$valued";
-        }
-        return $this->verify($postdata);
     }
-    private function clearStr($str)
-    {
-        if (!get_magic_quotes_gpc()) {
-            $str = addslashes($str);
-        }
-        return $str;
-    }
-
-    private function verify($data)
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "https://pagseguro.uol.com.br/pagseguro-ws/checkout/NPI.jhtml");
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        $result = trim(curl_exec($curl));
-        curl_close($curl);
-        return $result;
-    }
-
 }

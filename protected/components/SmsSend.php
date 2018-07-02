@@ -180,8 +180,7 @@ class SmsSend
                 $success          = false;
             }
 
-            $sessionid = "SMS/$destination-" . date('His');
-            $uniqueid  = "$destination-" . date('His');
+            $uniqueid = "$destination-" . date('His');
 
             $modelCall                   = new Call();
             $modelCall->uniqueid         = $uniqueid;
