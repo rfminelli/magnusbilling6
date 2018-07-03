@@ -46,7 +46,7 @@ class TransferToMobileController extends Controller
     public function init()
     {
 
-        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '016305935932') {
+        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
             $this->test = true;
 
             echo 'teste';
@@ -453,7 +453,7 @@ error_txt=Transaction successful';
             $result = explode("error_txt=", $result);
 
             if (preg_match("/Transaction successful/", $result[1])) {
-                $this->releaseCredit($result);
+                $this->releaseCredit($result, '');
 
             } else {
                 echo '<div align=center id="container">';
@@ -466,9 +466,8 @@ error_txt=Transaction successful';
         } else {
 
             if (strlen($result) < 1) {
-                echo '<div align=center id="container">';
-                echo "<font color=red>INVALID REQUEST, CONTACT ADMIN</font>";
-                echo '</div>';
+
+                $this->releaseCredit($result, 'error');
                 exit;
             } else if (preg_match("/ERROR|error/", $result)) {
                 echo '<div align=center id="container">';
@@ -477,14 +476,14 @@ error_txt=Transaction successful';
                 echo '</div>';
                 exit;
             } elseif (preg_match("/SUCCESS/", strtoupper($result))) {
-                $this->releaseCredit($result);
+                $this->releaseCredit($result, '');
 
             }
 
         }
     }
 
-    public function releaseCredit($result)
+    public function releaseCredit($result, $status)
     {
 
         if ($this->modelTransferToMobile->method == 'international') {
@@ -521,8 +520,13 @@ error_txt=Transaction successful';
             $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->sell_price . '. ref: ' . $result[0];
 
         } else {
+            if ($status == 'error') {
+                $description = 'PENDING: ';
+            } else {
+                $description = '';
+            }
             //Send Credit BDT 150 to 01630593593 via flexiload at 2.25"
-            $description = 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
+            $description .= 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
 
         }
 
@@ -728,10 +732,13 @@ error_txt=Transaction successful';
 
             if (!preg_match('/international/', $modelRefill->description)) {
                 echo 'Product: BDT ' . $number[3] . "<br>";
+                $amount = end($number);
+            } else {
+                echo 'Product: ' . $number[2] . ' ' . $number[3] . "<br>";
+                $amount = substr($number[9], 0, -1);
             }
 
-            $amount = end($number);
-            echo "Amount Paid: <input type=text' style='text-align: right;' size='5' value='$amount'> <br><br>";
+            echo "Amount Paid: <input type=text' style='text-align: right;' size='10' value='$amount'> <br><br>";
 
             echo $config['global']['fm_transfer_print_footer'] . "<br><br>";
 
@@ -858,7 +865,7 @@ error_txt=Transaction successful';
             $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
             $resultRates = $command->queryAll();
 
-            echo $amount = ($amountEUR - $resultRates[0]['sell_price']) / $modelSendCreditProducts[0]->retail_price;
+            echo $amount = number_format(($amountEUR - $resultRates[0]['sell_price']) / $modelSendCreditProducts[0]->retail_price, 0, '', '');
         } else {
 
             /*
@@ -879,7 +886,7 @@ error_txt=Transaction successful';
             $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
             $resultRates = $command->queryAll();
 
-            echo $amount = ($amountBDT * $product->retail_price) + $resultRates[0]['sell_price'];
+            echo $amount = number_format(($amountBDT * $product->retail_price) + $resultRates[0]['sell_price'], 2);
 
         }
     }

@@ -1,5 +1,10 @@
 <link rel="stylesheet" type="text/css" href="../../resources/css/signup.css" />
-
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
+  <script src="https://plentz.github.io/jquery-maskmoney/javascripts/jquery.maskMoney.min.js" type="text/javascript"></script>
+  <script type="text/javascript">$(function() {
+    $('#amountfielEUR').maskMoney();
+    $('#amountfielBDT').maskMoney({precision:0, thousands:''});
+  })</script>
 <?php
 
 $form = $this->beginWidget('CActiveForm', array(
@@ -12,8 +17,6 @@ $form = $this->beginWidget('CActiveForm', array(
 ?>
 
 <br/>
-
-
 <?php
 
 $buttonName = 'Next';
@@ -72,6 +75,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
         'class'   => 'input',
         'id'      => 'amountfielEUR',
         'onkeyup' => 'showPriceEUR()',
+        'style'   => 'color:blue; font-size:20',
     )) ?>
 		<?php echo $form->error($modelTransferToMobile, 'amountValuesEUR') ?>
 
@@ -84,6 +88,7 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
         'class'   => 'input',
         'id'      => 'amountfielBDT',
         'onkeyup' => 'showPriceBDT()',
+        'style'   => 'color:blue; font-size:20',
     )) ?>
 		<?php echo $form->error($modelTransferToMobile, 'amountValuesBDT') ?>
 		<p class="hint"><?php echo $amountDetails ?></p>
@@ -139,13 +144,17 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 	function button2(e) {
 
+		if (!document.getElementById('amountfielEUR')) {
+			document.getElementById("sendButton").style.display = 'none';
+		  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+		  	return;
+		}
+
 		valueAmoutEUR = document.getElementById('amountfielEUR').value;
 
 		if (valueAmoutEUR > 0) {
 			if(!confirm('Are you sure to send this request?')){
 				e.preventDefault();
-				document.getElementById("sendButton").style.display = 'none';
-		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 			}else{
 				document.getElementById("sendButton").style.display = 'none';
 		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
@@ -158,8 +167,8 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 	}
 	function showPriceEUR() {
 
-		valueAmoutEUR = document.getElementById('amountfielEUR').value;
 
+		valueAmoutEUR = document.getElementById('amountfielEUR').value;
 
 		if (valueAmoutEUR > 0) {
 			var http = new XMLHttpRequest()
