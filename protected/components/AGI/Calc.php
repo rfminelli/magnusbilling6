@@ -879,6 +879,7 @@ class Calc
                 $modelCallShop->id_user       = $MAGNUS->id_user;
                 $modelCallShop->status        = 0;
                 $modelCallShop->price         = $sellratecost_callshop;
+                $modelCallShop->sessionid     = $MAGNUS->channel;
                 $modelCallShop->buycost       = $MAGNUS->round_precision(abs($cost));
                 $modelCallShop->calledstation = $MAGNUS->destination;
                 $modelCallShop->destination   = $modelReteCallshop[0]['destination'];
