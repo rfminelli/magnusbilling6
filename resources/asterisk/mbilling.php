@@ -115,8 +115,9 @@ if ($agi->get_variable("PHONENUMBER_ID", true) > 0 && $agi->get_variable("CAMPAI
 if ($agi->get_variable("SPY", true) == 1) {
 
     $channel = $agi->get_variable("CHANNELSPY", true);
+    $spyType = $agi->get_variable("SPYTYPE", true);
     $agi->verbose('SPY CALL ' . $channel);
-    $agi->execute("ChanSpy", $channel, "bqE");
+    $agi->execute("ChanSpy", $channel . ',' . $spyType);
     $agi->stream_file('prepaid-final', '#');
     $MAGNUS->hangup($agi);
     exit;

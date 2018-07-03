@@ -108,17 +108,14 @@ class CallOnLineController extends Controller
 
     public function actionSpyCall()
     {
-        $model = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
-
-        if (count($this->config['global']['channel_spy']) == 0) {
-            echo json_encode(array(
-                'success' => false,
-                'msg'     => 'Invalid SIP for spy call',
-            ));
-            exit;
+        if (!isset($_POST['id_sip'])) {
+            $dialstr = 'SIP/' . $this->config['global']['channel_spy'];
+        } else {
+            $modelSip = Sip::model()->findByPk((int) $_POST['id_sip']);
+            $dialstr  = 'SIP/' . $modelSip->name;
         }
-        $dialstr = 'SIP/' . $this->config['global']['channel_spy'];
-        $call    = "Action: Originate\n";
+
+        $call = "Action: Originate\n";
         $call .= "Channel: " . $dialstr . "\n";
         $call .= "Callerid: " . Yii::app()->session['username'] . "\n";
         $call .= "Context: billing\n";
@@ -126,7 +123,8 @@ class CallOnLineController extends Controller
         $call .= "Priority: 1\n";
         $call .= "Set:USERNAME=" . Yii::app()->session['username'] . "\n";
         $call .= "Set:SPY=1\n";
-        $call .= "Set:CHANNELSPY=" . $model->canal . "\n";
+        $call .= "Set:SPYTYPE=" . $_POST['type'] . "\n";
+        $call .= "Set:CHANNELSPY=" . $_POST['channel'] . "\n";
 
         AsteriskAccess::generateCallFile($call);
 
