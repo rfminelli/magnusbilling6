@@ -444,8 +444,8 @@ class CalcAgi
             } else {
                 $sessiontime = $initblock;
             }
-
         }
+
         $calldestinationPortabilidade = $MAGNUS->destination;
         if ($MAGNUS->portabilidade == 1) {
             if (substr($MAGNUS->destination, 0, 4) == '1111') {

@@ -99,6 +99,11 @@ class BaseController extends CController
                 ));
 
             if (count($modelUser)) {
+                if ($this->getCurrentAction() == 'remoteLogin') {
+                    unset($modelUser->password);
+                    echo json_encode($modelUser->getAttributes());
+                    exit;
+                }
                 $idUserType                          = $modelUser->idGroup->idUserType->id;
                 Yii::app()->session['isAdmin']       = $idUserType == 1 ? true : false;
                 Yii::app()->session['isAgent']       = $idUserType == 2 ? true : false;
@@ -115,6 +120,8 @@ class BaseController extends CController
                 Yii::app()->session['user_type']     = $idUserType;
                 Yii::app()->session['language']      = $modelUser->language;
                 Yii::app()->session['currency']      = $this->config['global']['base_currency'];
+                $modelGroupModule                    = GroupModule::model()->getGroupModule(Yii::app()->session['id_group'], Yii::app()->session['isClient'], Yii::app()->session['id_user']);
+                Yii::app()->session['action']        = $this->getActions($modelGroupModule);
             }
         }
 
@@ -172,6 +179,19 @@ class BaseController extends CController
         }
 
         parent::init();
+    }
+
+    private function getActions($modules)
+    {
+        $actions = array();
+
+        foreach ($modules as $key => $value) {
+            if (!empty($value['action'])) {
+                $actions[$value['module']] = $value['action'];
+            }
+        }
+
+        return $actions;
     }
 
     public function authorizedNoSession()

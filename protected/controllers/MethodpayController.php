@@ -34,7 +34,6 @@ class MethodpayController extends Controller
     );
 
     public $fieldsInvisibleClient = array(
-        'username',
         'pagseguro_TOKEN',
         'boleto_convenio',
         'boleto_banco',

@@ -65,9 +65,10 @@ class Mail
     public static $TYPE_SERVICES_RELEASED   = 'services_released';
 
     //Used by mail type = service
-    public static $SERVICE_PENDING_URL = '$service_pending_url$';
-    public static $SERVICE_NAME        = '$service_name$';
-    public static $SERVICE_PRICE       = '$service_price$';
+    public static $SERVICE_PENDING_URL            = '$service_pending_url$';
+    public static $CANCEL_CREDIT_NOTIFICATION_URL = '$cancel_credit_notification_email$';
+    public static $SERVICE_NAME                   = '$service_name$';
+    public static $SERVICE_PRICE                  = '$service_price$';
 
     public static $TYPE_INVOICE_TO_PAY  = 'invoice_to_pay';
     public static $TYPE_USER_DISK_SPACE = 'user_disk_space';
@@ -157,7 +158,8 @@ class Mail
 
         if (!empty($type)) {
 
-            $modelUser = User::model()->findByPk((int) $id_user);
+            $modelUser   = User::model()->findByPk((int) $id_user);
+            $modelConfig = Configuration::model()->find('config_key = "ip_servers"');
 
             $modelTemplate = TemplateMail::model()->find('mailtype = :key AND language = :key1 AND id_user = :key2',
                 array(
@@ -234,6 +236,7 @@ class Mail
             $this->replaceInEmail(self::$CUSTOMER_CREDIT_BASE_CURRENCY_KEY, $credit);
             $this->replaceInEmail(self::$CUSTOMER_CURRENCY, $currency);
             $this->replaceInEmail(self::$CUSTOMER_CREDIT_NOTIFICATION, $modelUser->credit_notification);
+            $this->replaceInEmail(self::$CANCEL_CREDIT_NOTIFICATION_URL, 'http://' . $modelConfig->config_value . '/mbilling/index.php/authentication/cancelCreditNotification?id=' . $modelUser->id . '&key=' . sha1($modelUser->id . $modelUser->username . $modelUser->password));
             $this->replaceInEmail(self::$TIME_KEY, date('Y-m-d H:i:s'));
             $OBS = !isset($OBS) ? $this->replaceInEmail(self::$OBS, '') : $OBS;
 

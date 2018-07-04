@@ -546,4 +546,20 @@ class AuthenticationController extends Controller
         ));
 
     }
+
+    public function actionCancelCreditNotification()
+    {
+        if (isset($_GET['key']) && isset($_GET['id'])) {
+
+            $modelUser = User::model()->findByPk((int) $_GET['id']);
+            if (count($modelUser)) {
+                $key = sha1($modelUser->id . $modelUser->username . $modelUser->password);
+                if ($key == $_GET['key']) {
+                    $modelUser->credit_notification = '-1';
+                    $modelUser->save();
+                    echo '<br><center><font color=green>Success</font></center>';
+                }
+            }
+        }
+    }
 }
