@@ -1,4 +1,10 @@
 Locale.load({
+    'Only Spy': 'Somente espiar',
+    'Whisper, can talk to the spied': 'Whisper, pode escutar e falar',
+    'Whisper, can talk to the spied but cannot listen the call': 'Whisper, pode falar com a conta VoIp, mas nao pode escutar a chamada',
+    'Notices with audio': 'Executar audios',
+    'Use a php regular expression to block matched with calls': 'Use uma expressão regular para bloquear chamadas. EX: ^55\d\d9 para bloquear celulares no Brasil',
+    'Block Call REGEX': 'Bloquear Chamada com REGEX',
     'On Phone': 'Em chamada',
     'Receiving': 'Recebendo',
     'Waiting': 'Esperando',
