@@ -56,9 +56,10 @@ class Did extends Model
         return array(
             array('did', 'required'),
             array('minimal_time_charge,calllimit, charge_of, block_expression_1, block_expression_2,block_expression_3, initblock, increment, id_user, cbr_em, activated, reserved, secondusedreal, billingtype,
-            		send_to_callback_1,send_to_callback_3,send_to_callback_3,cbr,cbr_ua', 'numerical', 'integerOnly' => true),
+                    send_to_callback_1,send_to_callback_3,send_to_callback_3,cbr,cbr_ua', 'numerical', 'integerOnly' => true),
             array('fixrate', 'numerical'),
             array('did', 'length', 'max' => 50),
+            array('description', 'length', 'max' => 150),
             array('expression_1, expression_2,expression_2,TimeOfDay_monFri,TimeOfDay_sat,TimeOfDay_sun,workaudio,noworkaudio', 'length', 'max' => 150),
             array('connection_charge, selling_rate_1, selling_rate_2,selling_rate_3, connection_sell', 'length', 'max' => 15),
         );

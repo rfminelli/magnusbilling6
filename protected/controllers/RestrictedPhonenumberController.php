@@ -22,7 +22,7 @@
 
 class RestrictedPhonenumberController extends Controller
 {
-    public $attributeOrder = 'id';
+    public $attributeOrder = 't.id';
     public $extraValues    = array('idUser' => 'username');
 
     public $fieldsFkReport = array(

@@ -61,7 +61,7 @@ class RefillController extends Controller
         if (!$this->isNewRecord) {
             $modelRefill = Refill::model()->findByPk($values['id']);
 
-            if (preg_match('/^PENDING\:/', $modelRefill->description) && $values['payment'] == 1 && $modelRefill->payment == 0) {
+            if (isset($values['payment']) && (preg_match('/^PENDING\:/', $modelRefill->description) && $values['payment'] == 1 && $modelRefill->payment == 0)) {
                 $this->releaseSendCreditBDService($values, $modelRefill);
             }
         }
@@ -209,57 +209,15 @@ class RefillController extends Controller
     }
     public function releaseSendCreditBDService($values, $modelRefill)
     {
-        $description = explode(' ', $modelRefill->description);
 
-        $login             = $this->config['global']['BDService_username'];
-        $token             = $this->config['global']['BDService_token'];
-        $url               = $this->config['global']['BDService_url'];
-        $send_credit_id    = $modelRefill->invoice_number;
-        $type              = $description[8] == 'dbbl_rocket' ? 'DBBL' : $description[8];
-        $number            = $description[6];
-        $amountValuesBDT   = $description[4];
-        $url               = $url . "/ezzeapi/request/" . $type . "?number=" . $number . "&amount=" . $amountValuesBDT . "&type=1&id=" . $send_credit_id . "&user=" . $login . "&key=" . $token;
-        $arrContextOptions = array(
-            "ssl"     => array(
-                "verify_peer"      => false,
-                "verify_peer_name" => false,
-            ),
-            'timeout' => 10,
+        User::model()->updateByPk($modelRefill->id_user,
+            array(
+                'credit' => new CDbExpression('credit - ' . $modelRefill->credit * -1),
+            )
         );
 
-        $default_socket_timeout = ini_get('default_socket_timeout');
-        ini_set('default_socket_timeout', 10);
-        $arrContextOptions = array(
-            "ssl" => array(
-                "verify_peer"      => false,
-                "verify_peer_name" => false,
-            ),
-        );
+        $modelRefill->description = preg_replace('/PENDING\: /', '', $modelRefill->description);
+        $modelRefill->save();
 
-        if (!$result = @file_get_contents($url, false, stream_context_create($arrContextOptions))) {
-            $result = '';
-        }
-
-        ini_set('default_socket_timeout', $default_socket_timeout);
-
-        if (preg_match("/Transaction successful/", $result[1])) {
-            $this->releaseCredit($result);
-
-            $modelRefill->description = preg_replace('/PENDING\: /', '', $modelRefill->description);
-            $modelRefill->save();
-
-            echo json_encode(array(
-                $this->nameSuccess => true,
-                $this->nameRoot    => $modelRefill->getAttributes(),
-                $this->nameMsg     => 'The request to BDService work ok',
-            ));
-        } else {
-            echo json_encode(array(
-                $this->nameSuccess => false,
-                $this->nameRoot    => $modelRefill->getAttributes(),
-                $this->nameMsg     => print_r($result, true),
-            ));
-        }
-        exit;
     }
 }

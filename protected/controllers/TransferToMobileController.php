@@ -486,7 +486,7 @@ error_txt=Transaction successful';
     public function releaseCredit($result, $status)
     {
 
-        if ($this->modelTransferToMobile->method == 'international') {
+        if ($this->modelTransferToMobile->method == 'international' && $status != 'error') {
             User::model()->updateByPk(Yii::app()->session['id_user'],
                 array(
                     'credit' => new CDbExpression('credit - ' . $this->user_cost),
@@ -562,7 +562,7 @@ error_txt=Transaction successful';
         }
 
         if ($this->modelTransferToMobile->id_user > 1) {
-            if ($this->modelTransferToMobile->method == 'international') {
+            if ($this->modelTransferToMobile->method == 'international' && $status != 'error') {
                 $sql     = "UPDATE  pkg_user SET credit = credit - :costAgent WHERE id = :id";
                 $command = Yii::app()->db->createCommand($sql);
                 $command->bindValue(":id", $this->modelTransferToMobile->id_user, PDO::PARAM_INT);
