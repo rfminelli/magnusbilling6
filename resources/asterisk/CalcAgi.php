@@ -864,7 +864,7 @@ class CalcAgi
                         starttime,sessiontime,real_sessiontime, terminatecauseid,sessionbill,
                         sipiax,buycost";
 
-            $values = "'$MAGNUS->uniqueid', $MAGNUS->id_user, '$MAGNUS->destination', $MAGNUS->id_plan, $MAGNUS->CallerID,
+            $values = "'$MAGNUS->uniqueid', $MAGNUS->id_user, '$MAGNUS->destination', $MAGNUS->id_plan, '$MAGNUS->CallerID',
                         '$MAGNUS->sip_account',
                         '$this->starttime', '$this->sessiontime',
                         '$this->real_sessiontime', '$this->terminatecauseid', '$this->sessionbill',

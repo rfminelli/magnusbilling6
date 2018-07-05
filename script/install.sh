@@ -399,6 +399,7 @@ touch /etc/asterisk/sip_magnus_user.conf
 touch /etc/asterisk/iax_magnus_register.conf
 touch /etc/asterisk/iax_magnus.conf
 touch /etc/asterisk/iax_magnus_user.conf
+touch /etc/asterisk/musiconhold_magnus.conf
 
 selectLanguage() {
    echo "SELECT THE MAIN LANGUAGE"  
@@ -499,6 +500,7 @@ write = system,call,agent,user,config,command,reporting,originate
 
 
 echo "#include extensions_magnus.conf" >> /etc/asterisk/extensions.conf
+echo "#include musiconhold_magnus.conf" >> /etc/asterisk/musiconhold.conf
 
 echo "[settings]
 voicemail => mysql,general,pkg_voicemail_users
