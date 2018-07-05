@@ -81,6 +81,31 @@ class JoomlaController extends Controller
         return $subMenu;
     }
 
+    public function actionEdit()
+    {
+
+        if (isset($_POST['key'])) {
+
+            $modelUser = User::model()->find('username = :key', array('key' => $_POST['user']));
+            if (count($modelUser)) {
+                $key = sha1($modelUser->username . $modelUser->password);
+
+                if ($key == $_POST['key']) {
+                    if (strlen($_POST['password'])) {
+                        $modelUser->password = $_POST['password'];
+                    }
+                    $modelUser->email = $_POST['email'];
+                    $modelUser->save();
+                } else {
+                    print_r($_POST);
+                    echo "<br>" . $key;
+                }
+            }
+        }
+
+        exit;
+    }
+
     public function actionSignup()
     {
 
