@@ -1,4 +1,5 @@
 Locale.load({
+    'Timeout in seconds to wait the sip answer the call': 'Segundos de espera para o ramal atender a chamada',
     'Only Spy': 'Somente espiar',
     'Whisper, can talk to the spied': 'Whisper, pode escutar e falar',
     'Whisper, can talk to the spied but cannot listen the call': 'Whisper, pode falar com a conta VoIp, mas nao pode escutar a chamada',

@@ -20,6 +20,21 @@ function placetopay($modelMethodPay)
     ]);
 }
 
+$totalAmount = $_GET['amount'];
+$totalAmount = $selectdAmount = preg_replace("/,/", '', $totalAmount);
+
+if ((isset($_GET['iva']) && $_GET['iva'] == 1) || strlen($modelUser->vat) > 1) {
+
+    if (preg_match("/\+/", $modelUser->vat)) {
+        $totalAmount = $totalAmount * ((intval($modelUser->vat) / 100) + 1);
+        //$totalAmount = $total - $totalAmount;
+    } else {
+        $totalAmount = $totalAmount / ((intval($modelUser->vat) / 100) + 1);
+
+    }
+}
+$totalAmount = number_format($totalAmount, 2, '.', '');
+
 $modelRefill = Refill::model()->find('id_user = :key AND payment = 0 AND description LIKE :key1',
     array(
         ':key'  => Yii::app()->session['id_user'],
@@ -34,7 +49,7 @@ $description = 'Recarga PlaceToPay <font color=blue>Pendiente</font>';
 $modelRefill              = new Refill();
 $modelRefill->description = $description;
 $modelRefill->id_user     = Yii::app()->session['id_user'];
-$modelRefill->credit      = $_GET['amount'];
+$modelRefill->credit      = $selectdAmount;
 $modelRefill->payment     = 0;
 $modelRefill->save();
 
@@ -56,7 +71,7 @@ $request = [
         "description" => "Credito VOIP para el usuario " . $modelUser->username,
         "amount"      => [
             "currency" => "COP",
-            "total"    => $_GET['amount'],
+            "total"    => $totalAmount,
         ],
     ],
     "expiration"     => date('c', strtotime('+1 hour')),

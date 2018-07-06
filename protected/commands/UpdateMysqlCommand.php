@@ -808,6 +808,14 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.3.0') {
+            $sql = "ALTER TABLE `pkg_sip` ADD `dial_timeout` INT(11) NOT NULL DEFAULT '60' AFTER `block_call_reg`;";
+
+            $this->executeDB($sql);
+            $version = '6.3.1';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 

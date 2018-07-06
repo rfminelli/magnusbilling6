@@ -14,7 +14,12 @@ class SipCallAgi
 
         $MAGNUS->destination = $MAGNUS->dnid;
 
-        $dialparams        = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
+        $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
+        //add the sipaccount dial timeout in dialcommand_param.
+        $dialparams    = explode(',', $dialparams);
+        $dialparamsArg = isset($dialparams[2]) ? $dialparams[2] : '';
+        $dialparams    = ',' . $MAGNUS->modelSip->dial_timeout . ',' . $dialparamsArg;
+
         $MAGNUS->modelUser = User::model()->findByPk((int) $MAGNUS->modelSip->id_user);
         AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $MAGNUS->modelUser);
 
@@ -30,7 +35,7 @@ class SipCallAgi
 
         }
         $startCall = time();
-        $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->config["agi-conf1"]['dialcommand_param_sipiax_friend']);
+        $MAGNUS->run_dial($agi, $dialstr, $dialparams);
 
         $answeredtime = $agi->get_variable("ANSWEREDTIME");
         $answeredtime = $answeredtime['data'];
