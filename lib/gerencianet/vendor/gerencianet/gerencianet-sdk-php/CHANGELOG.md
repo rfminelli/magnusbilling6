@@ -1,3 +1,30 @@
+# 2.1.0
+
+- Added: new endpoint (update plan)
+- Added: new endpoint (create subscription history)
+
+# 2.0.0
+
+- Breaking change: Drop PHP 5.4 support 
+- Breaking change: Update Guzzle version
+
+# 1.0.14
+
+- Added: timeout option
+
+# 1.0.13
+
+- Fix: code climate on dev dependencies
+
+# 1.0.12
+
+- Added: new endpoint (update charge link)
+
+# 1.0.11
+
+- Added: new endpoint (charge link)
+- Updated: docs
+
 # 1.0.10
 
 - Added: new endpoints (cancel carnet and cancel parcel)

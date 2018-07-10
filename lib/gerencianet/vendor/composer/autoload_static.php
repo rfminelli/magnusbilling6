@@ -4,76 +4,39 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee
+class ComposerStaticInitb1f06884deb8f4ade0737c8dc04d91a1
 {
     public static $files = array (
-        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
-        'ad155f8f1cf0d418fe49e248db8c661b' => __DIR__ . '/..' . '/react/promise/src/functions_include.php',
+        'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
+        'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
+        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
     );
 
     public static $prefixLengthsPsr4 = array (
-        'S' => 
+        'P' => 
         array (
-            'Symfony\\Polyfill\\Mbstring\\' => 26,
-            'Symfony\\Component\\Yaml\\' => 23,
-            'Symfony\\Component\\Stopwatch\\' => 28,
-            'Symfony\\Component\\Filesystem\\' => 29,
-            'Symfony\\Component\\EventDispatcher\\' => 34,
-            'Symfony\\Component\\Console\\' => 26,
-            'Symfony\\Component\\Config\\' => 25,
-        ),
-        'R' => 
-        array (
-            'React\\Promise\\' => 14,
+            'Psr\\Http\\Message\\' => 17,
         ),
         'G' => 
         array (
-            'GuzzleHttp\\Stream\\' => 18,
-            'GuzzleHttp\\Ring\\' => 16,
+            'GuzzleHttp\\Psr7\\' => 16,
+            'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Symfony\\Polyfill\\Mbstring\\' => 
+        'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
-        'Symfony\\Component\\Yaml\\' => 
+        'GuzzleHttp\\Psr7\\' => 
         array (
-            0 => __DIR__ . '/..' . '/symfony/yaml',
+            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
         ),
-        'Symfony\\Component\\Stopwatch\\' => 
+        'GuzzleHttp\\Promise\\' => 
         array (
-            0 => __DIR__ . '/..' . '/symfony/stopwatch',
-        ),
-        'Symfony\\Component\\Filesystem\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/filesystem',
-        ),
-        'Symfony\\Component\\EventDispatcher\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/event-dispatcher',
-        ),
-        'Symfony\\Component\\Console\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/console',
-        ),
-        'Symfony\\Component\\Config\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/config',
-        ),
-        'React\\Promise\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/react/promise/src',
-        ),
-        'GuzzleHttp\\Stream\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/streams/src',
-        ),
-        'GuzzleHttp\\Ring\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/ringphp/src',
+            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
         ),
         'GuzzleHttp\\' => 
         array (
@@ -82,45 +45,11 @@ class ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee
     );
 
     public static $prefixesPsr0 = array (
-        'P' => 
-        array (
-            'Psr\\Log\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/psr/log',
-            ),
-        ),
         'G' => 
         array (
-            'Guzzle\\Tests' => 
-            array (
-                0 => __DIR__ . '/..' . '/guzzle/guzzle/tests',
-            ),
-            'Guzzle' => 
-            array (
-                0 => __DIR__ . '/..' . '/guzzle/guzzle/src',
-            ),
             'Gerencianet' => 
             array (
                 0 => __DIR__ . '/..' . '/gerencianet/gerencianet-sdk-php/src',
-            ),
-        ),
-        'C' => 
-        array (
-            'Contrib\\Component' => 
-            array (
-                0 => __DIR__ . '/..' . '/satooshi/php-coveralls/src',
-            ),
-            'Contrib\\Bundle' => 
-            array (
-                0 => __DIR__ . '/..' . '/satooshi/php-coveralls/src',
-            ),
-            'CodeClimate\\Component' => 
-            array (
-                0 => __DIR__ . '/..' . '/codeclimate/php-test-reporter/src',
-            ),
-            'CodeClimate\\Bundle' => 
-            array (
-                0 => __DIR__ . '/..' . '/codeclimate/php-test-reporter/src',
             ),
         ),
     );
@@ -128,9 +57,9 @@ class ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInite97ecbf96ee318e58eb947484ae2d5ee::$prefixesPsr0;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitb1f06884deb8f4ade0737c8dc04d91a1::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitb1f06884deb8f4ade0737c8dc04d91a1::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitb1f06884deb8f4ade0737c8dc04d91a1::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }

@@ -102,64 +102,30 @@ $params = [
     'id' => $charge['data']['charge_id'],
 ];
 
-$modelUser->firstname = isset($modelUser->firstname) ? $modelUser->firstname : '';
-$modelUser->lastname  = isset($modelUser->lastname) ? $modelUser->lastname : '';
-$modelUser->address   = isset($modelUser->address) ? $modelUser->address : '';
-
-$modelUser->city    = isset($modelUser->city) ? $modelUser->city : '';
-$modelUser->state   = isset($modelUser->state) ? $modelUser->state : '';
-$modelUser->zipcode = isset($modelUser->zipcode) ? $modelUser->zipcode : '';
-$modelUser->phone   = isset($modelUser->phone) ? $modelUser->phone : '';
-$modelUser->email   = isset($modelUser->email) ? $modelUser->email : '';
-$cpf                = isset($modelUser->doc) ? $modelUser->doc : '';
-
-$customer = [
-    'name'         => $modelUser->firstname . ' ' . $modelUser->lastname, // nome do cliente
-    'cpf'          => $cpf, // cpf válido do cliente
-    'phone_number' => $modelUser->phone, // telefone do cliente
-    'email'        => $modelUser->email,
-];
-
-if ($tipo == 'juridica') {
-    unset($customer['cpf']);
-    $customer['juridical_person'] = array(
-        'corporate_name' => $modelUser->company_name,
-        'cnpj'           => $cpf,
-    );
-}
-
 $dataVencimento = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 7, date("Y")));
 
-$bankingBillet = [
-    'expire_at' => $dataVencimento, // data de vencimento do boleto (formato: YYYY-MM-DD)
-    'customer'  => $customer,
-];
-
-$payment = [
-    'banking_billet' => $bankingBillet, // forma de pagamento (banking_billet = boleto)
-];
-
 $body = [
-    'payment' => $payment,
+    "message"                  => "Username " . $modelUser->username,
+    "expire_at"                => $dataVencimento,
+    "request_delivery_address" => false,
+    "payment_method"           => "all",
+
 ];
 
 try {
     $api    = new Gerencianet($options);
-    $charge = $api->payCharge($params, $body);
-
+    $charge = $api->linkCharge($params, $body);
     if ($charge['code'] == 200) {
-        header('Location: ' . $charge['data']['link']);
+        header('Location: ' . $charge['data']['payment_url']);
     } else {
         echo '1';
         print_r($charge);
     }
 } catch (GerencianetException $e) {
-    echo 'Error';
     print_r($e->code);
     print_r($e->error);
     print_r($e->errorDescription);
 } catch (Exception $e) {
-    echo 'Error2';
     print_r($e->getMessage());
 }
 
