@@ -17,7 +17,7 @@
 
 class SipController extends Controller
 {
-    public $attributeOrder = 't.id DESC';
+    public $attributeOrder = 't.id ASC';
     public $extraValues    = array('idUser' => 'username');
 
     private $sipShowPeers = array();
@@ -39,9 +39,9 @@ class SipController extends Controller
 
     public function actionRead($asJson = true, $condition = null)
     {
-
-        $this->sipShowPeers = AsteriskAccess::getSipShowPeers();
-
+        if ($_SERVER['HTTP_HOST'] != 'localhost') {
+            $this->sipShowPeers = AsteriskAccess::getSipShowPeers();
+        }
         parent::actionRead($asJson = true, $condition = null);
     }
 
@@ -65,6 +65,17 @@ class SipController extends Controller
 
     public function beforeSave($values)
     {
+
+        if (isset($values['type_forward'])) {
+            if ($values['type_forward'] == 'undefined' || $values['type_forward'] == '') {
+                $values['forward'] = '';
+            } elseif (preg_match("/group|number|custom|hangup/", $values['type_forward'])) {
+                $values['forward'] = $values['type_forward'] . '|' . $values['extension'];
+            } else {
+                Yii::log($values['type_forward'] . '|' . $values['id_' . $values['type_forward']], 'error');
+                $values['forward'] = $values['type_forward'] . '|' . $values['id_' . $values['type_forward']];
+            }
+        }
 
         if ($this->isNewRecord) {
 
@@ -113,7 +124,9 @@ class SipController extends Controller
 
     public function afterSave($model, $values)
     {
-        AsteriskAccess::instance()->generateSipPeers();
+        if ($_SERVER['HTTP_HOST'] != 'localhost') {
+            AsteriskAccess::instance()->generateSipPeers();
+        }
 
         $this->siproxyServer($model, 'save');
 
@@ -176,6 +189,32 @@ class SipController extends Controller
 
                 if (strtok($value['Name/username'], '/') == $attributes[$i]['name']) {
                     $attributes[$i]['lineStatus'] = $value['Status'];
+                }
+            }
+
+            foreach ($attributes[$i] as $key => $value) {
+                if ($key == 'forward') {
+
+                    $itemOption = explode("|", $value);
+                    $itemKey    = explode("_", $key);
+
+                    if (!isset($attributes[$i]['type_forward'])) {
+                        $attributes[$i]['type_forward'] = $itemOption[0];
+                    }
+
+                    if (isset($itemOption[1]) && preg_match("/number|group|custom|hangup/", $itemOption[0])) {
+                        $attributes[$i]['extension'] = $itemOption[1];
+                    } else if (isset($itemOption[1])) {
+                        $attributes[$i]['id_' . $itemOption[0]] = end($itemOption);
+                        if (is_numeric($itemOption[1])) {
+                            $model = ucfirst($itemOption[0]);
+                            $model = $model::model()->findByPk(end($itemOption));
+
+                            $attributes[$i]['id_' . $itemOption[0] . '_name'] = isset($model->name) ? $model->name : '';
+                        } else {
+                            $attributes[$i]['id_' . $itemOption[0] . '_name'] = '';
+                        }
+                    }
                 }
             }
         }
