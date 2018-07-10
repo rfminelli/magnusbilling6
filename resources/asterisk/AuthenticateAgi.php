@@ -324,13 +324,15 @@ class AuthenticateAgi
     {
         if (strlen($MAGNUS->dnid) > 13) {
             //tech prefix to route
-            $sql       = "SELECT id FROM pkg_plan WHERE techprefix = '" . substr($MAGNUS->dnid, 0, 5) . "'  LIMIT 1";
+            $sql       = "SELECT id,portabilidadeFixed,portabilidadeMobile FROM pkg_plan WHERE techprefix = '" . substr($MAGNUS->dnid, 0, 5) . "'  LIMIT 1";
             $modelPlan = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             if (isset($modelPlan->id)) {
                 $MAGNUS->id_plan = $modelPlan->id;
                 $MAGNUS->dnid    = substr($MAGNUS->dnid, 5);
                 $agi->verbose("Changed plan via TechPrefix: Plan used $MAGNUS->id_plan - Number: $MAGNUS->dnid ", 15);
+                $MAGNUS->portabilidadeMobile = $modelPlan->portabilidadeMobile;
+                $MAGNUS->portabilidadeFixed  = $modelPlan->portabilidadeFixed;
             }
         }
     }
