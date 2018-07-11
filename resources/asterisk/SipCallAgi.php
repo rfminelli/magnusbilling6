@@ -50,37 +50,8 @@ class SipCallAgi
         $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
         if (isset($modelSipForward->id) && strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
 
-            $sql              = "SELECT * FROM pkg_user WHERE id = $modelSipForward->id_user  LIMIT 1";
-            $modelUserForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-            $credit           = $modelUserForward->typepaid == 1
-            ? $modelUserForward->credit + $modelUserForward->creditlimit
-            : $modelUserForward->credit;
+            $this->callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
 
-            $sql = "SELECT id FROM pkg_sip WHERE name = '$modelSipForward->forward' LIMIT 1";
-            if ($agi->query($sql)->fetch(PDO::FETCH_OBJ)) {
-                $agi->verbose('Forward to sipaccount ' . $modelSipForward->forward, 5);
-                $MAGNUS->dnid = $MAGNUS->destination = $modelSipForward->forward;
-                $this->processCall($MAGNUS, $agi, $CalcAgi);
-                return;
-            } elseif ($credit > 1) {
-                $agi->verbose('Forward to PSTN network. Number ' . $modelSipForward->forward, 5);
-                $MAGNUS->dnid        = $MAGNUS->destination        = $MAGNUS->extension        = $modelSipForward->forward;
-                $MAGNUS->accountcode = $modelSipForward->accountcode;
-
-                if (AuthenticateAgi::authenticateUser($agi, $MAGNUS)) {
-                    if ($MAGNUS->checkNumber($agi, $CalcAgi, 0, true) == 1) {
-                        $standardCall = new StandardCallAgi();
-                        $standardCall->processCall($MAGNUS, $agi, $CalcAgi);
-
-                        $dialstatus   = $CalcAgi->dialstatus;
-                        $answeredtime = $CalcAgi->answeredtime;
-                        /* INSERT CDR  & UPDATE SYSTEM*/
-                        $CalcAgi->updateSystem($this, $agi, $this->destination, 1, 1);
-                    }
-
-                }
-                return;
-            }
         }
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);
@@ -116,5 +87,78 @@ class SipCallAgi
         $CalcAgi->saveCDR($agi, $MAGNUS);
 
         $MAGNUS->hangup($agi);
+    }
+
+    public function callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward)
+    {
+
+        $forward     = explode(("|"), $modelSipForward->forward);
+        $optionType  = $forward[0];
+        $optionValue = $forward[1];
+
+        if ($optionType == 'sip') // SIP
+        {
+            $agi->verbose('Sip call', 25);
+            $insertCDR = true;
+            $sql       = "SELECT name, callerid FROM pkg_sip WHERE id = $optionValue LIMIT 1";
+            $modelSip  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            $MAGNUS->CallerID = $modelSip->callerid;
+            $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+
+            $MAGNUS->dnid = $MAGNUS->destination = $MAGNUS->sip_account = $modelSip->name;
+            $sipCallAgi->processCall($MAGNUS, $agi, $CalcAgi);
+
+        } else if ($optionType == 'group') // CUSTOM
+        {
+            $agi->verbose("Call to group " . $optionValue, 1);
+            $sql      = "SELECT * FROM pkg_sip WHERE `group` = '$optionValue'";
+            $modelSip = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
+
+            if (!isset($modelSip[0]->id)) {
+                $agi->verbose('GROUP NOT FOUND');
+                $agi->stream_file('prepaid-invalid-digits', '#');
+            }
+            $MAGNUS->sip_account = $modelSip[0]->name;
+            $group               = '';
+
+            foreach ($modelSip as $key => $value) {
+                $group .= "SIP/" . $value->name . "&";
+            }
+
+            $dialstr = substr($group, 0, -1) . $dialparams;
+
+            $MAGNUS->startRecordCall($agi);
+            $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+            $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
+            $dialstatus = $agi->get_variable("DIALSTATUS");
+            $dialstatus = $dialstatus['data'];
+        } else if (preg_match("/custom/", $optionType)) // CUSTOM
+        {
+            $MAGNUS->startRecordCall($agi);
+            $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+            $MAGNUS->run_dial($agi, $optionValue);
+            $dialstatus = $agi->get_variable("DIALSTATUS");
+            $dialstatus = $dialstatus['data'];
+        } else if ($optionType == 'ivr') // QUEUE
+        {
+            $didAgi                                = new DidAgi();
+            $didAgi->modelDestination[0]['id_ivr'] = $optionValue;
+            IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
+        } else if ($optionType == 'queue') // QUEUE
+        {
+            $didAgi                                  = new DidAgi();
+            $didAgi->modelDestination[0]['id_queue'] = $optionValue;
+            QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
+            $dialstatus = $CalcAgi->sessiontime > 0 ? 'ANSWER' : 'DONTCALL';
+        } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
+        {
+            $sql                 = "SELECT * FROM pkg_user WHERE id = $modelSipForward->id_user  LIMIT 1";
+            $modelUserForward    = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            $MAGNUS->accountcode = $modelUserForward->accountcode;
+            $agi->verbose("CALL number $optionValue");
+            $didAgi = new DidAgi();
+            $didAgi->call_did($agi, $MAGNUS, $CalcAgi, $optionValue);
+        }
     }
 }

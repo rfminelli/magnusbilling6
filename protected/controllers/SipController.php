@@ -70,10 +70,14 @@ class SipController extends Controller
             if ($values['type_forward'] == 'undefined' || $values['type_forward'] == '') {
                 $values['forward'] = '';
             } elseif (preg_match("/group|number|custom|hangup/", $values['type_forward'])) {
-                $values['forward'] = $values['type_forward'] . '|' . $values['extension'];
+                $values['extension'] = isset($values['extension']) ? $values['extension'] : '';
+                $values['forward']   = $values['type_forward'] . '|' . $values['extension'];
             } else {
-                Yii::log($values['type_forward'] . '|' . $values['id_' . $values['type_forward']], 'error');
-                $values['forward'] = $values['type_forward'] . '|' . $values['id_' . $values['type_forward']];
+                if ($values['type_forward'] == 'sip') {
+                    $values['forward'] = $values['type_forward'] . '|' . $values['id_sip_forward'];
+                } else {
+                    $values['forward'] = $values['type_forward'] . '|' . $values['id_' . $values['type_forward']];
+                }
             }
         }
 
