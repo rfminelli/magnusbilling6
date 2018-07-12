@@ -12,7 +12,7 @@ $GLOBALS["LIB_LOCATION"] = dirname(__FILE__);
 class MP
 {
 
-    const version = "0.5.2";
+    const version = "0.5.3";
 
     private $client_id;
     private $client_secret;
@@ -89,7 +89,7 @@ class MP
         $uri_prefix = $this->sandbox ? "/sandbox" : "";
 
         $request = array(
-            "uri"    => $uri_prefix . "/collections/notifications/{$id}",
+            "uri"    => "/v1/payments/{$id}",
             "params" => array(
                 "access_token" => $this->get_access_token(),
             ),
@@ -129,16 +129,15 @@ class MP
     public function refund_payment($id)
     {
         $request = array(
-            "uri"    => "/collections/{$id}",
+            "uri"    => "/v1/payments/{$id}/refunds",
             "params" => array(
                 "access_token" => $this->get_access_token(),
             ),
             "data"   => array(
-                "status" => "refunded",
             ),
         );
 
-        $response = MPRestClient::put($request);
+        $response = MPRestClient::post($request);
         return $response;
     }
 
@@ -150,7 +149,7 @@ class MP
     public function cancel_payment($id)
     {
         $request = array(
-            "uri"    => "/collections/{$id}",
+            "uri"    => "/v1/payments/{$id}",
             "params" => array(
                 "access_token" => $this->get_access_token(),
             ),
@@ -199,7 +198,7 @@ class MP
         $uri_prefix = $this->sandbox ? "/sandbox" : "";
 
         $request = array(
-            "uri"    => $uri_prefix . "/collections/search",
+            "uri"    => "/v1/payments/search",
             "params" => array_merge($filters, array(
                 "access_token" => $this->get_access_token(),
             )),
@@ -477,10 +476,12 @@ class MPRestClient
             array_push($headers, "content-type: application/json");
         }
 
+        array_push($headers, "x-product-id: BC32A7VTRPP001U8NHK0");
+
         // Build $connect
         $connect = curl_init();
 
-        curl_setopt($connect, CURLOPT_USERAGENT, "MercadoPago PHP SDK v" . MP::version);
+        curl_setopt($connect, CURLOPT_USERAGENT, "MercadoPago PHP SDK /v" . MP::version);
         curl_setopt($connect, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($connect, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($connect, CURLOPT_CAINFO, $GLOBALS["LIB_LOCATION"] . "/cacert.pem");
@@ -543,21 +544,15 @@ class MPRestClient
                 if (isset($response['response']['cause']['code']) && isset($response['response']['cause']['description'])) {
                     $message .= " - " . $response['response']['cause']['code'] . ': ' . $response['response']['cause']['description'];
                 } else if (is_array($response['response']['cause'])) {
-
-                    if (!isset($response['cause'])) {
-                        print_r($response);
-                    } else {
-                        foreach ($response['cause'] as $causes) {
-                            if (is_array($causes)) {
-                                foreach ($causes as $cause) {
-                                    $message .= " - " . $cause['code'] . ': ' . $cause['description'];
-                                }
-                            } else {
-                                $message .= " - " . $causes['code'] . ': ' . $causes['description'];
+                    foreach ($response['response']['cause'] as $causes) {
+                        if (is_array($causes)) {
+                            foreach ($causes as $cause) {
+                                $message .= " - " . $cause['code'] . ': ' . $cause['description'];
                             }
+                        } else {
+                            $message .= " - " . $causes['code'] . ': ' . $causes['description'];
                         }
                     }
-
                 }
             }
 

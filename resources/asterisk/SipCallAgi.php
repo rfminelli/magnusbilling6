@@ -14,9 +14,11 @@ class SipCallAgi
         $MAGNUS->destination = $MAGNUS->dnid;
         $dialparams          = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
         //add the sipaccount dial timeout in dialcommand_param.
-        $dialparams    = explode(',', $dialparams);
-        $dialparamsArg = isset($dialparams[2]) ? $dialparams[2] : '';
-        $dialparams    = ',' . $MAGNUS->modelSip->dial_timeout . ',' . $dialparamsArg;
+        $dialparams = explode(',', $dialparams);
+        if (isset($dialparams[1])) {
+            $dialparams[1] = $MAGNUS->modelSip->dial_timeout;
+        }
+        $dialparams = implode(',', $dialparams);
 
         $sql               = "SELECT * FROM pkg_user WHERE id = " . $MAGNUS->modelSip->id_user . " LIMIT 1";
         $MAGNUS->modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
@@ -51,7 +53,7 @@ class SipCallAgi
         if (isset($modelSipForward->id) && strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
 
             $this->callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
-
+            $MAGNUS->hangup($agi);
         }
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);

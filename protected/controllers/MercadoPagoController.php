@@ -2,7 +2,7 @@
 
 /**
  * Url for moip ruturn http://ip/billing/index.php/mercadoPago .
- * https://pagseguro.uol.com.br/preferences/automaticReturn.jhtml
+ * https://www.mercadopago.com.br/ipn-notifications
  */
 class MercadoPagoController extends CController
 {
@@ -10,7 +10,7 @@ class MercadoPagoController extends CController
 
     public function actionIndex()
     {
-        Yii::log('mercadaoPago' . print_r($_POST, true), 'error');
+        Yii::log('mercadaoPago' . print_r($_REQUEST, true), 'error');
 
         require_once 'lib/mercadopago/mercadopago.php';
 
@@ -26,43 +26,27 @@ class MercadoPagoController extends CController
         $topic               = $_GET["topic"];
         $merchant_order_info = null;
 
-        switch ($topic) {
-            case 'payment':
-                $payment_info        = $mp->get("/collections/notifications/" . $_GET["id"]);
-                $merchant_order_info = $mp->get("/merchant_orders/" . $payment_info["response"]["collection"]["merchant_order_id"]);
-                break;
-            case 'merchant_order':
-                $merchant_order_info = $mp->get("/merchant_orders/" . $_GET["id"]);
-                break;
-            default:
-                $merchant_order_info = null;
-        }
+        $payment_info = $mp->get_payment_info($_GET["id"]);
 
-        Yii::log('mercadaoPago' . print_r($merchant_order_info, true), 'error');
+        if ($payment_info["status"] == 200) {
 
-        if ($merchant_order_info == null) {
-            echo "Error obtaining the merchant_order";
-            die();
-        }
+            if (isset($payment_info["response"]['status']) && $payment_info["response"]['status'] == 'approved') {
+                $amount = $payment_info["response"]['transaction_amount'];
 
-        if ($merchant_order_info["status"] == 200) {
+                $identification = Util::getDataFromMethodPay($payment_info["response"]['description']);
 
-            if (isset($merchant_order_info["response"]['payments'][0]['status']) && $merchant_order_info["response"]['payments'][0]['status'] == 'approved') {
-                $amount = $merchant_order_info["response"]['items'][0]['unit_price'];
-
-                $identification = Util::getDataFromMethodPay($merchant_order_info["response"]['items'][0]['title']);
                 if (!is_array($identification)) {
                     exit;
                 }
                 $username = $identification['username'];
                 $id_user  = $identification['id_user'];
 
-                $code        = $merchant_order_info["response"]['payments'][0]['id'];
+                $code        = $payment_info["response"]['id'];
                 $description = "Pagamento confirmado, MERCADOPAGO:" . $code;
                 $modelUser   = User::model()->findByPk((int) $id_user);
 
-                if (count($resultUser)) {
-                    Yii::log($modelUser->id . ' ' . $amount . ' ' . $description . ' ' . $txn_id, 'error');
+                if (count($modelUser)) {
+                    Yii::log($modelUser->id . ' ' . $amount . ' ' . $description . ' ' . $code, 'error');
                     UserCreditManager::releaseUserCredit($modelUser->id, $amount, $description, 1, $code);
                     header("HTTP/1.1 200 OK");
                 }
