@@ -501,6 +501,7 @@ class MassiveCall
 
             }
 
+            $MAGNUS->sip_account       = $MAGNUS->username;
             $CalcAgi->starttime        = date("Y-m-d H:i:s", time() - $duration);
             $CalcAgi->sessiontime      = $duration;
             $CalcAgi->real_sessiontime = intval($duration);
