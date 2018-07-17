@@ -272,6 +272,8 @@ class MassiveCall
                 }
             }
 
+        } else {
+            $MAGNUS->sip_account = $MAGNUS->username;
         }
 
         //execute poll if exist
@@ -500,8 +502,6 @@ class MassiveCall
                 $agi->exec($sql);
 
             }
-
-            $MAGNUS->sip_account       = $MAGNUS->username;
             $CalcAgi->starttime        = date("Y-m-d H:i:s", time() - $duration);
             $CalcAgi->sessiontime      = $duration;
             $CalcAgi->real_sessiontime = intval($duration);

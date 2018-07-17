@@ -20,33 +20,28 @@
 ?>
 <div id="load" ><?php echo Yii::t('yii', 'Please wait while loading...') ?></div>
 <script languaje="JavaScript">
-	window.onload = function () {
+    window.onload = function () {
         var form = document.getElementById("buyForm");
         form.submit();
     };
 </script>
 <?php
-if (Yii::app()->session['currency'] == 'U$S') {
-    $currency = 'USD';
-} else if (Yii::app()->session['currency'] == 'R$') {
-    $currency = 'BRL';
-} elseif (Yii::app()->session['currency'] == '€') {
-    $currency = 'EUR';
-} elseif (Yii::app()->session['currency'] == 'AUD$') {
-    $currency = 'AUD';
-} else if (Yii::app()->session['currency'] == '$') {
-    $currency = 'USD';
-} else {
-    $currency = Yii::app()->session['currency'];
+$url    = "http://ws.geeklab.com.ar/dolar/get-dolar-json.php";
+$handle = @fopen($url, 'r');
+if ($handle) {
+    $result = fgets($handle, 4096);
+    fclose($handle);
+    $result = json_decode($result);
 }
+
+$cambio = trim($result->blue) * 1.1;
 ?>
 
 <form method="GET" action="<?php echo $modelMethodPay->url ?>" target="_parent" id="buyForm">
-<input type="text" name="precio" value="<?php echo $_GET['amount'] * 1.27; ?>">
+<input type="hidden" name="precio" value="<?php echo $_GET['amount'] * $cambio; ?>">
 <input type="hidden" name="id" value="<?php echo $modelMethodPay->username ?>">
 
 <input type="hidden" name="codigo" value="<?php echo $modelUser->username ?>">
 <input type="hidden" name="venc" value="7">
 <input type="hidden" name="concepto" value="<?php echo $reference; ?>">
-<input type="text" name="moneda" value="<?php echo $currency; ?>">
 </form>

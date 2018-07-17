@@ -21,39 +21,43 @@ class CuentaDigitalCommand extends ConsoleCommand
 {
     public function run($args)
     {
-        $url    = "http://finance.yahoo.com/d/quotes.csv?s=ARSUSD=X&f=l1";
+        $url    = "http://ws.geeklab.com.ar/dolar/get-dolar-json.php";
         $handle = @fopen($url, 'r');
         if ($handle) {
             $result = fgets($handle, 4096);
             fclose($handle);
+            $result = json_decode($result);
         }
-        $cambio = trim($result);
 
+        $cambio = trim($result->blue) * 1.1;
+        echo $cambio . "\n";
         $date = date('Ymd');
 
         $lines = file('https://www.cuentadigital.com/exportacion.php?control=50dccff9ad9dc1946ff9b9020b5acafe&fecha=' . $date . '');
 
         for ($i = 0; $i < count($lines); $i++) {
-            if (list($fecha, $monto_pago, $monto, $codigo_barras, $codigo_opcional, $medio_pago, $num_pago) = preg_split("/\//", $lines[$i])) {
-                $identification = Util::getDataFromMethodPay($codigo_opcional);
-                if (!is_array($identification)) {
-                    exit;
-                }
 
-                $username = $identification['username'];
-                $id_user  = $identification['id_user'];
+            $line = preg_split("/\//", $lines[$i]);
 
-                $monto = preg_replace("/\.|\,/", "", $monto);
-                $monto = ($monto * $cambio) * 0.875;
-
-                $description = $medio_pago . ' ' . $codigo_barras;
-                $modelUser   = User::model()->findByPk((int) $id_user);
-
-                if (count($modelUser)) {
-                    UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $codigo_barras);
-                }
-
+            $identification = Util::getDataFromMethodPay($line[4]);
+            if (!is_array($identification)) {
+                exit;
             }
+
+            $modelUser = User::model()->find('username = :key', array(':key' => $identification['id_user']));
+            if (!count($modelUser)) {
+                exit;
+            }
+
+            $monto = preg_replace("/\\,/", ".", $line[1]);
+            $monto = ($monto / $cambio);
+
+            $description = $line[5] . ' ' . $line[3];
+
+            if (count($modelUser)) {
+                UserCreditManager::releaseUserCredit($modelUser->id, $monto, $description, 1, $line[3]);
+            }
+
         }
     }
 }

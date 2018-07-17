@@ -21,12 +21,16 @@ class DineromailCommand extends ConsoleCommand
 {
     public function run($args)
     {
-        $url    = "http://finance.yahoo.com/d/quotes.csv?s=ARSUSD=X&f=l1";
+        $url    = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_ARS&compact=ultra";
         $handle = @fopen($url, 'r');
         if ($handle) {
             $result = fgets($handle, 4096);
             fclose($handle);
+            $result = json_decode($result);
         }
+
+        print_r($result);
+
         $cambio = trim($result);
 
         $date = date('Ymd');
