@@ -79,6 +79,8 @@ class QueueController extends Controller
 
             $model->musiconhold = $model->name;
             $model->save();
+
+            AsteriskAccess::instance()->mohReload();
         }
 
         return;

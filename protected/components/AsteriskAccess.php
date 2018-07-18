@@ -71,6 +71,11 @@ class AsteriskAccess
         return $this->asmanager->Command("queue reset stats " . $queue);
     }
 
+    public function mohReload()
+    {
+        return $this->asmanager->Command("moh reload");
+    }
+
     public function hangupRequest($channel)
     {
         $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
