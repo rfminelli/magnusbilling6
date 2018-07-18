@@ -145,9 +145,11 @@ class RefillController extends Controller
 
     public function beforeDestroy($values)
     {
-        $modelRefill = Refill::model()->findByPk($values['id']);
-        if (preg_match('/^PENDING\:/', $modelRefill->description) && $modelRefill->payment == 0 && $modelRefill->credit < 0) {
-            $this->cancelSendCreditBDService($values, $modelRefill);
+        if (isset($values['id'])) {
+            $modelRefill = Refill::model()->findByPk($values['id']);
+            if (preg_match('/^PENDING\:/', $modelRefill->description) && $modelRefill->payment == 0 && $modelRefill->credit < 0) {
+                $this->cancelSendCreditBDService($values, $modelRefill);
+            }
         }
         return $values;
     }
