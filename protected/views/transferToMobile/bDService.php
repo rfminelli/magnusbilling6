@@ -175,6 +175,13 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 			http.onreadystatechange = function() {
 	       		if (this.readyState == 4 && this.status == 200) {
+
+	       			if (this.responseText =='invalid') {
+	       				document.getElementById('secondButton').style.display = 'none';
+	       			}else{
+	       				document.getElementById('secondButton').style.display = 'inline';
+	       			}
+
 	       			document.getElementById('buying_price').style.display = 'inline';
 					document.getElementById('buying_price').value = 'R';
 	       			document.getElementById('amountfielBDT').value = this.responseText;

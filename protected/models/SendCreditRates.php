@@ -37,7 +37,7 @@ class SendCreditRates extends Model
      */
     public function tableName()
     {
-        return 'pkg_send_credit_products';
+        return 'pkg_send_credit_rates';
     }
 
     /**
@@ -54,11 +54,19 @@ class SendCreditRates extends Model
     public function rules()
     {
         return array(
-            array('operator_id,country_code', 'numerical', 'integerOnly' => true),
-            array('country,operator_name', 'length', 'max' => 100),
-            array('product,retail_price', 'length', 'max' => 50),
-            array('currency_dest,currency_orig', 'length', 'max' => 3),
+            array('id_user, id_product', 'numerical', 'integerOnly' => true),
+            array('sell_price', 'length', 'max' => 50),
+        );
+    }
 
+    /**
+     * @return array regras de relacionamento.
+     */
+    public function relations()
+    {
+        return array(
+            'idProduct' => array(self::BELONGS_TO, 'SendCreditProducts', 'id_product'),
+            'idUser'    => array(self::BELONGS_TO, 'User', 'id_user'),
         );
     }
 }

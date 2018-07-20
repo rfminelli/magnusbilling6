@@ -42,14 +42,13 @@ class TransferToMobileController extends Controller
     private $sell_price;
     private $local_currency;
     public $modelTransferToMobile = array();
+    public $operator_name;
 
     public function init()
     {
 
-        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
+        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '55519824647312') {
             $this->test = true;
-
-            echo 'teste';
         }
         $this->instanceModel = new User;
         $this->abstractModel = User::model();
@@ -369,7 +368,7 @@ error_txt=Transaction successful';
                     ':key1' => $_GET['amountValues'],
                 ),
             ));
-            $cost = $modelSendCreditProducts->retail_price;
+            $cost = $modelSendCreditProducts->wholesale_price;
         } else {
 
             $rateinitial = $this->modelTransferToMobile->transfer_bdservice_rate / 100 + 1;
@@ -395,28 +394,34 @@ error_txt=Transaction successful';
         if ($_POST['TransferToMobile']['method'] == 'international') {
             $product = $_POST['TransferToMobile']['amountValues']; //is the amout to refill
 
-            $modelSendCreditProducts = SendCreditProducts::model()->find(array(
-                'condition' => 'operator_id = :key AND product = :key1',
+            $modelSendCreditRates = SendCreditRates::model()->find(array(
+                'condition' => 'id_user = :key',
                 'params'    => array(
-                    ':key'  => Yii::app()->session['operatorId'],
+                    ':key'  => Yii::app()->session['id_user'],
                     ':key1' => $product,
+                    ':key2' => Yii::app()->session['operatorId'],
+                ),
+                'with'      => array(
+                    'idProduct' => array(
+                        'condition' => 'product =  :key1 AND operator_id = :key2',
+                    ),
                 ),
             ));
 
-            $sql = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = :key1 AND product = :key2";
-            if ($this->test == true) {
-                echo "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = " . Yii::app()->session['id_user'] . " AND operator_id = " . Yii::app()->session['operatorId'] . " AND product = " . $product . " <BR>";
+            if (!count($modelSendCreditRates)) {
+
+                echo '<div align=center id="container">';
+                echo Yii::app()->session['id_user'] . ' ' . $product . ' ' . Yii::app()->session['operatorId'] . "<br>";
+                echo '<font color=red>ERROR: 413</font><br><br>';
+                echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
+                echo '</div>';
+                exit;
             }
 
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-            $command->bindValue(":key1", Yii::app()->session['operatorId'], PDO::PARAM_INT);
-            $command->bindValue(":key2", $product, PDO::PARAM_INT);
-            $resultRates      = $command->queryAll();
-            $this->sell_price = $resultRates[0]['sell_price'];
-
-            $this->cost           = $modelSendCreditProducts->retail_price;
-            $this->local_currency = $modelSendCreditProducts->currency_dest;
+            $this->sell_price     = $modelSendCreditRates->sell_price;
+            $this->cost           = $modelSendCreditRates->idProduct->wholesale_price;
+            $this->local_currency = $modelSendCreditRates->idProduct->currency_dest;
+            $this->operator_name  = $modelSendCreditRates->idProduct->operator_name;
 
         } else {
 
@@ -433,7 +438,13 @@ error_txt=Transaction successful';
 
         $this->addInDataBase();
         if ($this->modelTransferToMobile->method == 'international') {
-            $result = $this->sendActionTransferToMobile('topup', $product);
+
+            if ($modelSendCreditRates->idProduct->provider == 'Ding') {
+                $result = DingConnect::sendCredit($_POST['TransferToMobile']['number'], $modelSendCreditRates->idProduct->send_value, $modelSendCreditRates->idProduct->SkuCode, $this->test);
+            } else {
+                $result = $this->sendActionTransferToMobile('topup', $product);
+            }
+
         } else {
             $result = $this->sendActionBDService($this->modelTransferToMobile);
         }
@@ -517,7 +528,7 @@ error_txt=Transaction successful';
             $result = explode("reference_operator=", $result[0]);
             $result = explode("\n", $result[1]);
 
-            $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at ' . $this->sell_price . '. ref: ' . $result[0];
+            $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' - ' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - ' . $this->sell_price;
 
         } else {
             if ($status == 'error') {
@@ -608,78 +619,63 @@ error_txt=Transaction successful';
 
             if (isset($this->config['global']['fm_transfer_to_username'])) {
 
-                $timeToCall = date('Y-m-d H:i', mktime(date('H'), date('i') - 10, date('s'), date('m'), date('d'), date('Y')));
-
-                $sql     = "SELECT * FROM pkg_refill WHERE description LIKE :description AND date BETWEEN '$timeToCall' AND  NOW() AND payment = 1 AND id_user =" . Yii::app()->session['id_user'];
-                $command = Yii::app()->db->createCommand($sql);
-                $command->bindValue(":description", "%" . $number . "%", PDO::PARAM_STR);
-                $result = $command->queryAll();
-
-                if (count($result) > 0) {
+                $modelRefill = Refill::model()->find('description LIKE :key AND date BETWEEN :key1 AND  NOW() AND payment = 1 AND id_user = :key2',
+                    array(
+                        ':key'  => "%" . $number . "%",
+                        ':key1' => date('Y-m-d H:i', mktime(date('H'), date('i') - 10, date('s'), date('m'), date('d'), date('Y'))),
+                        ':key2' => Yii::app()->session['id_user'],
+                    ));
+                if (count($modelRefill)) {
                     echo '<div align=center id="container">';
                     echo "<font color=red>You already send credit to this number. Wait minimal 10 minutes to new recharge</font>";
                     echo '</div>';
                     exit;
                 }
 
-                $result = $this->sendActionTransferToMobile('msisdn_info');
+                //VOBR
+                //request provider code to ding and chech if exist products to Ding
+                $operatorid              = DingConnect::getProviderCode($_POST['TransferToMobile']['number']);
+                $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_id = :key AND status = 1', array(':key' => $operatorid));
 
-                if (preg_match("/Transaction successful/", $result)) {
-                    $result = explode("\n", $result);
-
-                    $operatorId = explode("=", $result[3]);
-                    $operatorId = trim($operatorId[1]);
-                } else {
-                    //not receive Operator ID FROM API
-                    $numberFormate = preg_replace('/\+/', '', $number);
-                    $numberFormate = substr($numberFormate, 0, 2) == '00' ? substr($numberFormate, 2) : $numberFormate;
-
-                    $modelSendCreditProductsOperator = SendCreditProducts::model()->findAll('country_code = SUBSTRING(:key,1,length(country_code))',
-                        array(
-                            ':key' => $numberFormate,
-                        ));
-
-                    if (count($modelSendCreditProductsOperator)) {
-                        $operatorId = $modelSendCreditProductsOperator[0]->operator_id;
+                if (strlen($operatorid) < 1 || !count($modelSendCreditProducts)) {
+                    //no exists any product with this operator ID in ding, Find in TrasnferTo
+                    $result = $this->sendActionTransferToMobile('msisdn_info');
+                    if (preg_match("/Transaction successful/", $result)) {
+                        $resultArray = explode("\n", $result);
+                        $operatorid  = trim(end(explode('=', $resultArray[3])));
+                        //find products whit trasnferto operatorid
+                        $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_id = :key AND status = 1', array(':key' => $operatorid));
                     } else {
-                        $result = explode("error_txt=", $result);
-                        echo '<div align=center id="container">';
-                        echo "<font color=red>" . $result[1] . "</font>";
-                        echo '</div>';
+                        //not receive Operator ID FROM API. API OFF LINE. GET operator from country_code
+                        $numberFormate           = $_POST['TransferToMobile']['number'];
+                        $numberFormate           = substr($numberFormate, 0, 2) == '00' ? substr($numberFormate, 2) : $numberFormate;
+                        $modelSendCreditProducts = SendCreditProducts::model()->findAll('country_code = SUBSTRING(:key,1,length(country_code)) AND status = 1',
+                            array(
+                                ':key' => $numberFormate,
+                            ));
                     }
-
+                }
+                if (count($modelSendCreditProducts)) {
+                    $this->modelTransferToMobile->provider = $modelSendCreditProducts[0]->provider;
+                } else {
+                    echo '<div align=center id="container">';
+                    echo "<font color=red>ERROR. No exist product to this number. Contact admin</font><br><br>";
+                    echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
+                    echo '</div>';
+                    exit;
                 }
 
-                $modelSendCreditProducts = SendCreditProducts::model()->findAll(' operator_id = :key',
-                    array(
-                        ':key' => $operatorId,
-                    ));
+                $ids_products = array();
+                foreach ($modelSendCreditProducts as $key => $products) {
+                    $ids_products[] = $products->id;
+                }
+                //get the user prices to mount the amount combo
+                $criteria = new CDbCriteria();
+                $criteria->addInCondition('id_product', $ids_products);
+                $criteria->addCondition('id_user = :key');
+                $criteria->params[':key'] = Yii::app()->session['id_user'];
 
-                $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = :key1";
-                $command = Yii::app()->db->createCommand($sql);
-                $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-                $command->bindValue(":key1", $operatorId, PDO::PARAM_INT);
-                $resultRates = $command->queryAll();
-
-                /*
-                Array
-                (
-                [0] => country=Brazil
-                [1] => countryid=691
-                [2] => operator=TIM Brazil
-                [3] => operatorid=610
-                [4] => connection_status=100
-                [5] => destination_msisdn=5551982464731
-                [6] => destination_currency=BRL
-                [7] => product_list=10,15,20,30,35,40,50,100
-                [8] => retail_price_list=3.50,5.20,6.90,10.40,12.10,12.90,17.30,34.50
-                [9] => wholesale_price_list=2.77,4.15,5.48,8.28,12.72,10.93,13.81,27.32
-                [10] => authentication_key=1519327737
-                [11] => error_code=0
-                [12] => error_txt=Transaction successful
-                [13] =>
-                )
-                 */
+                $modelSendCreditRates = SendCreditRates::model()->findAll($criteria);
 
                 $values = array();
                 $i      = 0;
@@ -687,15 +683,16 @@ error_txt=Transaction successful';
                 foreach ($modelSendCreditProducts as $key => $product) {
 
                     if ($this->test == true) {
-                        echo $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($resultRates[$i]['sell_price']) . "<BR>";
+                        echo $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price) . "<BR>";
 
                     }
-                    $values[trim($product->product)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($resultRates[$i]['sell_price']);
+                    $values[trim($product->product)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price);
                     $i++;
                 }
 
-                Yii::app()->session['amounts']    = $values;
-                Yii::app()->session['operatorId'] = $operatorId;
+                Yii::app()->session['amounts']      = $values;
+                Yii::app()->session['operatorId']   = $operatorid;
+                Yii::app()->session['ids_products'] = $ids_products;
 
                 $this->modelTransferToMobile->country  = $modelSendCreditProducts[0]->country;
                 $this->modelTransferToMobile->operator = $modelSendCreditProducts[0]->operator_name;
@@ -805,13 +802,20 @@ error_txt=Transaction successful';
             }
         }
 
-        $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-        $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
-        $resultRates = $command->queryAll();
+        $modelSendCreditRates = SendCreditRates::model()->find(array(
+            'condition' => 'id_user = :key',
+            'params'    => array(
+                ':key'  => Yii::app()->session['id_user'],
+                ':key1' => $product->product,
+            ),
+            'with'      => array(
+                'idProduct' => array(
+                    'condition' => 'product =  :key1 AND operator_id = 0',
+                ),
+            ),
+        ));
 
-        $amount = $amountEUR - $resultRates[0]['sell_price'];
+        $amount = $amountEUR - $modelSendCreditRates->sell_price;
 
         $methosProfit = 'transfer_' . $methodOld . '_profit';
 
@@ -849,7 +853,7 @@ error_txt=Transaction successful';
 
             $amountEUR = $_GET['amount'];
 
-            $amountBDT = $amountEUR / ($modelSendCreditProducts[0]->retail_price);
+            $amountBDT = $amountEUR / ($modelSendCreditProducts[0]->wholesale_price);
 
             foreach ($modelSendCreditProducts as $key => $value) {
                 $product = explode('-', $value->product);
@@ -859,13 +863,24 @@ error_txt=Transaction successful';
                 }
             }
 
-            $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-            $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
-            $resultRates = $command->queryAll();
+            if (!isset($product->product)) {
+                exit('invalid');
+            }
 
-            echo $amount = number_format(($amountEUR - $resultRates[0]['sell_price']) / $modelSendCreditProducts[0]->retail_price, 0, '', '');
+            $modelSendCreditRates = SendCreditRates::model()->find(array(
+                'condition' => 'id_user = :key',
+                'params'    => array(
+                    ':key'  => Yii::app()->session['id_user'],
+                    ':key1' => $product->product,
+                ),
+                'with'      => array(
+                    'idProduct' => array(
+                        'condition' => 'product =  :key1 AND operator_id = 0',
+                    ),
+                ),
+            ));
+
+            echo $amount = number_format(($amountEUR - $modelSendCreditRates->sell_price) / $modelSendCreditProducts[0]->wholesale_price, 0, '', '');
         } else {
 
             /*
@@ -880,13 +895,20 @@ error_txt=Transaction successful';
                     break;
                 }
             }
-            $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = 0 AND product = :key1";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-            $command->bindValue(":key1", $product->product, PDO::PARAM_INT);
-            $resultRates = $command->queryAll();
+            $modelSendCreditRates = SendCreditRates::model()->find(array(
+                'condition' => 'id_user = :key',
+                'params'    => array(
+                    ':key'  => Yii::app()->session['id_user'],
+                    ':key1' => $product->product,
+                ),
+                'with'      => array(
+                    'idProduct' => array(
+                        'condition' => 'product =  :key1 AND operator_id = 0',
+                    ),
+                ),
+            ));
 
-            echo $amount = number_format(($amountBDT * $product->retail_price) + $resultRates[0]['sell_price'], 2);
+            echo $amount = number_format(($amountBDT * $product->wholesale_price) + $modelSendCreditRates->sell_price, 2);
 
         }
     }

@@ -34,6 +34,7 @@ class Controller extends BaseController
     //Allowed controllers to no admin users use updateall
     public $controllerAllowUpdateAll = array(
         'rateCallshop',
+        'sendCreditRates',
     );
 
     public function authorizedNoSession()

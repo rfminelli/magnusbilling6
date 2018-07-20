@@ -23,7 +23,8 @@
 class SendCreditRatesController extends Controller
 {
     public $attributeOrder = 't.id';
-    public $join           = '   JOIN pkg_send_credit_rates p ON t.operator_id = p.operator_id AND  t.product = p.product ';
+    public $extraValues    = array('idUser' => 'username', 'idProduct' => 'operator_name,country,currency_dest,product,currency_orig,wholesale_price');
+
     public function init()
     {
         $this->instanceModel = new SendCreditRates;
@@ -35,13 +36,10 @@ class SendCreditRatesController extends Controller
     public function actionRead($asJson = true, $condition = null)
     {
         if (Yii::app()->session['isClient']) {
-
-            $sql     = "SELECT id FROM pkg_send_credit_rates WHERE id_user = " . (int) Yii::app()->session['id_user'];
-            $command = Yii::app()->db->createCommand($sql);
-            $result  = $command->queryAll();
+            $modelSendCreditRates = SendCreditRates::model()->find('id_user = :key', array(':key' => Yii::app()->session['id_user']));
             //add the user sell_price if his not have any change
-            if (!count($result)) {
-                $sql = " INSERT INTO pkg_send_credit_rates (id_user,product,operator_id,sell_price)  SELECT " . (int) Yii::app()->session['id_user'] . ",product,operator_id,retail_price FROM pkg_send_credit_products ";
+            if (!count($modelSendCreditRates)) {
+                $sql = " INSERT INTO pkg_send_credit_rates (id_user,id_product,sell_price)  SELECT " . (int) Yii::app()->session['id_user'] . ",id,wholesale_price FROM pkg_send_credit_products ";
                 Yii::app()->db->createCommand($sql)->execute();
 
             }
@@ -49,82 +47,13 @@ class SendCreditRatesController extends Controller
         parent::actionRead($asJson = true, $condition = null);
     }
 
-    public function readCountRecord()
-    {
-        return SendCreditRates::model()->count();
-    }
-
-    public function extraFilterCustomClient($filter)
-    {
-
-        //se for cliente filtrar pelo pkg_user.id
-        $filter .= ' AND p.id_user = :clfby';
-        $this->paramsFilter[':clfby'] = Yii::app()->session['id_user'];
-
-        return $filter;
-    }
-
-    public function actionSave()
-    {
-        $values = $this->getAttributesRequest();
-
-        if (isset($_POST['filter'])) {
-
-            if (strlen($_POST['filter']) > 5) {
-                echo json_encode(array(
-                    $this->nameSuccess => false,
-                    $this->nameRoot    => [],
-                    $this->nameMsg     => 'You cant use filter to batch update',
-                ));
-                exit;
-
-            }
-
-            foreach ($values as $fieldName => $value) {
-                if (isset($value['isPercent']) && is_bool($value['isPercent'])) {
-                    $v            = $value['value'];
-                    $percent      = $v / 100;
-                    $valuePercent = $value['isPercent'] ? "($fieldName * $percent)" : $v;
-
-                    if ($value['isAdd']) {
-                        $valueUpdate = "$fieldName + $valuePercent";
-                    } else if ($value['isRemove']) {
-                        $valueUpdate = "$fieldName - $valuePercent";
-                    } else {
-                        $valueUpdate = $valuePercent;
-                    }
-                } else {
-
-                    $valueUpdate = "'$value'";
-                }
-
-                $setters[$fieldName] = "$valueUpdate";
-            }
-
-            $sql = "UPDATE pkg_send_credit_rates SET $fieldName = " . $valueUpdate . "  WHERE id_user = " . Yii::app()->session['id_user'] . " ";
-            Yii::app()->db->createCommand($sql)->execute();
-        } else {
-
-            $modelSendCreditProducts = SendCreditProducts::model()->findByPk((int) $values['id']);
-
-            $sql     = "UPDATE pkg_send_credit_rates SET sell_price = :key WHERE id_user = " . (int) Yii::app()->session['id_user'] . " AND product = '" . $modelSendCreditProducts->product . "' AND operator_id = " . (int) $modelSendCreditProducts->operator_id . " LIMIT 1";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":key", $values['sell_price'], PDO::PARAM_STR);
-            $command->execute();
-        }
-        echo json_encode(array(
-            $this->nameSuccess => true,
-            $this->nameRoot    => [],
-            $this->nameMsg     => $this->msg,
-        ));
-    }
-
     public function actionResetSellPrice()
     {
-        $sql = "DELETE FROM pkg_send_credit_rates WHERE id_user = " . (int) Yii::app()->session['id_user'];
-        Yii::app()->db->createCommand($sql)->execute();
+        SendCreditRates::model()->deleteAll('id_user = :key',
+            array(':key' => Yii::app()->session['id_user'])
+        );
 
-        $sql = " INSERT INTO pkg_send_credit_rates (id_user,product,operator_id,sell_price)  SELECT " . (int) Yii::app()->session['id_user'] . ",product,operator_id,retail_price FROM pkg_send_credit_products ";
+        $sql = " INSERT INTO pkg_send_credit_rates (id_user,id_product,sell_price)  SELECT " . (int) Yii::app()->session['id_user'] . ",id,wholesale_price FROM pkg_send_credit_products ";
         Yii::app()->db->createCommand($sql)->execute();
 
         echo json_encode(array(
@@ -133,22 +62,4 @@ class SendCreditRatesController extends Controller
         ));
     }
 
-    public function setAttributesModels($attributes, $models)
-    {
-
-        for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
-            $sql = "SELECT sell_price FROM pkg_send_credit_rates WHERE
-                    id_user = " . (int) Yii::app()->session['id_user'] . "  AND
-                    operator_id = :key AND
-                    product = " . (int) $attributes[$i]['product'] . " LIMIT 1";
-            $command = Yii::app()->db->createCommand($sql);
-            $command->bindValue(":key", $attributes[$i]['operator_id'], PDO::PARAM_INT);
-            $result = $command->queryAll();
-
-            $attributes[$i]['sell_price'] = count($result) ? $result[0]['sell_price'] : $attributes[$i]['retail_price'];
-
-        }
-
-        return $attributes;
-    }
 }

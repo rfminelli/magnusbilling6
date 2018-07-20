@@ -349,7 +349,7 @@ language  = /usr/share/mysql/english
 skip-external-locking
 secure-file-priv = ""
 symbolic-links=0
-sql-mode=NO_ENGINE_SUSTITUTION,STRICT_TRANS_TABLES
+sql-mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 bind-address    = 127.0.0.1
 key_buffer      = 16M
 max_allowed_packet  = 16M

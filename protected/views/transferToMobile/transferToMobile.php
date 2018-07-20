@@ -90,6 +90,7 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
         'options'  => array(isset($_POST['TransferToMobile']['operator_name']) ? $_POST['TransferToMobile']['operator_name'] : null => array('selected' => true)),
         'onchange' => 'showProducts()',
         'id'       => 'operatorfield',
+        'disabled' => $this->modelTransferToMobile->provider == 'Ding' ? "disabled" : '',
     )
 ); ?>
 	        </div>
