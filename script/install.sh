@@ -25,12 +25,14 @@ get_linux_distribution ()
         DIST="DEBIAN"
         HTTP_DIR="/etc/apache2/"
         HTTP_CONFIG=${HTTP_DIR}"apache2.conf"
-        PHP_INI="/etc/php5/cli/php.ini"
+        PHP_INI="/etc/php/7.0/cli/php.ini"
+        MYSQL_CONFIG="/etc/mysql/mariadb.conf.d/50-server.cnf"
     elif [ -f /etc/redhat-release ]; then
         DIST="CENTOS"
         HTTP_DIR="/etc/httpd/"
         HTTP_CONFIG=${HTTP_DIR}"conf/httpd.conf"
         PHP_INI="/etc/php.ini"
+        MYSQL_CONFIG="/etc/my.cnf"
     else
         DIST="OTHER"
         echo 'Installation does not support your distribution'
@@ -100,12 +102,13 @@ fi
 if [ ${DIST} = "DEBIAN" ]; then
     
     apt-get -o Acquire::Check-Valid-Until=false update 
-    apt-get install -y autoconf automake devscripts gawk ntpdate ntp g++ git-core curl sudo php5-fpm php5 php5-mcrypt git xmlstarlet libmyodbc unixodbc-bin apache2 php5-dev php5-common php5-cli php5-gd libjansson-dev php-pear php5-cli php-apc php5-curl libapache2-mod-php5 uuid-dev libxml2 libxml2-dev openssl libcurl4-openssl-dev gettext gcc g++ libncurses5-dev sqlite3 libsqlite3-dev subversion mpg123
+    apt-get install -y autoconf automake devscripts gawk ntpdate ntp g++ git-core curl sudo xmlstarlet libmyodbc unixodbc-bin apache2 libjansson-dev git
+    apt-get install -y php-fpm php php-mcrypt php-dev php-common php-cli php-gd php-pear php-cli php-sqlite3 php-curl php-mbstring unzip libapache2-mod-php uuid-dev libxml2 libxml2-dev openssl libcurl4-openssl-dev gettext gcc g++ libncurses5-dev sqlite3 libsqlite3-dev subversion mpg123
     echo mysql-server mysql-server/root_password password ${password} | debconf-set-selections
     echo mysql-server mysql-server/root_password_again password ${password} | debconf-set-selections            
-    apt-get install -y mysql-server php5-mysql mysql-client
-    apt-get install -y unixODBC unixODBC-dev unzip 
-    apt-get install -y libmysqlclient15-dev
+    apt-get install -y mysql-server php-mysql mysql-client unzip git
+    apt-get install -y unixODBC unixODBC-dev
+    apt-get install -y libmysqlclient15-dev 
 elif  [ ${DIST} = "CENTOS" ]; then
     yum clean all
     yum -y install kernel-devel.`uname -m` epel-release
@@ -124,7 +127,7 @@ sleep 1
 cd /usr/src
 wget http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
 tar -zxvf jansson-2.7.tar.gz
-cd jansson-2*
+cd jansson-2.7
 ./configure
 make clean
 make && make install
@@ -163,16 +166,9 @@ make samples
 make config
 ldconfig
 
-
-
 clear
 
-
 chmod -R 777 /tmp
-sleep 2
-
-
-
  
 if [ ${DIST} = "CENTOS" ]; then
     cd /usr/src
@@ -323,21 +319,13 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 [mysqld_safe]
 log-error=/var/log/mariadb/mariadb.log
 pid-file=/var/run/mariadb/mariadb.pid
-" > /etc/my.cnf
+" > ${MYSQL_CONFIG}
 elif [ ${DIST} = "DEBIAN" ]; then
 echo "
-[client]
-port    = 3306
-socket    = /var/run/mysqld/mysqld.sock
 
-[mysqld_safe]
-socket    = /var/run/mysqld/mysqld.sock
-nice    = 0
+[server]
 
 [mysqld]
-join_buffer_size = 128M
-sort_buffer_size = 2M
-read_rnd_buffer_size = 2M
 user    = mysql
 pid-file  = /var/run/mysqld/mysqld.pid
 socket    = /var/run/mysqld/mysqld.sock
@@ -345,33 +333,33 @@ port    = 3306
 basedir   = /usr
 datadir   = /var/lib/mysql
 tmpdir    = /tmp
-language  = /usr/share/mysql/english
+lc-messages-dir = /usr/share/mysql
 skip-external-locking
+
+bind-address    = 127.0.0.1
+
+key_buffer_size   = 16M
+max_allowed_packet  = 16M
+thread_stack    = 192K
+thread_cache_size       = 8
+myisam_recover_options  = BACKUP
+query_cache_limit = 1M
+query_cache_size        = 16M
+log_error = /var/log/mysql/error.log
+expire_logs_days  = 10
+max_binlog_size   = 100M
+character-set-server  = utf8mb4
+collation-server      = utf8mb4_general_ci
 secure-file-priv = ""
 symbolic-links=0
 sql-mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
-bind-address    = 127.0.0.1
-key_buffer      = 16M
-max_allowed_packet  = 16M
-thread_stack    = 192K
-thread_cache_size   = 8
-myisam-recover      = BACKUP
-query_cache_limit = 1M
-query_cache_size    = 16M
-expire_logs_days  = 10
-max_binlog_size     = 100M
 
-[mysqldump]
-quick
-quote-names
-max_allowed_packet  = 16M
+[embedded]
 
-[mysql]
+[mariadb]
 
-[isamchk]
-key_buffer    = 16M
-!includedir /etc/mysql/conf.d/
-" > /etc/my.cnf
+[mariadb-10.1]
+" > ${MYSQL_CONFIG}
 fi;
 
 
@@ -473,7 +461,7 @@ fi
 cd /var/www/html/mbilling
 
 echo $'[billing]
-exten => _.,1,AGI("/var/www/html/mbilling/agi.php")
+exten => _.,1,AGI("/var/www/html/mbilling/resources/asterisk/mbillin.php")
 
 exten => h,1,hangup()
 
@@ -509,6 +497,12 @@ queue_members => mysql,general,pkg_queue_member
 " > /etc/asterisk/extconfig.conf
 
 echo "
+noload => res_config_sqlite3.so
+noload => res_config_sqlite.so
+noload => chan_skinny.so
+noload => cdr_custom.so
+noload => cdr_odbc.so
+noload => cdr_sqlite3_custom.so
 noload => cdr_csv.so
 " >> /etc/asterisk/modules.conf
 
@@ -589,19 +583,29 @@ pbx_realtime=1.6
 res_agi=1.6
 app_set=1.6" >> /etc/asterisk/asterisk.conf
 
-if [ ${DIST} = "CENTOS" ]; then
-    cd /etc/init.d/
-    mv /etc/init.d/asterisk /tmp/asterisk_old
-    rm -rf /etc/init.d/asterisk
-    wget http://magnusbilling.com/scriptsSh/asterisk
-    chmod +x /etc/init.d/asterisk
 
-    echo 500000 > /proc/sys/fs/file-max
-    echo "fs.file-max=500000">>/etc/sysctl.conf
-    echo '* soft nofile 500000' >> /etc/security/limits.conf
-    echo '* hard nofile 500000' >> /etc/security/limits.conf
-fi;
+echo 500000 > /proc/sys/fs/file-max
+echo "fs.file-max=500000">>/etc/sysctl.conf
 
+echo '
+* soft nofile 500000
+* hard nofile 500000
+* soft core unlimited
+* hard core unlimited
+* soft data unlimited
+* hard data unlimited
+* soft fsize unlimited
+* hard fsize unlimited
+* soft memlock unlimited
+* hard memlock unlimited
+* soft cpu unlimited
+* hard cpu unlimited
+* soft nproc unlimited
+* hard nproc unlimited
+* soft locks unlimited
+* hard locks unlimited
+* soft sigpending unlimited
+* hard sigpending unlimited' >> /etc/security/limits.conf
 
 
 if [ ${DIST} = "DEBIAN" ]; then
@@ -798,11 +802,6 @@ ignoreregex =
 ' > /etc/fail2ban/filter.d/mbilling_login.conf
 
 
-
-
-
-
-
 echo "
 [DEFAULT]
 ignoreip = 127.0.0.1
@@ -923,7 +922,11 @@ messages => notice,warning,error
 
 " > /etc/asterisk/logger.conf
 
-cp -Rf /tmp/fail2ban/build/fail2ban.service /usr/lib/systemd/system/fail2ban.service
+if [ ${DIST} = "DEBIAN" ]; then
+  cp -rf /tmp/fail2ban/build/fail2ban.service /usr/lib/systemd/fail2ban.service
+elif [ ${DIST} = "CENTOS" ]; then  
+  cp -rf /tmp/fail2ban/build/fail2ban.service /usr/lib/systemd/system/fail2ban.service
+fi
 
 mkdir /var/run/fail2ban/
 asterisk -rx "module reload logger"
