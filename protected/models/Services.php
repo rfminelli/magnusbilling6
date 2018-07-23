@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -21,52 +21,52 @@
 
 class Services extends Model
 {
-	protected $_module = 'services';
-	/**
-	 * Retorna a classe estatica da model.
-	 * @return Prefix classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module = 'services';
+    /**
+     * Retorna a classe estatica da model.
+     * @return Prefix classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return nome da tabela.
-	 */
-	public function tableName()
-	{
-		return 'pkg_services';
-	}
+    /**
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_services';
+    }
 
-	/**
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('name, price', 'required'),
-			array('status,disk_space,sipaccountlimit,calllimit', 'numerical', 'integerOnly'=>true ),
-            	array('description', 'length', 'min'=>1),
-            	array('type', 'length', 'max'=>50),
-		);
-	}
-	/**
-	 * @return array roles of relationship.
-	 */
-	public function relations()
-	{
-		return array(
-			'modules' => array( self::MANY_MANY, 'Module', 'group_module(id_group, id_module)' ),
-			'groupModules' => array( self::HAS_MANY, 'GroupModule', 'id_group' ),
-		);
-	}
+    /**
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('name, price', 'required'),
+            array('status,disk_space,sipaccountlimit,calllimit', 'numerical', 'integerOnly' => true),
+            array('description', 'length', 'min' => 1),
+            array('type', 'length', 'max' => 50),
+        );
+    }
+    /**
+     * @return array roles of relationship.
+     */
+    public function relations()
+    {
+        return array(
+            'modules'      => array(self::MANY_MANY, 'Module', 'group_module(id_group, id_module)'),
+            'groupModules' => array(self::HAS_MANY, 'GroupModule', 'id_group'),
+        );
+    }
 }

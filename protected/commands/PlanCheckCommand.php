@@ -6,7 +6,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -22,13 +22,13 @@ class PlanCheckCommand extends ConsoleCommand
     public function run($args)
     {
         $sql = "SELECT reservationdate, month_payed, pkg_user.id, credit, email, label, typepaid, creditlimit, username,
-		pkg_user.id_offer, price, pkg_user.id
-		FROM pkg_user
-		INNER JOIN pkg_offer_use ON pkg_offer_use.id_user = pkg_user.id
-		INNER JOIN pkg_offer ON pkg_offer.id  = pkg_user.id_offer
-		WHERE releasedate IS NULL OR releasedate < '1984-01-01 00:00:00'
-		AND pkg_user.active= 1
-		ORDER BY pkg_user.id ASC";
+        pkg_user.id_offer, price, pkg_user.id
+        FROM pkg_user
+        INNER JOIN pkg_offer_use ON pkg_offer_use.id_user = pkg_user.id
+        INNER JOIN pkg_offer ON pkg_offer.id  = pkg_user.id_offer
+        WHERE releasedate IS NULL OR releasedate < '1984-01-01 00:00:00'
+        AND pkg_user.active= 1
+        ORDER BY pkg_user.id ASC";
 
         $modelOfferUse = OfferUse::model()->findAll(array(
             'condition' => '(releasedate IS NULL OR releasedate < :key) AND status = 1',

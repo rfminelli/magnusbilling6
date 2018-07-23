@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -36,57 +36,61 @@
 
 class ServicesModule extends Model
 {
-	protected $_module = 'groupmodule';
+    protected $_module = 'groupmodule';
 
-	/**
-	 * Return the static class of model.
-	 *
-	 * @return GroupModule classe estatica da model.
-	 */
-	public static function model( $className = __CLASS__ ) {
-		return parent::model( $className );
-	}
+    /**
+     * Return the static class of model.
+     *
+     * @return GroupModule classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 *
-	 *
-	 * @return name of table.
-	 */
-	public function tableName() {
-		return 'pkg_services_module';
-	}
+    /**
+     *
+     *
+     * @return name of table.
+     */
+    public function tableName()
+    {
+        return 'pkg_services_module';
+    }
 
-	/**
-	 *
-	 *
-	 * @return name of primary key(s).
-	 */
-	public function primaryKey() {
-		return array( 'id_services', 'id_module' );
-	}
+    /**
+     *
+     *
+     * @return name of primary key(s).
+     */
+    public function primaryKey()
+    {
+        return array('id_services', 'id_module');
+    }
 
-	/**
-	 *
-	 *
-	 * @return array validation of fields of model.
-	 */
-	public function rules() {
-		return array(
-			array( 'id_services, id_module', 'required' ),
-			array( 'id_services, id_module, show_menu', 'numerical', 'integerOnly'=>true ),
-			array( 'action', 'length', 'max'=>5 ),
-		);
-	}
+    /**
+     *
+     *
+     * @return array validation of fields of model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_services, id_module', 'required'),
+            array('id_services, id_module, show_menu', 'numerical', 'integerOnly' => true),
+            array('action', 'length', 'max' => 5),
+        );
+    }
 
-	/**
-	 *
-	 *
-	 * @return array roles of relationship.
-	 */
-	public function relations() {
-		return array(
-			'idModule' => array( self::BELONGS_TO, 'Module', 'id_module' ),
-		);
-	}
+    /**
+     *
+     *
+     * @return array roles of relationship.
+     */
+    public function relations()
+    {
+        return array(
+            'idModule' => array(self::BELONGS_TO, 'Module', 'id_module'),
+        );
+    }
 }
-?>

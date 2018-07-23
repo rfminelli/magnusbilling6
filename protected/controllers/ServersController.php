@@ -8,7 +8,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -59,7 +59,7 @@ class ServersController extends Controller
             $con->createCommand($sql)->execute();
 
             $modelServerAS = Servers::model()->findAll("(type = 'asterisk' OR type = 'mbilling')
-						AND status = 1 AND weight > 0");
+                        AND status = 1 AND weight > 0");
 
             foreach ($modelServerAS as $key => $server) {
                 $sql = "INSERT INTO $dbname.$table (setid,destination,weight,description) VALUES ('1','sip:" . $modelServer->host . ":5060','" . $modelServer->weight . "','" . $modelServer->description . "')";

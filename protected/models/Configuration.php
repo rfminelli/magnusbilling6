@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -245,7 +245,7 @@ class Configuration extends Model
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - Informar tempo disponível', config_description = 'informa no inicio da chamada o tempo total de minutos disponível ' WHERE  config_key = 'say_timetocall' AND config_group_title = 'agi-conf1'",
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - Autenticação por CallerID', config_description = 'Ativar autenticação por CallerID.\n\n0 - Não\n1 - Sim' WHERE  config_key = 'cid_enable' AND config_group_title = 'agi-conf1'",
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - Backup por LCR/LCD Prefix', config_description = 'Se ativo e existir dois prefixo idênticos no mesmo plano, o MBilling vai usar 1º o de menor custo.
-		Se o tronco da 1º tarifa nao completar a chamada, e não tiver um tronco backup, o MBilling usará a segunda tarifa' WHERE  config_key = 'failover_lc_prefix' AND config_group_title = 'agi-conf1'",
+        Se o tronco da 1º tarifa nao completar a chamada, e não tiver um tronco backup, o MBilling usará a segunda tarifa' WHERE  config_key = 'failover_lc_prefix' AND config_group_title = 'agi-conf1'",
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - Comando Dial', config_description = 'Mais informações em  : http://voip-info.org/wiki-Asterisk+cmd+dial' WHERE  config_key = 'dialcommand_param' AND config_group_title = 'agi-conf1'",
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - Internal Call, Dial Command Params', config_description = 'Parâmetros para o DIAL usado em ligações entre clientes.\n\nby default (3600000  =  1HOUR MAX CALL).' WHERE  config_key = 'dialcommand_param_sipiax_friend' AND config_group_title = 'agi-conf1'",
             "UPDATE pkg_configuration SET config_title = 'AGI 1 - DID Dial Command Params', config_description = '%timeout% is the value of the paramater : Max time to Call a DID no billed' WHERE  config_key = 'dialcommand_param_call_2did' AND config_group_title = 'agi-conf1'",

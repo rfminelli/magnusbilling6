@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -21,56 +21,54 @@
 
 class UserRate extends Model
 {
-	protected $_module = 'userrate';
-	protected $newPassword = NULL;
-	/**
-	 * Return the static class of model.
-	 * @return User classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module     = 'userrate';
+    protected $newPassword = null;
+    /**
+     * Return the static class of model.
+     * @return User classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return name of table.
-	 */
-	public function tableName()
-	{
-		return 'pkg_user_rate';
-	}
+    /**
+     * @return name of table.
+     */
+    public function tableName()
+    {
+        return 'pkg_user_rate';
+    }
 
-	/**
-	 * @return name of primary key(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return name of primary key(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validation of fields of model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('id_user, id_prefix', 'required'),
-			array('id_user, id_prefix, initblock, billingblock', 'numerical', 'integerOnly'=>true),
-			array('rateinitial', 'length', 'max'=>10)
+    /**
+     * @return array validation of fields of model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_user, id_prefix', 'required'),
+            array('id_user, id_prefix, initblock, billingblock', 'numerical', 'integerOnly' => true),
+            array('rateinitial', 'length', 'max' => 10),
 
-		);
-	}
+        );
+    }
 
-
-	/**
-	 * @return array roles of relationship.
-	 */
-	public function relations()
-	{
-		return array(
-			'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
-			'idUser' => array(self::BELONGS_TO, 'User', 'id_user')
-		);
-	}
+    /**
+     * @return array roles of relationship.
+     */
+    public function relations()
+    {
+        return array(
+            'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
+            'idUser'   => array(self::BELONGS_TO, 'User', 'id_user'),
+        );
+    }
 }
-?>

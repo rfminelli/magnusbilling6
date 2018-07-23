@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -72,26 +72,26 @@ class CallFailed extends Model
     public function createDataBaseIfNotExist()
     {
         $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_failed_archive (
-			  `id` int(11) NOT NULL AUTO_INCREMENT,
-			  `id_user` int(11) NOT NULL,
-			  `id_plan` int(11) DEFAULT NULL,
-			  `id_trunk` int(11) DEFAULT NULL,
-			  `id_prefix` int(11) DEFAULT NULL,
-			  `uniqueid` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			  `starttime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			  `calledstation` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			  `sipiax` int(11) DEFAULT '0',
-			  `src` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			  `terminatecauseid` int(1) DEFAULT '1',
-			  PRIMARY KEY (`id`),
-			  KEY `id_user` (`id_user`),
-			  KEY `id_plan` (`id_plan`),
-			  KEY `id_trunk` (`id_trunk`),
-			  KEY `calledstation` (`calledstation`),
-			  KEY `terminatecauseid` (`terminatecauseid`),
-			  KEY `id_prefix` (`id_prefix`),
-			  KEY `uniqueid` (`uniqueid`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `id_user` int(11) NOT NULL,
+              `id_plan` int(11) DEFAULT NULL,
+              `id_trunk` int(11) DEFAULT NULL,
+              `id_prefix` int(11) DEFAULT NULL,
+              `uniqueid` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+              `starttime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `calledstation` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+              `sipiax` int(11) DEFAULT '0',
+              `src` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+              `terminatecauseid` int(1) DEFAULT '1',
+              PRIMARY KEY (`id`),
+              KEY `id_user` (`id_user`),
+              KEY `id_plan` (`id_plan`),
+              KEY `id_trunk` (`id_trunk`),
+              KEY `calledstation` (`calledstation`),
+              KEY `terminatecauseid` (`terminatecauseid`),
+              KEY `id_prefix` (`id_prefix`),
+              KEY `uniqueid` (`uniqueid`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
         Yii::app()->db->createCommand($sql)->execute();
     }
 }

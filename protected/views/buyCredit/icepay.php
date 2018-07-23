@@ -6,7 +6,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -55,11 +55,11 @@ if (isset($_GET['sussess'])) {
 <link rel="stylesheet" type="text/css" href="../../../resources/css/signup.css" />
 <form class="rounded" id="contactform" action="" method="post">
 
-	<h2><?php echo Yii::t('yii', 'Select the Bank') ?></h2>
+    <h2><?php echo Yii::t('yii', 'Select the Bank') ?></h2>
 
-			<div class="field">
-				<div class="styled-select">
-				<?php echo CHtml::dropDownList('bank', '', array(
+            <div class="field">
+                <div class="styled-select">
+                <?php echo CHtml::dropDownList('bank', '', array(
     'ABNAMRO'      => 'ABN AMRO Bank',
     'ASNBANK'      => 'ASN Bank',
     'FRIESLAND'    => 'Friesland Bank',
@@ -70,10 +70,10 @@ if (isset($_GET['sussess'])) {
     'TRIODOSBANK'  => 'Triodos Bank',
     'VANLANSCHOT'  => 'Van Lanschot Bankiers',
 )); ?>
-				</div>
-			</div>
+                </div>
+            </div>
 
-			<input class="button" type="submit" value = "<?php echo Yii::t('yii', 'Continue') ?>" />
+            <input class="button" type="submit" value = "<?php echo Yii::t('yii', 'Continue') ?>" />
 </form>
 
 <?php exit;?>

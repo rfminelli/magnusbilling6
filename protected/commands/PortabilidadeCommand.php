@@ -6,7 +6,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -35,13 +35,13 @@ class PortabilidadeCommand extends CConsoleCommand
         }
 
         $sql = "CREATE TABLE IF NOT EXISTS pkg_portabilidade_prefix (
-		  `id` int(11) NOT NULL auto_increment,
-		  `number` bigint(15) NOT NULL,
-		  `company` int(5) NOT NULL,
-		  PRIMARY KEY  (`id`),
-		  KEY `number` (`number`),
-		  KEY `company` (`company`)
-		) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
+          `id` int(11) NOT NULL auto_increment,
+          `number` bigint(15) NOT NULL,
+          `company` int(5) NOT NULL,
+          PRIMARY KEY  (`id`),
+          KEY `number` (`number`),
+          KEY `company` (`company`)
+        ) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "TRUNCATE pkg_portabilidade_prefix";
@@ -59,14 +59,14 @@ class PortabilidadeCommand extends CConsoleCommand
         }
 
         $sql = "CREATE TABLE IF NOT EXISTS pkg_portabilidade (
-		  `id` int(11) NOT NULL auto_increment,
-		  `number` bigint(15) NOT NULL,
-		  `company` int(5) NOT NULL,
-		  `date` varchar(30) NOT NULL,
-		  PRIMARY KEY  (`id`),
-		  KEY `number` (`number`),
-		  KEY `company` (`company`)
-		) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
+          `id` int(11) NOT NULL auto_increment,
+          `number` bigint(15) NOT NULL,
+          `company` int(5) NOT NULL,
+          `date` varchar(30) NOT NULL,
+          PRIMARY KEY  (`id`),
+          KEY `number` (`number`),
+          KEY `company` (`company`)
+        ) ENGINE=MyISAM  DEFAULT CHARSET=latin1;";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "TRUNCATE pkg_portabilidade";

@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -36,94 +36,98 @@
 
 class GroupModule extends Model
 {
-	protected $_module = 'groupmodule';
+    protected $_module = 'groupmodule';
 
-	/**
-	 * Return the static class of model.
-	 *
-	 * @return GroupModule classe estatica da model.
-	 */
-	public static function model( $className = __CLASS__ ) {
-		return parent::model( $className );
-	}
+    /**
+     * Return the static class of model.
+     *
+     * @return GroupModule classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 *
-	 *
-	 * @return name of table.
-	 */
-	public function tableName() {
-		return 'pkg_group_module';
-	}
+    /**
+     *
+     *
+     * @return name of table.
+     */
+    public function tableName()
+    {
+        return 'pkg_group_module';
+    }
 
-	/**
-	 *
-	 *
-	 * @return name of primary key(s).
-	 */
-	public function primaryKey() {
-		return array( 'id_group', 'id_module' );
-	}
+    /**
+     *
+     *
+     * @return name of primary key(s).
+     */
+    public function primaryKey()
+    {
+        return array('id_group', 'id_module');
+    }
 
-	/**
-	 *
-	 *
-	 * @return array validation of fields of model.
-	 */
-	public function rules() {
-		return array(
-			array( 'id_group, id_module', 'required' ),
-			array( 'id_group, id_module, show_menu, createShortCut, createQuickStart', 'numerical', 'integerOnly'=>true ),
-			array( 'action', 'length', 'max'=>5 ),
-		);
-	}
+    /**
+     *
+     *
+     * @return array validation of fields of model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_group, id_module', 'required'),
+            array('id_group, id_module, show_menu, createShortCut, createQuickStart', 'numerical', 'integerOnly' => true),
+            array('action', 'length', 'max' => 5),
+        );
+    }
 
-	/**
-	 *
-	 *
-	 * @return array roles of relationship.
-	 */
-	public function relations() {
-		return array(
-			'idGroup' => array( self::BELONGS_TO, 'GroupUser', 'id_group' ),
-			'idModule' => array( self::BELONGS_TO, 'Module', 'id_module' ),
-		);
-	}
+    /**
+     *
+     *
+     * @return array roles of relationship.
+     */
+    public function relations()
+    {
+        return array(
+            'idGroup'  => array(self::BELONGS_TO, 'GroupUser', 'id_group'),
+            'idModule' => array(self::BELONGS_TO, 'Module', 'id_module'),
+        );
+    }
 
-	public function getGroupModule($id_group,$isClient,$id_user)
-	{
-		if ($isClient) {
-			$sql ="(SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut, gm.createQuickStart
-					FROM pkg_group_module gm 
+    public function getGroupModule($id_group, $isClient, $id_user)
+    {
+        if ($isClient) {
+            $sql = "(SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut, gm.createQuickStart
+					FROM pkg_group_module gm
 					INNER JOIN pkg_module m ON gm.id_module = m.id
 					WHERE id_group = :id_group)
-				UNION 
+				UNION
 					(
-						SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut, gm.createQuickStart 
-						FROM pkg_services_module gm 
-						INNER JOIN pkg_module m ON gm.id_module = m.id 
+						SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut, gm.createQuickStart
+						FROM pkg_services_module gm
+						INNER JOIN pkg_module m ON gm.id_module = m.id
 						WHERE gm.id_services IN (
 							SELECT id_services FROM pkg_services_use WHERE id_user = :id_user AND status = 1
 							)
-					) 
+					)
 				ORDER BY id, LENGTH(ACTION) DESC, show_menu DESC";
-			$command = Yii::app()->db->createCommand($sql);
-			$command->bindValue(":id_group", $id_group , PDO::PARAM_INT);
-			$command->bindValue(":id_user", $id_user, PDO::PARAM_INT);
-			$result = $command->queryAll();
-			//remove duplicate on permissions
-			$result = Util::unique_multidim_array($result,'id');
-		}else{
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":id_group", $id_group, PDO::PARAM_INT);
+            $command->bindValue(":id_user", $id_user, PDO::PARAM_INT);
+            $result = $command->queryAll();
+            //remove duplicate on permissions
+            $result = Util::unique_multidim_array($result, 'id');
+        } else {
 
-			$sql   = "SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut, 
-									gm.createQuickStart FROM pkg_group_module gm 
-									INNER JOIN pkg_module m ON gm.id_module = m.id 
-									WHERE id_group = :id_group";	
-			$command = Yii::app()->db->createCommand($sql);
-			$command->bindValue(":id_group", $id_group, PDO::PARAM_STR);
-			$result = $command->queryAll();
-		}
-		return $result;
-	}
+            $sql = "SELECT m.id, action, show_menu, text, module, icon_cls, m.id_module, gm.createShortCut,
+									gm.createQuickStart FROM pkg_group_module gm
+									INNER JOIN pkg_module m ON gm.id_module = m.id
+									WHERE id_group = :id_group";
+            $command = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":id_group", $id_group, PDO::PARAM_STR);
+            $result = $command->queryAll();
+        }
+        return $result;
+    }
 }
-?>

@@ -104,7 +104,10 @@ class DingConnect
 
     public function getProviderCode($number)
     {
-
+        $removeprefix = '00';
+        if (strncmp($number, $removeprefix, strlen($removeprefix)) == 0) {
+            $number = substr($number, strlen($removeprefix));
+        }
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, "https://api.dingconnect.com/api/V1/GetProviders?accountNumber=$number");

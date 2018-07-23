@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -40,56 +40,55 @@
 
 class Module extends Model
 {
-	protected $_module = 'module';
-	/**
-	 * Return the static class of model.
-	 * @return Module classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module = 'module';
+    /**
+     * Return the static class of model.
+     * @return Module classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return name of table.
-	 */
-	public function tableName()
-	{
-		return 'pkg_module';
-	}
+    /**
+     * @return name of table.
+     */
+    public function tableName()
+    {
+        return 'pkg_module';
+    }
 
-	/**
-	 * @return name of primary key(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return name of primary key(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validation of fields of model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('text', 'required'),
-			array('id_module, id_user_type', 'numerical', 'integerOnly'=>true),
-			array('text, controller, icon_cls', 'length', 'max'=>100),
-		);
-	}
+    /**
+     * @return array validation of fields of model.
+     */
+    public function rules()
+    {
+        return array(
+            array('text', 'required'),
+            array('id_module, id_user_type', 'numerical', 'integerOnly' => true),
+            array('text, controller, icon_cls', 'length', 'max' => 100),
+        );
+    }
 
-	/**
-	 * @return array roles of relationship.
-	 */
-	public function relations()
-	{
-		return array(
-			'groupUsers' => array(self::MANY_MANY, 'GroupUser', 'group_module(id_module, id_group)'),
-			'groupModules' => array(self::HAS_MANY, 'GroupModule', 'id_module'),
-			'idModule' => array(self::BELONGS_TO, 'Module', 'id_module'),
-			'modules' => array(self::HAS_MANY, 'Module', 'id_module'),
-			'idUserType' => array(self::BELONGS_TO, 'UserType', 'id_user_type'),
-		);
-	}
+    /**
+     * @return array roles of relationship.
+     */
+    public function relations()
+    {
+        return array(
+            'groupUsers'   => array(self::MANY_MANY, 'GroupUser', 'group_module(id_module, id_group)'),
+            'groupModules' => array(self::HAS_MANY, 'GroupModule', 'id_module'),
+            'idModule'     => array(self::BELONGS_TO, 'Module', 'id_module'),
+            'modules'      => array(self::HAS_MANY, 'Module', 'id_module'),
+            'idUserType'   => array(self::BELONGS_TO, 'UserType', 'id_user_type'),
+        );
+    }
 }
-?>

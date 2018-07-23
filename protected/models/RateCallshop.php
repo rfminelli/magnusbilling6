@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -65,9 +65,9 @@ class RateCallshop extends Model
         $table = $model->id_user > 1 ? 'pkg_rate_agent' : 'pkg_rate';
 
         $sql = "SELECT " . $model->id . ",prefix, destination, rateinitial, initblock, billingblock
-									FROM " . $table . " JOIN pkg_prefix
-									ON " . $table . ".id_prefix = pkg_prefix.id
-									WHERE id_plan = :id_plan";
+                                    FROM " . $table . " JOIN pkg_prefix
+                                    ON " . $table . ".id_prefix = pkg_prefix.id
+                                    WHERE id_plan = :id_plan";
 
         $sql     = "INSERT INTO pkg_rate_callshop (id_user , dialprefix,  destination, buyrate, minimo , block) $sql";
         $command = Yii::app()->db->createCommand($sql);
@@ -78,7 +78,7 @@ class RateCallshop extends Model
     public function findCallShopRate($number, $id_user)
     {
         $sql = "SELECT * FROM pkg_rate_callshop WHERE dialprefix = SUBSTRING(:ndiscado,1,length(dialprefix))
-                  				AND id_user= :id_user   ORDER BY LENGTH(dialprefix) DESC LIMIT 1";
+                                AND id_user= :id_user   ORDER BY LENGTH(dialprefix) DESC LIMIT 1";
         $command = Yii::app()->db->createCommand($sql);
         $command->bindValue(":id_user", $id_user, PDO::PARAM_INT);
         $command->bindValue(":ndiscado", $number, PDO::PARAM_STR);

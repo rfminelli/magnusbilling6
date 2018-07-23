@@ -8,7 +8,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -170,7 +170,7 @@ class VoucherController extends Controller
         while ($existsVoucher) {
             $randVoucher = Util::generatePassword(6, false, false, true, false);
             $sql         = "SELECT count(id) FROM pkg_voucher WHERE voucher LIKE :randVoucher
-				OR (SELECT count(id) FROM pkg_user WHERE callingcard_pin LIKE :randVoucher) > 0";
+                OR (SELECT count(id) FROM pkg_user WHERE callingcard_pin LIKE :randVoucher) > 0";
             $command = Yii::app()->db->createCommand($sql);
             $command->bindValue(":randVoucher", $randVoucher, PDO::PARAM_STR);
             $countVoucher = $command->queryAll();

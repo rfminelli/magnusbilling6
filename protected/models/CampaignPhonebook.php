@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -21,51 +21,51 @@
 
 class CampaignPhonebook extends Model
 {
-	protected $_module = 'campaignphonebook';
-	/**
-	 * Retorna a classe estatica da model.
-	 * @return SubModule classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module = 'campaignphonebook';
+    /**
+     * Retorna a classe estatica da model.
+     * @return SubModule classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return nome da tabela.
-	 */
-	public function tableName()
-	{
-		return 'pkg_campaign_phonebook';
-	}
+    /**
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_campaign_phonebook';
+    }
 
-	/**
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey()
-	{
-		return array('id_campaign','id_phonebook');
-	}
+    /**
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return array('id_campaign', 'id_phonebook');
+    }
 
-	/**
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules()
-	{
-		return array(
-			array('id_campaign, id_phonebook', 'required'),
-			array('id_campaign, id_phonebook', 'numerical', 'integerOnly'=>true),
-		);
-	}
+    /**
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_campaign, id_phonebook', 'required'),
+            array('id_campaign, id_phonebook', 'numerical', 'integerOnly' => true),
+        );
+    }
 
-	/**
-	 * @return array regras de relacionamento.
-	 */
-	public function relations()
-	{
-		return array(
-			'idCampaign' => array(self::BELONGS_TO, 'Campaign', 'id_campaign'),
-			'idPhoneBook' => array(self::BELONGS_TO, 'PhoneBook', 'id_phonebook')
-		);
-	}
+    /**
+     * @return array regras de relacionamento.
+     */
+    public function relations()
+    {
+        return array(
+            'idCampaign'  => array(self::BELONGS_TO, 'Campaign', 'id_campaign'),
+            'idPhoneBook' => array(self::BELONGS_TO, 'PhoneBook', 'id_phonebook'),
+        );
+    }
 }

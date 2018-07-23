@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -57,8 +57,8 @@ class Sipuras extends Model
             array('macadr', 'length', 'max' => 12),
             array('senha_admin, senha_user, Use_Pref_Codec_Only_1, Use_Pref_Codec_Only_2, Preferred_Codec_1, Preferred_Codec_2', 'length', 'max' => 8),
             array('antireset, altera, Enable_Web_Server, STUN_Enable,
-            	NAT_Keep_Alive_Enable_1_, NAT_Keep_Alive_Enable_2_, NAT_Mapping_Enable_1_,
-            	NAT_Mapping_Enable_2_, STUN_Test_Enable, Substitute_VIA_Addr', 'length', 'max' => 3),
+                NAT_Keep_Alive_Enable_1_, NAT_Keep_Alive_Enable_2_, NAT_Mapping_Enable_1_,
+                NAT_Mapping_Enable_2_, STUN_Test_Enable, Substitute_VIA_Addr', 'length', 'max' => 3),
             array('lastmov', 'length', 'max' => 20),
             array('marca', 'length', 'max' => 2),
             array('obs', 'length', 'max' => 50),

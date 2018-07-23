@@ -7,7 +7,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v3
@@ -21,60 +21,60 @@
 
 class RateAgent extends Model
 {
-	protected $_module = 'rate';
-	/**
-	 * Retorna a classe estatica da model.
-	 * @return Rate classe estatica da model.
-	 */
-	public static function model($className = __CLASS__)
-	{
-		return parent::model($className);
-	}
+    protected $_module = 'rate';
+    /**
+     * Retorna a classe estatica da model.
+     * @return Rate classe estatica da model.
+     */
+    public static function model($className = __CLASS__)
+    {
+        return parent::model($className);
+    }
 
-	/**
-	 * @return nome da tabela.
-	 */
-	public function tableName()
-	{		
-		return 'pkg_rate_agent';
-	}
+    /**
+     * @return nome da tabela.
+     */
+    public function tableName()
+    {
+        return 'pkg_rate_agent';
+    }
 
-	/**
-	 * @return nome da(s) chave(s) primaria(s).
-	 */
-	public function primaryKey()
-	{
-		return 'id';
-	}
+    /**
+     * @return nome da(s) chave(s) primaria(s).
+     */
+    public function primaryKey()
+    {
+        return 'id';
+    }
 
-	/**
-	 * @return array validacao dos campos da model.
-	 */
-	public function rules()
-	{		
-		return array(
-			array('id_plan', 'required'),
-			array('id_plan, id_prefix, initblock, billingblock, minimal_time_charge', 'numerical', 'integerOnly'=>true),
-			array('rateinitial', 'length', 'max'=>15),
-			);
-	}
-	/**
-	 * @return array regras de relacionamento.
-	 */
-	public function relations()
-	{
-		return array(
-			'idPlan' => array(self::BELONGS_TO, 'Plan', 'id_plan'),
-			'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
-			);
-	}
+    /**
+     * @return array validacao dos campos da model.
+     */
+    public function rules()
+    {
+        return array(
+            array('id_plan', 'required'),
+            array('id_plan, id_prefix, initblock, billingblock, minimal_time_charge', 'numerical', 'integerOnly' => true),
+            array('rateinitial', 'length', 'max' => 15),
+        );
+    }
+    /**
+     * @return array regras de relacionamento.
+     */
+    public function relations()
+    {
+        return array(
+            'idPlan'   => array(self::BELONGS_TO, 'Plan', 'id_plan'),
+            'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
+        );
+    }
 
-	public function createAgentRates($model,$id_plan)
-	{
-		$sql = 'INSERT INTO pkg_rate_agent (id_plan , id_prefix,  rateinitial , initblock , billingblock) 
-							SELECT '.$model->id.', id_prefix, rateinitial, initblock, billingblock FROM pkg_rate WHERE id_plan = :id_plan';
-		$command = Yii::app()->db->createCommand($sql);
-		$command->bindValue(":id_plan", $id_plan, PDO::PARAM_INT);
-		$command->execute();
-	}
+    public function createAgentRates($model, $id_plan)
+    {
+        $sql = 'INSERT INTO pkg_rate_agent (id_plan , id_prefix,  rateinitial , initblock , billingblock)
+							SELECT ' . $model->id . ', id_prefix, rateinitial, initblock, billingblock FROM pkg_rate WHERE id_plan = :id_plan';
+        $command = Yii::app()->db->createCommand($sql);
+        $command->bindValue(":id_plan", $id_plan, PDO::PARAM_INT);
+        $command->execute();
+    }
 }
