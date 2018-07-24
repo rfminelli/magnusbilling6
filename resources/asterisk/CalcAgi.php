@@ -384,13 +384,13 @@ class CalcAgi
         $id_plan   = $this->tariffObj[$K]['id_plan'];
         $buycost   = 0;
 
-        if ($doibill == 0 || $sessiontime < $this->tariffObj[$K]['minimal_time_charge']) {
+        if ($doibill == 0 || $sessiontime <= $this->tariffObj[$K]['minimal_time_charge']) {
             $cost = 0;
         } else {
             $cost = $this->lastcost;
         }
 
-        if ($doibill == 0 || $sessiontime < $this->tariffObj[$K]['minimal_time_buy']) {
+        if ($doibill == 0 || $sessiontime <= $this->tariffObj[$K]['minimal_time_buy']) {
             $buycost = 0;
         } else {
             $buycost = abs($this->lastbuycost);
