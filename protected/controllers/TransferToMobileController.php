@@ -6,7 +6,7 @@
  *
  * @package MagnusBilling
  * @author Adilson Leffa Magnus.
- * @copyright Copyright (C) 2005 - 2018 MagnusSolution. All rights reserved.
+ * @copyright Copyright (C) 2005 - 2016 MagnusBilling. All rights reserved.
  * ###################################
  *
  * This software is released under the terms of the GNU Lesser General Public License v2.1
@@ -47,7 +47,7 @@ class TransferToMobileController extends Controller
     public function init()
     {
 
-        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '55519824647312') {
+        if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
             $this->test = true;
         }
         $this->instanceModel = new User;
@@ -348,11 +348,6 @@ error_txt=Transaction successful';
     public function actionGetBuyingPrice()
     {
 
-        $modelSendCreditProducts = SendCreditProducts::model()->find(array(
-            'condition' => 'operator_name = :key',
-            'params'    => array(':key' => $_GET['operatorname']),
-        ));
-
         if ($_GET['method'] == 'international') {
             $currency = $this->config['global']['fm_transfer_currency'];
         } else {
@@ -360,14 +355,11 @@ error_txt=Transaction successful';
         }
 
         if ($_GET['method'] == 'international') {
+
+            $modelSendCreditProducts = SendCreditProducts::model()->findByPk((int) $_GET['id']);
+
             Yii::app()->session['operatorId'] = $modelSendCreditProducts->operator_id;
-            $modelSendCreditProducts          = SendCreditProducts::model()->find(array(
-                'condition' => 'operator_id = :key AND product = :key1',
-                'params'    => array(
-                    ':key'  => $modelSendCreditProducts->operator_id,
-                    ':key1' => $_GET['amountValues'],
-                ),
-            ));
+
             $cost = $modelSendCreditProducts->wholesale_price;
         } else {
 
@@ -398,12 +390,11 @@ error_txt=Transaction successful';
                 'condition' => 'id_user = :key',
                 'params'    => array(
                     ':key'  => Yii::app()->session['id_user'],
-                    ':key1' => $product,
-                    ':key2' => Yii::app()->session['operatorId'],
+                    ':key1' => $_POST['TransferToMobile']['amountValues'],
                 ),
                 'with'      => array(
                     'idProduct' => array(
-                        'condition' => 'product =  :key1 AND operator_id = :key2',
+                        'condition' => 'idProduct.id =  :key1',
                     ),
                 ),
             ));
@@ -418,10 +409,11 @@ error_txt=Transaction successful';
                 exit;
             }
 
-            $this->sell_price     = $modelSendCreditRates->sell_price;
-            $this->cost           = $modelSendCreditRates->idProduct->wholesale_price;
-            $this->local_currency = $modelSendCreditRates->idProduct->currency_dest;
-            $this->operator_name  = $modelSendCreditRates->idProduct->operator_name;
+            $this->sell_price                     = $modelSendCreditRates->sell_price;
+            $this->cost                           = $modelSendCreditRates->idProduct->wholesale_price;
+            $this->local_currency                 = $modelSendCreditRates->idProduct->currency_dest;
+            $this->operator_name                  = $modelSendCreditRates->idProduct->operator_name;
+            $this->modelTransferToMobile->product = $modelSendCreditRates->idProduct->product;
 
         } else {
 
@@ -528,7 +520,7 @@ error_txt=Transaction successful';
             $result = explode("reference_operator=", $result[0]);
             $result = explode("\n", $result[1]);
 
-            $description = 'Send Credit ' . $this->local_currency . ' ' . $_POST['TransferToMobile']['amountValues'] . ' - ' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - ' . $this->sell_price;
+            $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - ' . $this->sell_price;
 
         } else {
             if ($status == 'error') {
@@ -655,15 +647,20 @@ error_txt=Transaction successful';
                             ));
                     }
                 }
-                if (count($modelSendCreditProducts)) {
-                    $this->modelTransferToMobile->provider = $modelSendCreditProducts[0]->provider;
-                } else {
+                if (!count($modelSendCreditProducts)) {
+
                     echo '<div align=center id="container">';
                     echo "<font color=red>ERROR. No exist product to this number. Contact admin</font><br><br>";
                     echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
                     echo '</div>';
                     exit;
                 }
+
+                $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_name = :key AND country_code =:key1',
+                    array(
+                        ':key'  => $modelSendCreditProducts[0]->operator_name,
+                        ':key1' => $modelSendCreditProducts[0]->country_code,
+                    ));
 
                 $ids_products = array();
                 foreach ($modelSendCreditProducts as $key => $products) {
@@ -683,10 +680,10 @@ error_txt=Transaction successful';
                 foreach ($modelSendCreditProducts as $key => $product) {
 
                     if ($this->test == true) {
-                        echo $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price) . "<BR>";
+                        echo $product->id . ' -> ' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price) . "<BR>";
 
                     }
-                    $values[trim($product->product)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price);
+                    $values[trim($product->id)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price);
                     $i++;
                 }
 
@@ -756,20 +753,24 @@ error_txt=Transaction successful';
 
         $operatorId = $modelSendCreditProducts[0]->operator_id;
 
-        $sql     = "SELECT sell_price FROM  pkg_send_credit_rates WHERE id_user = :key AND operator_id = :key1";
-        $command = Yii::app()->db->createCommand($sql);
-        $command->bindValue(":key", Yii::app()->session['id_user'], PDO::PARAM_INT);
-        $command->bindValue(":key1", $operatorId, PDO::PARAM_INT);
-        $resultRates = $command->queryAll();
+        $ids_products = array();
+        foreach ($modelSendCreditProducts as $key => $products) {
+            $ids_products[] = $products->id;
+        }
+        //get the user prices to mount the amount combo
+        $criteria = new CDbCriteria();
+        $criteria->addInCondition('id_product', $ids_products);
+        $criteria->addCondition('id_user = :key');
+        $criteria->params[':key'] = Yii::app()->session['id_user'];
+
+        $modelSendCreditRates = SendCreditRates::model()->findAll($criteria);
 
         $values = array();
         $i      = 0;
         echo '<select onchange="showPrice(' . $this->modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
         echo '<option value="">Select the amount</option>';
         foreach ($modelSendCreditProducts as $key => $product) {
-
-            echo '<option value="' . $product->product . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . $resultRates[$i]['sell_price'] . '</option>';
-
+            echo '<option value="' . $product->id . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . $modelSendCreditRates[$i]->sell_price . '</option>';
             $i++;
         }
 

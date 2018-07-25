@@ -90,7 +90,6 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
         'options'  => array(isset($_POST['TransferToMobile']['operator_name']) ? $_POST['TransferToMobile']['operator_name'] : null => array('selected' => true)),
         'onchange' => 'showProducts()',
         'id'       => 'operatorfield',
-        'disabled' => $this->modelTransferToMobile->provider == 'Ding' ? "disabled" : '',
     )
 ); ?>
 	        </div>
@@ -146,23 +145,23 @@ $this->endWidget();?>
 <script type="text/javascript">
 
 	function getBuyingPrice(argument) {
-		amountValues = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
+		id = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
 		operator = document.getElementById('operatorfield').options[document.getElementById('operatorfield').selectedIndex].text;
 		if (document.getElementById('buying_price').value != 'R') {
 			document.getElementById('buying_price').value = 'R';
 		}else{
 
-			if (amountValues > 0) {
-		var http = new XMLHttpRequest()
+			if (id > 0) {
+				var http = new XMLHttpRequest()
 
-		http.onreadystatechange = function() {
-		       		if (this.readyState == 4 && this.status == 200) {
-		       			document.getElementById('buying_price').value = this.responseText;
-		        	}
-		    	};
+				http.onreadystatechange = function() {
+			       	if (this.readyState == 4 && this.status == 200) {
+			       			document.getElementById('buying_price').value = this.responseText;
+			        	}
+			    	};
 
-		http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?amountValues="+amountValues+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>&operatorname="+operator,true)
-		http.send(null);
+				http.open("GET", "../../index.php/transferToMobile/getBuyingPrice?id="+id+"&method=<?php echo isset($_POST['TransferToMobile']['method']) ? $_POST['TransferToMobile']['method'] : 0 ?>&operatorname="+operator,true)
+				http.send(null);
 			}
 		}
 	}
