@@ -315,14 +315,13 @@ socket=/var/lib/mysql/mysql.sock
 secure-file-priv = ''
 symbolic-links=0
 sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
-
+max_connections = 500
 [mysqld_safe]
 log-error=/var/log/mariadb/mariadb.log
 pid-file=/var/run/mariadb/mariadb.pid
 " > ${MYSQL_CONFIG}
 elif [ ${DIST} = "DEBIAN" ]; then
 echo "
-
 [server]
 
 [mysqld]
@@ -335,21 +334,17 @@ datadir   = /var/lib/mysql
 tmpdir    = /tmp
 lc-messages-dir = /usr/share/mysql
 skip-external-locking
-
 bind-address    = 127.0.0.1
-
+max_connections = 500
 key_buffer_size   = 16M
 max_allowed_packet  = 16M
 thread_stack    = 192K
 thread_cache_size       = 8
-myisam_recover_options  = BACKUP
 query_cache_limit = 1M
 query_cache_size        = 16M
 log_error = /var/log/mysql/error.log
 expire_logs_days  = 10
 max_binlog_size   = 100M
-character-set-server  = utf8mb4
-collation-server      = utf8mb4_general_ci
 secure-file-priv = ""
 symbolic-links=0
 sql-mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
@@ -461,7 +456,7 @@ fi
 cd /var/www/html/mbilling
 
 echo $'[billing]
-exten => _.,1,AGI("/var/www/html/mbilling/resources/asterisk/mbillin.php")
+exten => _.,1,AGI("/var/www/html/mbilling/resources/asterisk/mbilling.php")
 
 exten => h,1,hangup()
 
