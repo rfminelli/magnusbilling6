@@ -152,14 +152,8 @@ echo $form->dropDownList($modelTransferToMobile, 'method',
 
 		valueAmoutEUR = document.getElementById('amountfielEUR').value;
 
-		if (valueAmoutEUR > 0) {
-			if(!confirm('Are you sure to send this request?')){
-				e.preventDefault();
-			}else{
-				document.getElementById("sendButton").style.display = 'none';
-		  		document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
-			}
-		}else{
+		if (valueAmoutEUR <0) {
+
 			document.getElementById("sendButton").style.display = 'none';
 		  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
 		}

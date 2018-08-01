@@ -54,7 +54,7 @@ class SendCreditProducts extends Model
     {
         return array(
             array('country_code,status', 'numerical', 'integerOnly' => true),
-            array('country,operator_name', 'length', 'max' => 100),
+            array('country,operator_name,info', 'length', 'max' => 100),
             array('product,send_value,wholesale_price,provider', 'length', 'max' => 50),
             array('currency_dest,currency_orig', 'length', 'max' => 3),
             array('SkuCode', 'length', 'max' => 30),

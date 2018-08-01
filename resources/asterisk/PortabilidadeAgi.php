@@ -56,7 +56,7 @@ class PortabilidadeAgi
                     $ddd = substr($number, 2);
                     //verifico se é radio
                     if (strlen($ddd) == 10 && $mobile == true) {
-                        $sql = "SELECT company FROM pkg_portabilidade_prefix  WHERE number = '" . substr($ddd, 0, 6) . "' DESC LIMIT 1";
+                        $sql = "SELECT company FROM pkg_portabilidade_prefix  WHERE number = '" . substr($ddd, 0, 6) . "' ORDER BY id DESC LIMIT 1";
                         $agi->verbose($sql, 25);
                         $resultNextel = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
                         if (isset($resultNextel->company)

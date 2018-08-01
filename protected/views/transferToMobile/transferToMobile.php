@@ -96,35 +96,26 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
 	    </div>
 
 
+<div class="sp-page companies__content" >
+      <div class="company__list" id='productList'>
+      	<?php $id = 0;?>
+      	<?php foreach (Yii::app()->session['amounts'] as $key => $value): ?>
+      		<label for="2" class="company__row" id="productLabel<?php echo $id ?>">
+            		<input type="radio"  id="productinput<?php echo $id ?>" name="amountValues" value="<?php echo $key ?>">
+            		<div  class="company__logo-container" onclick="handleChange1(<?php echo $id ?>,<?php echo count(Yii::app()->session['amounts']) ?>);" id='product<?php echo $id ?>' ><?php echo $value ?></div>
+         		</label>
+         		<?php $id++;?>
+      	<?php endforeach;?>
 
+      </div>
+</div>
 
-	<div class="field" id="divamount">
-		<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Amount')) ?>
-		<div class="styled-select">
-			<?php
-
-$buttonName = 'Confirm';
-
-echo $form->dropDownList($modelTransferToMobile, 'amountValues',
-    Yii::app()->session['amounts'],
-    array(
-        'empty'    => Yii::t('yii', 'Select the amount'),
-        'disabled' => false,
-        'onchange' => 'showPrice(' . $modelTransferToMobile->transfer_show_selling_price . ')',
-        'id'       => 'amountfiel',
-        'style'    => 'color:blue; font-size:20',
-    ));
-?>
-		<?php echo $form->error($modelTransferToMobile, 'amount') ?>
-
-		</div>
-	</div>
 	<?php endif?>
 
 
-<div class='field' id="divsellingPrice" style="display:none; border:0">
-	<label>Selling Price</label>
-	<div id="sellingPrice" class="input" style="border:0; width:650px" ></div>
+<div class='field' id="aditionalInfo" style="display:none; border:0">
+	<label>Additional Info</label>
+	<div id="aditionalInfoText" class="input" style="border:0; width:650px" ></div>
 </div>
 
 <div class="controls" id="sendButton">
@@ -145,7 +136,9 @@ $this->endWidget();?>
 <script type="text/javascript">
 
 	function getBuyingPrice(argument) {
-		id = document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
+		var id =  document.getElementById('productinput'+window.productInputSelected).value;
+		console.log(id);
+
 		operator = document.getElementById('operatorfield').options[document.getElementById('operatorfield').selectedIndex].text;
 		if (document.getElementById('buying_price').value != 'R') {
 			document.getElementById('buying_price').value = 'R';
@@ -191,6 +184,20 @@ $this->endWidget();?>
 	function showPrice(argument) {
 		document.getElementById('buying_price').style.display = 'inline';
 		document.getElementById('buying_price').value = 'R';
+		idProduct= document.getElementById('amountfiel').options[document.getElementById('amountfiel').selectedIndex].value;
+
+		var http = new XMLHttpRequest()
+		http.onreadystatechange = function() {
+       		if (this.readyState == 4 && this.status == 200) {
+       			document.getElementById('aditionalInfo').style.display = 'inline';
+				document.getElementById('aditionalInfoText').innerHTML = this.responseText;
+       		}
+        	}
+
+		http.open("GET", "../../index.php/transferToMobile/getProductTax?id="+idProduct);
+		http.send(null);
+
+
 	}
 
 	function showProducts(argument) {
@@ -199,7 +206,7 @@ $this->endWidget();?>
 		var http = new XMLHttpRequest()
 		http.onreadystatechange = function() {
        		if (this.readyState == 4 && this.status == 200) {
-       			document.getElementById("amountfiel").innerHTML = this.responseText;
+       			document.getElementById("productList").innerHTML = this.responseText;
        		}
         	}
 
@@ -210,5 +217,132 @@ $this->endWidget();?>
 		document.getElementById('buying_price').style.display = 'none';
 
 	}
+	function transfer_show_selling_price(argument) {
+		console.log('teste');
+	}
+	var currentValue = 0;
+	function handleChange1(argument,total) {
+
+		for (var i = 0; i < total ; i++) {
+			document.getElementById('productLabel'+i).style.backgroundColor = '#fff';
+		}
+		document.getElementById('productLabel'+argument).style.backgroundColor = 'dd8980';
+
+		document.getElementById('productinput'+argument).checked = true;
+		window.productInputSelected = argument
+
+		document.getElementById('buying_price').style.display = 'inline';
+		document.getElementById('buying_price').value = 'R';
+
+		idProduct = document.getElementById('productinput'+argument).value;
+		var http = new XMLHttpRequest()
+		http.onreadystatechange = function() {
+       		if (this.readyState == 4 && this.status == 200) {
+       			document.getElementById('aditionalInfo').style.display = 'inline';
+				document.getElementById('aditionalInfoText').innerHTML = this.responseText;
+       		}
+        	}
+
+		http.open("GET", "../../index.php/transferToMobile/getProductTax?id="+idProduct);
+		http.send(null);
+	}
 </script>
 
+<style type="text/css">
+	#contactform {
+    margin: 0 auto;
+    width: 720px;
+    padding: 5px;
+    background: #f0f0f0;
+    overflow: auto;
+    /* Border style */
+    border: 1px solid #cccccc;
+    -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
+    border-radius: 7px;
+    /* Border Shadow */
+    -moz-box-shadow: 2px 2px 2px #cccccc;
+    -webkit-box-shadow: 2px 2px 2px #cccccc;
+    box-shadow: 2px 2px 2px #cccccc;
+}
+	.company__row {
+		display: inline-block;
+		-webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, .1);
+		box-shadow: 0 0 5px 0 rgba(0, 0, 0, .1);
+		background-color: #fff;
+		position: relative;
+		vertical-align: top
+	}
+
+	.company__row:nth-child(odd) {
+		margin-left: 0
+	}
+
+	.company__row:hover {
+		background: #f7f7f7
+	}
+
+	.company__row input[type=radio] {
+		display: none
+	}
+
+
+	.company__logo-container {
+		text-align: center
+	}
+
+	.company__row--disabled .company__logo {
+		filter: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='grayscale'><feColorMatrix type='matrix' values='0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0'/></filter></svg>#grayscale");
+		filter: #999;
+		-webkit-filter: grayscale(100%);
+		-webkit-transition: all .6s ease;
+		transition: all .6s ease;
+		-webkit-backface-visibility: hidden;
+		backface-visibility: hidden;
+		opacity: .41
+	}
+
+	.company__row {
+		width: 23%;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+		padding: 20px 30px;
+		cursor: pointer
+	}
+
+	.company__row:first-child,
+	.company__row:nth-child(2) {
+		border-top: 0!important
+	}
+
+	.company__row:nth-child(odd) {
+		border-right: 1px solid hsla(0, 0%, 80%, .25)
+	}
+
+	.company__row:nth-child(2n),
+	.company__row:nth-child(odd) {
+		border-top: 1px solid hsla(0, 0%, 80%, .25)
+	}
+
+
+	.company__list {
+		-webkit-box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+		-webkit-border-radius: 4px;
+		border-radius: 4px;
+		overflow: hidden
+	}
+
+	.company__logo {
+		vertical-align: middle
+	}
+
+	.company__logo-container {
+		height: 58px;
+		line-height: 58px
+	}
+
+	.company__row--blank {
+		height: 108px
+	}
+</style>

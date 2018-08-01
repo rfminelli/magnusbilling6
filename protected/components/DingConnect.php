@@ -17,7 +17,9 @@ class DingConnect
     public static function sendCredit($number, $send_value, $SkuCode, $test)
     {
         //DingConnect::getProducts('VOBR');
-
+        if (preg_match('/^00/', $number)) {
+            $number = substr($number, 2);
+        }
         $post = array(
             "SkuCode"        => $SkuCode,
             "SendValue"      => $send_value,
@@ -49,7 +51,7 @@ class DingConnect
             print_r($result);
         }
 
-        return $result->TransferRecord->ProcessingState == 'Complete' ? 'error_txt=Transaction successful' : 'error';
+        return $result->TransferRecord->ProcessingState == 'Complete' ? 'error_txt=Transaction successful' : 'error_txt=' . $result->ErrorCodes[0]->Code . ' ' . $result->ErrorCodes[0]->Context;
 
     }
     public static function getBalance()
@@ -123,7 +125,8 @@ class DingConnect
 
         curl_close($ch);
         $result = json_decode($server_output);
-        return $result->Items[0]->ProviderCode;
+
+        return isset($result->Items[0]->ProviderCode) ? $result->Items[0]->ProviderCode : '';
 
     }
 }

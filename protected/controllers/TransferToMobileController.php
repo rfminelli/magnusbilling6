@@ -74,6 +74,9 @@ class TransferToMobileController extends Controller
 
     public function actionRead($asJson = true, $condition = null)
     {
+        if (isset($_POST['amountValues'])) {
+            $_POST['TransferToMobile']['amountValues'] = $_POST['amountValues'];
+        }
         //if we already request the number info, check if select a valid amount
         if (isset($_POST['TransferToMobile']['amountValues']) || isset($_POST['TransferToMobile']['amountValuesEUR'])) {
 
@@ -110,7 +113,36 @@ class TransferToMobileController extends Controller
                 $this->modelTransferToMobile->addError('amountValues', Yii::t('yii', 'Invalid amount'));
             } elseif (!count($this->modelTransferToMobile->getErrors())) {
 
-                $this->confirmRefill();
+                if (!isset($_POST['TransferToMobile']['confirmed'])) {
+
+                    if ($this->modelTransferToMobile->method == 'international') {
+
+                        $modelSendCreditRates = SendCreditRates::model()->find(array(
+                            'condition' => 'id_user = :key',
+                            'params'    => array(
+                                ':key'  => Yii::app()->session['id_user'],
+                                ':key1' => $_POST['TransferToMobile']['amountValues'],
+                            ),
+                            'with'      => array(
+                                'idProduct' => array(
+                                    'condition' => 'idProduct.id =  :key1',
+                                ),
+                            ),
+                        ));
+                        $this->render('confirmInternational', array(
+                            'modelTransferToMobile' => $this->modelTransferToMobile,
+                            'modelSendCreditRates'  => $modelSendCreditRates,
+                        ));
+                    } else {
+                        $this->render('confirmBDService', array(
+                            'modelTransferToMobile' => $this->modelTransferToMobile,
+                        ));
+                    }
+
+                    exit;
+                } else {
+                    $this->confirmRefill();
+                }
 
             }
 
@@ -217,14 +249,18 @@ class TransferToMobileController extends Controller
 
         if ($action == 'topup') {
             $modelSendCreditProducts = SendCreditProducts::model()->find(array(
-                'condition' => 'operator_name = :key',
-                'params'    => array(':key' => $this->modelTransferToMobile->operator),
+                'condition' => 'operator_name = :key AND product = :key1',
+                'params'    => array(
+                    ':key'  => $this->modelTransferToMobile->operator,
+                    ':key1' => $product,
+                ),
             ));
             $this->url = "https://airtime.transferto.com/cgi-bin/shop/topup?";
             $action .= '&msisdn=number&delivered_amount_info=1&product=' . $product . '&operatorid=' . $modelSendCreditProducts->operator_id . '&sms_sent=yes';
         }
 
-        $url               = $this->url . "login=" . $this->login . "&key=$key&md5=$md5&destination_msisdn=$number&action=" . $action;
+        $url = $this->url . "login=" . $this->login . "&key=$key&md5=$md5&destination_msisdn=$number&action=" . $action;
+
         $arrContextOptions = array(
             "ssl" => array(
                 "verify_peer"      => false,
@@ -267,7 +303,7 @@ error_txt=Transaction successful';
         }
 
         if ($this->test == true) {
-            echo $url . "<br>";
+            //echo $url . "<br>";
         }
 
         return $result;
@@ -413,7 +449,7 @@ error_txt=Transaction successful';
             $this->cost                           = $modelSendCreditRates->idProduct->wholesale_price;
             $this->local_currency                 = $modelSendCreditRates->idProduct->currency_dest;
             $this->operator_name                  = $modelSendCreditRates->idProduct->operator_name;
-            $this->modelTransferToMobile->product = $modelSendCreditRates->idProduct->product;
+            $this->modelTransferToMobile->product = $product = $modelSendCreditRates->idProduct->product;
 
         } else {
 
@@ -517,10 +553,8 @@ error_txt=Transaction successful';
         $this->showprice = number_format($this->cost * $fee, 2);
 
         if ($this->modelTransferToMobile->method == 'international') {
-            $result = explode("reference_operator=", $result[0]);
-            $result = explode("\n", $result[1]);
 
-            $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - ' . $this->sell_price;
+            $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - EUR ' . $this->sell_price;
 
         } else {
             if ($status == 'error') {
@@ -529,7 +563,7 @@ error_txt=Transaction successful';
                 $description = '';
             }
             //Send Credit BDT 150 to 01630593593 via flexiload at 2.25"
-            $description .= 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' to ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' at EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
+            $description .= 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' - ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' - EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
 
         }
 
@@ -674,6 +708,10 @@ error_txt=Transaction successful';
 
                 $modelSendCreditRates = SendCreditRates::model()->findAll($criteria);
 
+                if (!count($modelSendCreditRates)) {
+                    exit('Before send credit, you need add your sell price');
+                }
+
                 $values = array();
                 $i      = 0;
 
@@ -683,7 +721,7 @@ error_txt=Transaction successful';
                         echo $product->id . ' -> ' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price) . "<BR>";
 
                     }
-                    $values[trim($product->id)] = $product->currency_dest . ' ' . trim($product->product) . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price);
+                    $values[trim($product->id)] = '<font size=1px>' . $product->currency_dest . '</font> ' . trim($product->product) . ' = <font size=1px>' . $product->currency_orig . '</font> ' . trim($modelSendCreditRates[$i]->sell_price);
                     $i++;
                 }
 
@@ -767,14 +805,20 @@ error_txt=Transaction successful';
 
         $values = array();
         $i      = 0;
-        echo '<select onchange="showPrice(' . $this->modelTransferToMobile->transfer_show_selling_price . ')" id="amountfiel" name="TransferToMobile[amountValues]">';
-        echo '<option value="">Select the amount</option>';
-        foreach ($modelSendCreditProducts as $key => $product) {
-            echo '<option value="' . $product->id . '">' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . $modelSendCreditRates[$i]->sell_price . '</option>';
-            $i++;
-        }
 
-        echo '</select>';
+        ?>
+            <?php foreach ($modelSendCreditProducts as $key => $product): ?>
+                <label for="2" class="company__row" id="productLabel<?php echo $i ?>">
+                        <input type="radio"  id="productinput<?php echo $i ?>" name="amountValues" value="<?php echo $product->id ?>">
+                        <div  class="company__logo-container" onclick="handleChange1(<?php echo $i ?>,<?php echo count($modelSendCreditProducts) ?>);" id='product<?php echo $i ?>' >
+                            <?php echo '<font size=1px>' . $product->currency_dest . ' </font>' . $product->product . ' = <font size=1px>' . $product->currency_orig . ' </font>' . $modelSendCreditRates[$i]->sell_price ?>
+
+                            </div>
+                    </label>
+                    <?php $i++;?>
+            <?php endforeach;?>
+
+        <?php
 
         Yii::app()->session['amounts']    = $values;
         Yii::app()->session['operatorId'] = $operatorId;
@@ -912,5 +956,12 @@ error_txt=Transaction successful';
             echo $amount = number_format(($amountBDT * $product->wholesale_price) + $modelSendCreditRates->sell_price, 2);
 
         }
+    }
+
+    public function actionGetProductTax()
+    {
+
+        $modelSendCreditProducts = SendCreditProducts::model()->findByPk((int) $_GET['id']);
+        echo $modelSendCreditProducts->info;
     }
 }

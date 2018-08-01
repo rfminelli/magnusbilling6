@@ -882,8 +882,8 @@ class BaseController extends CController
     {
         foreach ($this->relationFilter as $key => $relationFilter) {
             //convert $this->relationFilter to SQL text;
-            $table     = strtolower(preg_replace("/id/", 'pkg_', $key));
-            $joinField = strtolower(preg_replace("/id/", 'id_', $key));
+            $table     = strtolower(preg_replace("/^id/", 'pkg_', $key));
+            $joinField = strtolower(preg_replace("/^id/", 'id_', $key));
             $this->join .= ' JOIN ' . $table . ' ' . $key . ' ON t.' . $joinField . ' = ' . $key . '.id';
             $this->filter .= ' AND ' . $relationFilter['condition'];
         }
@@ -918,6 +918,7 @@ class BaseController extends CController
                 $sql     = 'DELETE t FROM ' . $this->abstractModel->tableName() . ' t ' . $this->join . ' WHERE ' . $this->filter;
                 $command = Yii::app()->db->createCommand($sql);
                 foreach ($this->paramsFilter as $key => $value) {
+                    $key = preg_replace('/^\:/', '', $key);
                     $command->bindValue(':' . $key, $value, PDO::PARAM_STR);
                 }
 
