@@ -85,7 +85,22 @@ class CallbackAgi
                         $call .= "Set:IDPREFIX=" . $CalcAgi->tariffObj[0]['id_prefix'] . "\n";
                         $call .= "Set:IDTRUNK=" . $CalcAgi->tariffObj[0]['id_trunk'] . "\n";
                         $call .= "Set:IDPLAN=" . $MAGNUS->id_plan . "\n";
-                        AsteriskAccess::generateCallFile($call, 5);
+
+                        $aleatorio    = str_replace(" ", "", microtime(true));
+                        $arquivo_call = "/tmp/$aleatorio.call";
+                        $fp           = fopen("$arquivo_call", "a+");
+                        fwrite($fp, $call);
+                        fclose($fp);
+
+                        $time += time();
+
+                        touch("$arquivo_call", $time);
+                        @chown("$arquivo_call", "asterisk");
+                        @chgrp("$arquivo_call", "asterisk");
+                        chmod("$arquivo_call", 0755);
+
+                        system("mv $arquivo_call /var/spool/asterisk/outgoing/$aleatorio.call");
+
                         $agi->answer();
 
                     }
@@ -105,10 +120,11 @@ class CallbackAgi
         $agi->verbose("MAGNUS 0800 CALLBACK");
 
         if ($MAGNUS->dnid == 'failed' || !is_numeric($MAGNUS->dnid)) {
-            $agi->verbose("Hangup becouse dnid is OutgoingSpoolFailed", 25);
+            $agi->verbose("Hangup becouse dnid is OutgoingSpoolFailed");
             $MAGNUS->hangup($agi);
             exit;
         }
+
         $destination = $MAGNUS->CallerID;
 
         $removeprefix = $MAGNUS->config['global']['callback_remove_prefix'];
@@ -119,9 +135,9 @@ class CallbackAgi
         $addprefix   = $MAGNUS->config['global']['callback_add_prefix'];
         $destination = $addprefix . $destination;
 
-        $user = $DidAgi->modelDid->username;
+        $user = $MAGNUS->modelUser->username;
 
-        $sql              = "SELECT * FROM pkg_sip WHERE id_user = $DidAgi->modelDestination[0]->id_user LIMIT 1";
+        $sql              = "SELECT * FROM pkg_sip WHERE id_user = " . $DidAgi->modelDestination[0]['id_user'] . " LIMIT 1";
         $MAGNUS->modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         if (!isset($MAGNUS->modelSip->id)) {
@@ -129,8 +145,9 @@ class CallbackAgi
             $MAGNUS->hangup($agi);
             return;
         }
+
         $destino = $MAGNUS->modelSip->name;
-        $id_user = $DidAgi->modelDestination[0]->id_user;
+        $id_user = $DidAgi->modelDestination[0]['id_user'];
 
         if ($MAGNUS->config['global']['answer_callback'] == 1) {
             $agi->answer();
@@ -148,7 +165,21 @@ class CallbackAgi
         $call .= "Set:IDUSER=" . $id_user . "\n";
         $call .= "Set:SECCALL=" . $destination . "\n";
 
-        AsteriskAccess::generateCallFile($call, 5);
+        $aleatorio    = str_replace(" ", "", microtime(true));
+        $arquivo_call = "/tmp/$aleatorio.call";
+        $fp           = fopen("$arquivo_call", "a+");
+        fwrite($fp, $call);
+        fclose($fp);
+
+        $time += time();
+
+        touch("$arquivo_call", $time);
+        @chown("$arquivo_call", "asterisk");
+        @chgrp("$arquivo_call", "asterisk");
+        chmod("$arquivo_call", 0755);
+
+        system("mv $arquivo_call /var/spool/asterisk/outgoing/$aleatorio.call");
+
         $agi->evaluate("ANSWER 0");
         $MAGNUS->hangup($agi);
 
