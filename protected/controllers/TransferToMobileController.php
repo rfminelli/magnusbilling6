@@ -690,7 +690,7 @@ error_txt=Transaction successful';
                     exit;
                 }
 
-                $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_name = :key AND country_code =:key1',
+                $modelSendCreditProducts = SendCreditProducts::model()->findAll('status = 1 AND operator_name = :key AND country_code =:key1',
                     array(
                         ':key'  => $modelSendCreditProducts[0]->operator_name,
                         ':key1' => $modelSendCreditProducts[0]->country_code,
@@ -785,7 +785,7 @@ error_txt=Transaction successful';
     {
 
         $modelSendCreditProducts = SendCreditProducts::model()->findAll(array(
-            'condition' => 'operator_name = :key',
+            'condition' => 'operator_name = :key AND status = 1',
             'params'    => array(':key' => $_GET['operator']),
         ));
 

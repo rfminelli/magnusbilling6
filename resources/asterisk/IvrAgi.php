@@ -137,40 +137,12 @@ class IvrAgi
 
                 $dialstatus      = $agi->get_variable("DIALSTATUS");
                 $dialstatus      = $dialstatus['data'];
-                $sql             = "SELECT name FROM pkg_sip WHERE name = '$modelSip->name' LIMIT 1";
+                $sql             = "SELECT * FROM pkg_sip WHERE name = '$modelSip->name' LIMIT 1";
                 $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
                 if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
-
-                    $sql              = "SELECT * FROM pkg_user WHERE id = $modelSipForward->id_user  LIMIT 1";
-                    $modelUserForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-                    $credit           = $modelUserForward->typepaid == 1
-                    ? $modelUserForward->credit + $modelUserForward->creditlimit
-                    : $modelUserForward->credit;
-
-                    $sql = "SELECT id FROM pkg_sip WHERE name = '$modelSipForward->forward' LIMIT 1";
-                    if ($agi->query($sql)->fetch(PDO::FETCH_OBJ)) {
-                        $agi->verbose('Forward to sipaccount ' . $modelSipForward->forward, 5);
-                        $MAGNUS->dnid = $MAGNUS->destination = $modelSipForward->forward;
-                        $sipCallAgi   = new SipCallAgi();
-                        $sipCallAgi->processCall($MAGNUS, $agi, $CalcAgi);
-                    } elseif ($credit > 1) {
-                        $agi->verbose('Forward to PSTN network. Number ' . $modelSipForward->forward, 5);
-                        $MAGNUS->dnid        = $MAGNUS->destination        = $MAGNUS->extension        = $modelSipForward->forward;
-                        $MAGNUS->accountcode = $modelSipForward->accountcode;
-
-                        if (AuthenticateAgi::authenticateUser($agi, $MAGNUS)) {
-                            if ($MAGNUS->checkNumber($agi, $CalcAgi, 0, true) == 1) {
-                                $standardCall = new StandardCallAgi();
-                                $standardCall->processCall($MAGNUS, $agi, $CalcAgi);
-
-                                $dialstatus   = $CalcAgi->dialstatus;
-                                $answeredtime = $CalcAgi->answeredtime;
-                                /* INSERT CDR  & UPDATE SYSTEM*/
-                                $CalcAgi->updateSystem($this, $agi, $this->destination, 1, 1);
-                            }
-
-                        }
-                    }
+                    $agi->verbose(" SIP HAVE callForward " . $modelSip->name);
+                    SipCallAgi::callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
+                    $MAGNUS->hangup($agi);
                 }
 
                 break;

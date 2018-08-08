@@ -60,8 +60,7 @@ Free Support
 We provide several avenues for you to get your system up and running on your own and learn the basics of the system.
 
 1. [Youtube Channel](https://www.youtube.com/channel/UCish_6Lxfkh29n4CLVEd90Q)
-2. [Documentation](http://docs.magnusbilling.com)
-3. [Forum](https://www.magnusbilling.com/forum-en.html)
-4. [whatsAppGroup(English)](https://chat.whatsapp.com/FSuvl7QdQSQFlIdv34Y8R8)
-5. [whatsAppGroup(Spanish)](https://chat.whatsapp.com/DMrcSYWKRzO76wHgqWuXnU)
-6. [whatsAppGroup(Português)](https://chat.whatsapp.com/1mZuFSW89f8FP2SGmaMZxQ)
+2. [Documentation](https://magnusbilling.com) Menu Documentation
+3. [Facebook Group(English)](https://www.facebook.com/groups/1530184480421287/)
+4. [Facebook Grupo(Spanish)](https://www.facebook.com/groups/217242972284136/)
+5. [Facebook Grupo(Português)](https://www.facebook.com/groups/371784470023690)
