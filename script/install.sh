@@ -499,6 +499,15 @@ noload => cdr_custom.so
 noload => cdr_odbc.so
 noload => cdr_sqlite3_custom.so
 noload => cdr_csv.so
+noload => cdr_manager.so
+noload => chan_iax2.so
+noload => cdr_mysql.so
+noload => app_celgenuserevent.so
+noload => cel_custom.so
+noload => cel_manager.so
+noload => cel_odbc.so
+noload => cel_sqlite3_custom.so
+noload => res_format_attr_celt.so
 " >> /etc/asterisk/modules.conf
 
 echo "
