@@ -282,23 +282,46 @@ class DidAgi
                 else if ($inst_listdestination['voip_call'] == 9) {
                     //SMS@O numero %callerid% acabou de  ligar.
                     if (strtoupper(substr($inst_listdestination['destination'], 0, 3)) == 'SMS') {
+                        //url format ->  SMS|Text|trunkname
+                        $sms = explode('|', $inst_listdestination['destination']);
 
-                        $MAGNUS->destination = $MAGNUS->modelUser->mobile;
-                        $text                = substr($inst_listdestination['destination'], 4);
-                        $text                = preg_replace("/\%callerid\%/", $MAGNUS->CallerID, $text);
+                        $destination = $MAGNUS->modelUser->mobile;
+                        $trunk       = $sms[2];
+                        $text        = $sms[1];
+                        $text        = preg_replace("/\%callerid\%/", $MAGNUS->CallerID, $text);
 
                         if (file_exists('/var/lib/asterisk/sounds/' . $this->did . '.gsm')) {
-                            $agi->answer();
-                            sleep(2);
-                            $agi->stream_file($this->did, '#');
-                        } else {
-                            $agi->evaluate("ANSWER 0");
+                            $agi->verbose('execute earlymedia');
+                            $agi->verbose('earl ok');
+                            $agi->execute('Ringing');
+                            $agi->execute("Progress");
+                            $agi->execute('Wait', '1');
+                            $agi->execute('Playback', $this->did . ",noanswer");
                         }
 
-                        SmsSend::send($MAGNUS->modelUser, $MAGNUS->destination, $text);
+                        $text = addslashes((string) $text);
+                        //CODIFICA O TESTO DO SMS
+                        $text = urlencode($text);
+
+                        $sql        = "SELECT link_sms, removeprefix, trunkprefix FROM pkg_trunk WHERE trunkcode = '$trunk' LIMIT 1";
+                        $modelTrunk = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                        //retiro e adiciono os prefixos do tronco
+                        if (strncmp($destination, $modelTrunk->removeprefix, strlen($modelTrunk->removeprefix)) == 0) {
+                            $destination = substr($destination, strlen($modelTrunk->removeprefix));
+                        }
+                        $destination = $modelTrunk->trunkprefix . $destination;
+                        $agi->verbose($destination);
+                        $url = $modelTrunk->link_sms;
+                        $url = preg_replace("/\%number\%/", $destination, $url);
+                        $url = preg_replace("/\%text\%/", $text, $url);
+
+                        $agi->verbose($url);
+                        file_get_contents($url);
+
                         $answeredtime = 60;
                         $dialstatus   = 'ANSWER';
-
+                        $agi->execute('Congestion', '5');
                         break;
                     } else {
                         $agi->verbose("Ccall group $group ", 6);

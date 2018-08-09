@@ -73,11 +73,23 @@ class SipController extends Controller
                 $values['extension'] = isset($values['extension']) ? $values['extension'] : '';
                 $values['forward']   = $values['type_forward'] . '|' . $values['extension'];
             } else {
-                if ($values['type_forward'] == 'sip') {
-                    $values['forward'] = $values['type_forward'] . '|' . $values['id_sip_forward'];
-                } else {
-                    $values['forward'] = $values['type_forward'] . '|' . $values['id_' . $values['type_forward']];
-                }
+
+                $values['forward'] = $values['type_forward'] . '|' . $values['id_' . $values['type_forward']];
+
+            }
+        } else if ((isset($values['id_sip']) || isset($values['id_ivr']) || isset($values['id_queue'])) & !$this->isNewRecord) {
+
+            $modelSip = Sip::model()->findByPk($values['id']);
+
+            $type_forward = explode('|', $modelSip->forward);
+
+            if ($type_forward[0] == 'undefined' || $type_forward[0] == '') {
+                $values['forward'] = '';
+            } elseif (preg_match("/group|number|custom|hangup/", $type_forward[0])) {
+                $values['extension'] = isset($values['extension']) ? $values['extension'] : '';
+                $values['forward']   = $type_forward[0] . '|' . $values['extension'];
+            } else {
+                $values['forward'] = $type_forward[0] . '|' . $values['id_' . $type_forward[0]];
             }
         }
 

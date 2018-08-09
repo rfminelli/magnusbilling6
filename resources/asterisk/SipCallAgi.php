@@ -101,15 +101,15 @@ class SipCallAgi
         if ($optionType == 'sip') // SIP
         {
             $agi->verbose('Sip call', 25);
-            $insertCDR = true;
-            $sql       = "SELECT name, callerid FROM pkg_sip WHERE id = $optionValue LIMIT 1";
-            $modelSip  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            $insertCDR        = true;
+            $sql              = "SELECT name, callerid,id_user FROM pkg_sip WHERE id = $optionValue LIMIT 1";
+            $MAGNUS->modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             $MAGNUS->CallerID = $modelSip->callerid;
             $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
 
             $MAGNUS->dnid = $MAGNUS->destination = $MAGNUS->sip_account = $modelSip->name;
-            $sipCallAgi->processCall($MAGNUS, $agi, $CalcAgi);
+            sipCallAgi::processCall($MAGNUS, $agi, $CalcAgi);
 
         } else if ($optionType == 'group') // CUSTOM
         {

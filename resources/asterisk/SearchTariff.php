@@ -27,26 +27,18 @@ class SearchTariff
             include dirname(__FILE__) . '/beforeSearchTariff.php';
         }
 
-        //return the maximun length of prefix
-        $sql               = "SELECT length FROM pkg_prefix_length WHERE code = '" . substr($MAGNUS->destination, 0, 2) . "' LIMIT 1";
-        $modelPrefixLength = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-
-        if (isset($modelPrefixLength->length)) {
-            $max_len_prefix = $modelPrefixLength->length;
-            $prefixclause   = '(';
-            while ($max_len_prefix >= 1) {
-                $prefixclause .= "prefix='" . substr($MAGNUS->destination, 0, $max_len_prefix) . "' OR ";
-                $max_len_prefix--;
-            }
-
-            $prefixclause = substr($prefixclause, 0, -3) . ")";
-
-        } else {
-            $max_len_prefix = 6;
-            $prefixclause   = "  (prefix LIKE '&_%' ESCAPE '&' AND '" . $MAGNUS->destination . "'
-                        REGEXP REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT('^', prefix, '$'),
-                        'X', '[0-9]'), 'Z', '[1-9]'), 'N', '[2-9]'), '.', '.+'), '_', ''))";
+        $max_len_prefix = 10;
+        $prefixclause   = '(';
+        while ($max_len_prefix >= 1) {
+            $prefixclause .= "prefix='" . substr($MAGNUS->destination, 0, $max_len_prefix) . "' OR ";
+            $max_len_prefix--;
         }
+
+        $prefixclause = substr($prefixclause, 0, -3) . ")";
+
+        $prefixclause .= "  OR (prefix LIKE '&_%' ESCAPE '&' AND '" . $MAGNUS->destination . "'
+                    REGEXP REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CONCAT('^', prefix, '$'),
+                    'X', '[0-9]'), 'Z', '[1-9]'), 'N', '[2-9]'), '.', '.+'), '_', ''))";
 
         $sql = "SELECT lcrtype, pkg_plan.id AS id_plan, pkg_prefix.prefix AS dialprefix,
                 pkg_plan.name, pkg_rate.id_prefix, pkg_rate.id AS id_rate, buyrate,  buyrateinitblock buyrateinitblock,

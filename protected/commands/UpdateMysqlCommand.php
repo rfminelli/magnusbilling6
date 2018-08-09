@@ -816,6 +816,13 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.3.1') {
+            $sql = "ALTER TABLE `pkg_cdr_failed` ADD `hangupcause` INT(11) NULL DEFAULT NULL AFTER `terminatecauseid`;";
+            $this->executeDB($sql);
+            $version = '6.3.2';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 
