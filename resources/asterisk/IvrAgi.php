@@ -122,18 +122,25 @@ class IvrAgi
             {
                 $agi->verbose('Sip call, active insertCDR', 25);
                 $insertCDR = true;
-                $sql       = "SELECT name FROM pkg_sip WHERE id = $optionValue LIMIT 1";
+                $sql       = "SELECT name, dial_timeout FROM pkg_sip WHERE id = $optionValue LIMIT 1";
                 $modelSip  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                 $dialparams = $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
                 $dialparams = str_replace("%timeout%", 3600, $dialparams);
                 $dialparams = str_replace("%timeoutsec%", 3600, $dialparams);
-                $dialstr    = 'SIP/' . $modelSip->name . $dialparams;
+
+                $dialparams = explode(',', $dialparams);
+                if (isset($dialparams[1])) {
+                    $dialparams[1] = $modelSip->dial_timeout;
+                }
+                $dialparams = implode(',', $dialparams);
+
+                $dialstr = 'SIP/' . $modelSip->name . $dialparams;
                 $agi->verbose($dialstr, 25);
                 $MAGNUS->sip_account = $modelSip->name;
                 $MAGNUS->startRecordCall($agi);
                 $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
-                $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->config["agi-conf1"]['dialcommand_param_sipiax_friend']);
+                $MAGNUS->run_dial($agi, $dialstr);
 
                 $dialstatus      = $agi->get_variable("DIALSTATUS");
                 $dialstatus      = $dialstatus['data'];
