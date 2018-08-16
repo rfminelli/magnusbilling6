@@ -36,6 +36,10 @@ class SendCreditSummaryController extends Controller
         ? $_POST['SendCreditSummary']['stopdate']
         : date('Y-m-d');
 
+        $model->service = isset($_POST['SendCreditSummary']['service'])
+        ? $_POST['SendCreditSummary']['service']
+        : 'All';
+
         if (Yii::app()->session['isAdmin'] != 1) {
             $_POST['SendCreditSummary']['id'] = Yii::app()->session['id_user'];
         } else {
@@ -53,6 +57,11 @@ class SendCreditSummaryController extends Controller
         $this->filter .= ' AND date > :date AND date < :stopdate';
         $this->paramsFilter['date']     = $model->date;
         $this->paramsFilter['stopdate'] = $model->stopdate . ' 23:59:59';
+
+        if ($model->service != 'all') {
+            $this->filter .= ' AND service LIKE :service';
+            $this->paramsFilter['service'] = $model->service;
+        }
 
         $this->select = '*, count(*) count, sum(sell) total_sale, sum(cost) total_cost, sum(earned) earned, DATE(date) AS day, date';
         $this->group  = 'day, service';

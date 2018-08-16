@@ -235,8 +235,8 @@ class TransferToMobileController extends Controller
         SendCreditSummary::model()->updateByPk($this->send_credit_id, array(
             'profit' => $this->modelTransferToMobile->{$profit},
             'amount' => $this->cost,
-            'sell'   => $this->showprice,
-            'earned' => $this->showprice - $this->user_cost,
+            'sell'   => number_format($this->sell_price, 2),
+            'earned' => number_format($this->sell_price - $this->user_cost, 2),
         ));
     }
 
@@ -564,7 +564,7 @@ error_txt=Transaction successful';
             }
             //Send Credit BDT 150 to 01630593593 via flexiload at 2.25"
             $description .= 'Send Credit BDT ' . $_POST['TransferToMobile']['amountValuesBDT'] . ' - ' . $this->modelTransferToMobile->number . ' via ' . $this->modelTransferToMobile->method . ' - EUR ' . $_POST['TransferToMobile']['amountValuesEUR'];
-
+            $this->sell_price = $_POST['TransferToMobile']['amountValuesEUR'];
         }
 
         if ($this->test == true) {
