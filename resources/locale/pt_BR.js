@@ -68,6 +68,7 @@ Locale.load({
     'Block calls from this expression': 'Bloquear chamadas desta regra',
     'callsummaryperagent': 'Cdr por Agente',
     'callsummaryperuser': 'Cdr por usuário',
+    'callsummarypertrunk': 'Cdr por Tronco',
     'Minimal time to charge': 'Tempo minimo para tarifar',
     'Minimal time to buy': 'Tempo minimo para compra',
     'Your limit to download record is': 'Seu limite para baixar gravações é de',

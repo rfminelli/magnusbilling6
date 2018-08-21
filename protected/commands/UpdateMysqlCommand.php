@@ -832,6 +832,19 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.3.3') {
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''callsummarypertrunk'')', 'callsummarypertrunk', 'callsummarybymonth', '9')";
+            $this->executeDB($sql);
+            $idServiceModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idServiceModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            $version = '6.3.4';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

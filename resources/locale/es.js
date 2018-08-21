@@ -10,6 +10,7 @@ Locale.load({
     'unregistered': 'No registrada',
     'callsummaryperagent': 'Cdr por Agente',
     'callsummaryperuser': 'Cdr por usuario',
+    'callsummarypertrunk': 'Cdr por Troncal',
     'Minimal time to charge': 'Tiempo minimo para cobrar',
     'Minimal time to buy': 'Tiempo minimo para compra',
     'Your limit to download record is': 'Su limit para descargar grabaciones es de',

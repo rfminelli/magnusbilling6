@@ -16,6 +16,7 @@
 Locale.load({
     'callsummaryperagent': 'Cdr Summary per Agent',
     'callsummaryperuser': 'Cdr Summary per User',
+    'callsummarypertrunk': 'Cdr Summary per Trunk',
     'plans': 'Plans',
     'calledstation': 'Number',
     'idUserusername': 'Username',
