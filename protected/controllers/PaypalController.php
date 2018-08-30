@@ -70,7 +70,7 @@ class PaypalController extends Controller
             exit;
         }
 
-        if (count($modelMethodpay->username) == 0 || $_POST['business'] != $modelMethodpay->username) {
+        if (count($modelMethodpay->username) == 0 || $_POST['receiver_email'] != $modelMethodpay->username) {
             Yii::log('not allow', 'info');
             exit;
         }
