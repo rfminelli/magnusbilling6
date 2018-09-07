@@ -74,7 +74,7 @@ class CallChartCommand extends ConsoleCommand
                     $cdr           = $call[11];
                     $originate     = explode("/", substr($channel, 0, strrpos($channel, "-")));
                     $originate     = $originate[1];
-                    if ($call[5] == 'Dial') {
+                    if ($call[5] == 'Dial' || $call[5] == 'Mbilling') {
                         if (isset($_GET['log'])) {
                             echo '156 ' . $call[5];
                         }
