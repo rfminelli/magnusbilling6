@@ -118,6 +118,11 @@ class AsteriskAccess
         return @$this->asmanager->Command("core show channels concise");
     }
 
+    public function coreShowChannelsVerbose()
+    {
+        return @$this->asmanager->Command("core show channels verbose");
+    }
+
     public function groupShowChannels()
     {
         return $this->asmanager->Command("group show channels");
@@ -400,6 +405,52 @@ class AsteriskAccess
         }
         return $channels;
     }
+
+    public static function getCoreShowChannelsVerbose()
+    {
+
+        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+
+        $channels = array();
+        foreach ($modelServers as $key => $server) {
+            $columns = array('Channel', 'Context', 'Extension', 'Prio', 'State', 'Application', 'Data', 'CallerID', 'Duration', 'Accountcode', 'PeerAccount', 'BridgedTo');
+            $data    = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->coreShowChannelsVerbose();
+
+            if (!isset($data) || !isset($data['data'])) {
+                return;
+            }
+
+            $linesCallsResult = explode("\n", $data['data']);
+
+            if (count($linesCallsResult) < 1) {
+                return;
+            }
+
+            for ($i = 0; $i < count($linesCallsResult); $i++) {
+
+                if (preg_match("/\(Outgoing Line\)/", $linesCallsResult[$i])) {
+                    continue;
+                }
+                $call = preg_split("/\s+/", $linesCallsResult[$i]);
+                if (!preg_match("/\//", $call[0])) {
+                    continue;
+                }
+                $call['server'] = $server['host'];
+                $channels[]     = $call;
+
+            }
+
+        }
+        return $channels;
+    }
+
     public static function getCoreShowChannel($channel, $agi = null)
     {
 

@@ -38,12 +38,12 @@ class ServersController extends Controller
         $modelServer = Servers::model()->findAll("type = 'sipproxy' AND status = 1");
         foreach ($modelServer as $key => $server) {
 
-            $hostname = $modelServer->host;
+            $hostname = $server->host;
             $dbname   = 'opensips';
             $table    = 'dispatcher';
-            $user     = $modelServer->username;
-            $password = $modelServer->password;
-            $port     = $modelServer->port;
+            $user     = $server->username;
+            $password = $server->password;
+            $port     = $server->port;
 
             $dsn = 'mysql:host=' . $hostname . ';dbname=' . $dbname;
 
@@ -62,7 +62,7 @@ class ServersController extends Controller
                         AND status = 1 AND weight > 0");
 
             foreach ($modelServerAS as $key => $server) {
-                $sql = "INSERT INTO $dbname.$table (setid,destination,weight,description) VALUES ('1','sip:" . $modelServer->host . ":5060','" . $modelServer->weight . "','" . $modelServer->description . "')";
+                $sql = "INSERT INTO $dbname.$table (setid,destination,weight,description) VALUES ('1','sip:" . $server->host . ":5060','" . $server->weight . "','" . $server->description . "')";
                 $con->createCommand($sql)->execute();
 
             }

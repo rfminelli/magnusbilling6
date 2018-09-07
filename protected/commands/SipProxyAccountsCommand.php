@@ -42,9 +42,15 @@ class SipProxyAccountsCommand extends ConsoleCommand
             $sql = "TRUNCATE $table";
             $con->createCommand($sql)->execute();
 
+            $remoteProxyIP = trim(end(explode("|", $server->description)));
+
+            if (!filter_var($remoteProxyIP, FILTER_VALIDATE_IP)) {
+                $remoteProxyIP = $hostname;
+            }
+
             foreach ($modelSip as $key => $sip) {
 
-                $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode) VALUES ('" . $sip->defaultuser . "', '$hostname','" . md5($sip->defaultuser . ':' . $hostname . ':' . $sip->secret) . "', '" . $sip->accountcode . "')";
+                $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode) VALUES ('" . $sip->defaultuser . "', '$remoteProxyIP','" . md5($sip->defaultuser . ':' . $remoteProxyIP . ':' . $sip->secret) . "', '" . $sip->accountcode . "')";
                 $con->createCommand($sql)->execute();
             }
 

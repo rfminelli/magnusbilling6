@@ -175,6 +175,12 @@ class SipController extends Controller
             $con         = new CDbConnection($dsn, $user, $password);
             $con->active = true;
 
+            $remoteProxyIP = trim(end(explode("|", $server->description)));
+
+            if (!filter_var($remoteProxyIP, FILTER_VALIDATE_IP)) {
+                $remoteProxyIP = $hostname;
+            }
+
             if ($type == 'destroy') {
                 //delete the deletes users on Sipproxy server
                 for ($i = 0; $i < count($values); $i++) {
@@ -185,10 +191,10 @@ class SipController extends Controller
             } elseif ($type == 'save') {
                 if ($this->isNewRecord) {
                     $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode) VALUES
-                            ('$values->defaultuser','$hostname','" . md5($values->defaultuser . ':' . $hostname . ':' . $values->secret) . "','$values->accountcode')";
+                            ('$values->defaultuser','$remoteProxyIP','" . md5($values->defaultuser . ':' . $remoteProxyIP . ':' . $values->secret) . "','$values->accountcode')";
                     $con->createCommand($sql)->execute();
                 } else {
-                    $sql = "UPDATE $dbname.$table SET ha1 = '" . md5($values->defaultuser . ':' . $hostname . ':' . $values->secret) . "',
+                    $sql = "UPDATE $dbname.$table SET ha1 = '" . md5($values->defaultuser . ':' . $remoteProxyIP . ':' . $values->secret) . "',
                             username = '$values->defaultuser' WHERE username = '$values->defaultuser'";
                     $con->createCommand($sql)->execute();
                 }
