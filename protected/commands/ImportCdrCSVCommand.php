@@ -37,20 +37,31 @@ class ImportCdrCSVCommand extends ConsoleCommand
 
         $con         = new CDbConnection($dsn, $user, $pass);
         $con->active = true;
+        $time        = time();
         if (file_exists('/var/log/asterisk/cdr-csv/MBilling_Success.csv')) {
 
-            exec("mv /var/log/asterisk/cdr-csv/MBilling_Success.csv /var/log/asterisk/cdr-csv/MBilling_Success_now.csv");
-            $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/MBilling_Success_now.csv' IGNORE INTO TABLE pkg_cdr FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,callerid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,buycost,sessionbill,sessiontime,real_sessiontime,agent_bill)";
-            Yii::app()->db->createCommand($sql)->execute();
-            exec("rm -rf /var/log/asterisk/cdr-csv/MBilling_Success_now.csv");
+            exec('mv /var/log/asterisk/cdr-csv/MBilling_Success.csv /var/log/asterisk/cdr-csv/MBilling_Success_' . $time . '.csv');
+            $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/MBilling_Success_" . $time . ".csv' IGNORE INTO TABLE pkg_cdr FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,callerid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,buycost,sessionbill,sessiontime,real_sessiontime,agent_bill)";
+            try {
+                Yii::app()->db->createCommand($sql)->execute();
+                exec("rm -rf /var/log/asterisk/cdr-csv/MBilling_Success_" . $time . ".csv");
+            } catch (Exception $e) {
+                print_r($e);
+            }
         }
 
         if (file_exists('/var/log/asterisk/cdr-csv/MBilling_Failed.csv')) {
 
-            exec("mv /var/log/asterisk/cdr-csv/MBilling_Failed.csv /var/log/asterisk/cdr-csv/MBilling_Failed_now.csv");
-            $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/MBilling_Failed_now.csv' IGNORE INTO TABLE pkg_cdr_failed FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,terminatecauseid,hangupcause)";
-            Yii::app()->db->createCommand($sql)->execute();
-            exec("rm -rf /var/log/asterisk/cdr-csv/MBilling_Failed_now.csv");
+            exec("mv /var/log/asterisk/cdr-csv/MBilling_Failed.csv /var/log/asterisk/cdr-csv/MBilling_Failed_" . $time . ".csv");
+            $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/MBilling_Failed_" . $time . ".csv' IGNORE INTO TABLE pkg_cdr_failed FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,terminatecauseid,hangupcause)";
+            try {
+                Yii::app()->db->createCommand($sql)->execute();
+                exec("rm -rf /var/log/asterisk/cdr-csv/MBilling_Failed_" . $time . ".csv");
+            } catch (Exception $e) {
+                print_r($e);
+
+            }
+
         }
 
         $con = null;
