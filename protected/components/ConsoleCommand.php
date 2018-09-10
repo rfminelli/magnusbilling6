@@ -42,11 +42,15 @@ class ConsoleCommand extends CConsoleCommand
             }
 
         }
-        if (Process::isActive()) {
-            $this->debug >= 1 ? MagnusLog::writeLog(LOGFILE, ' line:' . __LINE__ . " PROCESS IS ACTIVE ") : null;
-            die();
-        } else {
+        if ($this->debug > 0) {
             Process::activate();
+        } else {
+            if (Process::isActive()) {
+                $this->debug >= 1 ? MagnusLog::writeLog(LOGFILE, ' line:' . __LINE__ . " PROCESS IS ACTIVE ") : null;
+                die();
+            } else {
+                Process::activate();
+            }
         }
 
         $this->debug >= 1 ? MagnusLog::writeLog(LOGFILE, ' line:' . __LINE__ . " START " . strtoupper($this->getName()) . " COMMAND ") : null;

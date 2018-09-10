@@ -845,6 +845,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.3.4') {
+            $sql = " ALTER TABLE `pkg_call_online` CHANGE `duration` `duration` INT(11) NOT NULL DEFAULT '0';";
+            $this->executeDB($sql);
+
+            $version = '6.3.4';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

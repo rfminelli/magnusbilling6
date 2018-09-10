@@ -38,7 +38,7 @@ class CallChartCommand extends ConsoleCommand
             $total = 0;
             if (count($calls) > 0) {
 
-                if (isset($_GET['log'])) {
+                if ($this->debug > 1) {
 
                     echo '<pre>';
                     print_r($calls);
@@ -111,6 +111,10 @@ class CallChartCommand extends ConsoleCommand
                                 $trunk = preg_split("/\&/", $trunk);
                                 $trunk = explode("/", $trunk[0]);
 
+                            } else if (preg_match("/@/", $trunk)) {
+                                $trunk    = explode("@", $trunk);
+                                $trunk    = explode(",", $trunk[1]);
+                                $trunk[1] = $trunk[0];
                             } else {
                                 $trunk = explode("/", $trunk);
                             }
