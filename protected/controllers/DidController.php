@@ -61,6 +61,13 @@ class DidController extends Controller
 
     }
 
+    public function actionReadBuy()
+    {
+        $_GET['buy'] = 1;
+        parent::actionRead($asJson = true, $condition = null);
+
+    }
+
     public function extraFilterCustom($filter)
     {
         if (isset($_GET['buy'])) {
@@ -98,9 +105,6 @@ class DidController extends Controller
 
                 //discount credit of customer
                 $priceDid = $modelDid->connection_charge + $modelDid->fixrate;
-
-                $modelUser->credit += $priceDid;
-                $modelUser->save();
 
                 $modelDidUse              = new DidUse();
                 $modelDidUse->id_user     = $id_user;
