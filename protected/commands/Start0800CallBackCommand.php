@@ -67,7 +67,7 @@ class Start0800CallBackCommand extends ConsoleCommand
 
                 if (strlen($agent) < 2) {
                     echo "Nao tem agent livre para receber chamada\n";
-                    exit;
+                    continue;
                 }
 
                 echo "Agent $agent esta livre para receber chamadas\n";
@@ -78,7 +78,7 @@ class Start0800CallBackCommand extends ConsoleCommand
                 $call = "Channel: " . $dialstr . "\n";
                 $call .= "Callerid: " . $callback['exten'] . "\n";
                 $call .= "Context: billing\n";
-                $call .= "Extension: " . $agent . "\n";
+                $call .= "Extension: " . $callback['exten'] . "\n";
                 $call .= "Priority: 1\n";
                 $call .= "Set:IDUSER=" . $callback['id_user'] . "\n";
                 $call .= "Set:SECCALL=" . $callback['exten'] . "\n";
