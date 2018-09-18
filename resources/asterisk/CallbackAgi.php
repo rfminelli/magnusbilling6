@@ -250,7 +250,7 @@ class CallbackAgi
 
     public function advanced0800CallBack($agi, $MAGNUS, $DidAgi)
     {
-        $MAGNUS->prefix_local = $DidAgi->modelDid->prefix_local;
+        $MAGNUS->prefix_local = $MAGNUS->modelUser->prefix_local;
         $MAGNUS->CallerID     = preg_replace("/\+/", '', $MAGNUS->CallerID);
         $MAGNUS->number_translation($agi, $MAGNUS->CallerID);
         $callerID = $MAGNUS->destination;
