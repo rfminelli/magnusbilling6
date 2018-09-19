@@ -61,6 +61,7 @@ class Controller extends BaseController
             'pagHiper',
             'mercadoPago',
             'molPay',
+            'sms',
         );
         return in_array($this->controllerName, $allow);
     }
