@@ -62,7 +62,7 @@ class SmsSend
                 );
             }
 
-            $rateInitialClientAgent = $modelRate[0]->rateinitial;
+            $rateInitialClientAgent = $modelRate[0]['rateinitial'];
 
             $modelUserAgent = User::model()->findByPk((int) $modelUser->id_user);
 
