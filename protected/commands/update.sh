@@ -39,6 +39,7 @@ chown -R asterisk:asterisk /var/lib/php/session/
 chown -R asterisk:asterisk /var/spool/asterisk/outgoing/
 chown -R asterisk:asterisk /etc/asterisk
 chown -R asterisk:asterisk /var/www/html/mbilling
+chown -R asterisk:asterisk /var/lib/asterisk/moh/
 chmod -R 777 /tmp
 chmod -R 555 /var/www/html/mbilling/
 chmod -R 700 /var/www/html/mbilling/resources/reports 
