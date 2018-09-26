@@ -59,12 +59,10 @@ class CallChartCommand extends ConsoleCommand
                     $channel  = $call[0];
 
                     $status = $call[4];
-                    if (preg_match("/Congestion/", $status) || preg_match("/Busy/", $status)) {
+                    if ((preg_match("/Congestion/", $status) || preg_match("/Busy/", $status)) ||
+                        (preg_match('/Ring/', $status) && $call[11] > 60)
+                    ) {
                         AsteriskAccess::instance()->hangupRequest($channel);
-                        if (isset($_GET['log'])) {
-                            echo '145';
-                        }
-
                         continue;
                     }
                     $trunk         = null;

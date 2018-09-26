@@ -21,7 +21,6 @@ class CallOnLineController extends Controller
     public $extraValues    = array('idUser' => 'username,credit');
 
     public $fieldsInvisibleClient = array(
-        'canal',
         'tronco',
     );
 
