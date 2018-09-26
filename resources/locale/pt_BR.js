@@ -39,7 +39,7 @@ Locale.load({
     'Permissions': 'Permissões',
     'The system will reload in 3 seconds': 'O sistema será recaregado para aplicar as novas permissões',
     'mobile': 'Celular',
-    'idUser.username': 'Usuário',
+    'User to client login into the panel.': 'Usuário para logar no painel de cliente.',
     'Add New Service': 'Adicionar novo serviço',
     'Please Select only a record': 'Por favor selecione somente um registro',
     'This Service alread is canceled': 'Este servico ja esta cancelado',
