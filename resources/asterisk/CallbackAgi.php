@@ -248,7 +248,7 @@ class CallbackAgi
         }
     }
 
-    public function advanced0800CallBack($agi, $MAGNUS, $DidAgi)
+    public function advanced0800CallBack($agi, $MAGNUS, $DidAgi, $CalcAgi)
     {
         $MAGNUS->prefix_local = $MAGNUS->modelUser->prefix_local;
         $MAGNUS->CallerID     = preg_replace("/\+/", '', $MAGNUS->CallerID);
@@ -293,7 +293,13 @@ class CallbackAgi
             } else {
                 $agi->answer();
                 $agi->execute('Wait', '1');
+                $time            = time();
+                $MAGNUS->id_user = $MAGNUS->modelUser->id;
+                $MAGNUS->id_plan = $MAGNUS->modelUser->id_plan;
+                $DidAgi->didCallCost($agi, $MAGNUS);
                 $agi->stream_file($audio, '#');
+                $answeredtime = time() - $time;
+                $DidAgi->call_did_billing($agi, $MAGNUS, $CalcAgi, $answeredtime, 'ANSWER');
             }
         }
 

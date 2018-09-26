@@ -25,7 +25,7 @@ class QueueAgi
         $agi->verbose("Queue module", 5);
 
         if ($DidAgi->modelDid->cbr == 1) {
-            CallbackAgi::advanced0800CallBack($agi, $MAGNUS, $DidAgi);
+            CallbackAgi::advanced0800CallBack($agi, $MAGNUS, $DidAgi, $CalcAgi);
         }
 
         $agi->answer();
