@@ -121,9 +121,10 @@ class IvrAgi
             if ($optionType == 'sip') // QUEUE
             {
                 $agi->verbose('Sip call, active insertCDR', 25);
-                $insertCDR = true;
-                $sql       = "SELECT name, dial_timeout FROM pkg_sip WHERE id = $optionValue LIMIT 1";
-                $modelSip  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                $insertCDR           = true;
+                $sql                 = "SELECT name, dial_timeout, record_call FROM pkg_sip WHERE id = $optionValue LIMIT 1";
+                $modelSip            = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                $MAGNUS->record_call = $modelSip->record_call;
 
                 $dialparams = $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
                 $dialparams = str_replace("%timeout%", 3600, $dialparams);
