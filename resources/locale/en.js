@@ -132,7 +132,7 @@ Locale.load({
     'confirmExitSystem': 'Do you really want to leave the system?',
     'confirmPassword': 'Confirm Password',
     'connectcharge': 'Cost Connect',
-    'connection_charge': 'Cost Connection',
+    'connection_charge': 'Activation cost',
     'contacorrente': 'Bank Account',
     'contains': 'contains',
     'context': 'Context',
