@@ -133,7 +133,7 @@ class ServicesProcess
                 //desativa gravacoes se o usuario ficar com espaço em disco menor que 1
                 if ($method != 'activation' &&
                     ($modelServicesUse->idUser->disk_space - $modelServicesUse->idServices->disk_space < 1)) {
-                    $modelSip = Sip::model()->findAll('id_user = :key',
+                    $modelSip = Sip::model()->find('id_user = :key',
                         array(':key' => $modelServicesUse->id_user)
                     );
                     $modelSip->record_call = 0;
