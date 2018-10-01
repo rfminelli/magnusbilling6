@@ -854,6 +854,16 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.3.4') {
+            $sql = "ALTER TABLE `pkg_trunk` CHANGE `directmedia` `directmedia` CHAR(10) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'no';
+            ALTER TABLE `pkg_sip` CHANGE `directmedia` `directmedia` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'no';";
+            $this->executeDB($sql);
+
+            $version = '6.3.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+        s
     }
 
     public function executeDB($sql)

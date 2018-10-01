@@ -118,6 +118,10 @@ class BuyCreditController extends Controller
                 }
             }
 
+            if ($modelServicesUse[0]->idUser->typepaid == 1) {
+                $modelServicesUse[0]->idUser->credit = $modelServicesUse[0]->idUser->credit;+$modelServicesUse[0]->idUser->creditlimit;
+            }
+
             if (!count($modelServicesUse)) {
                 $this->render('payservicelink', array(
                     'model'   => $model,
@@ -160,6 +164,10 @@ class BuyCreditController extends Controller
             $total = floatval($total[1]);
 
             if (isset($_POST['ServicesUse']['use_credit']) && $_POST['ServicesUse']['use_credit'] == 1) {
+
+                if ($modelServicesUse[0]->idUser->typepaid == 1) {
+                    $modelServicesUse[0]->idUser->credit = $modelServicesUse[0]->idUser->credit + $modelServicesUse[0]->idUser->creditlimit;
+                }
 
                 if ($modelServicesUse[0]->idUser->credit >= $total) {
                     ServicesProcess::activation(array(
@@ -217,6 +225,10 @@ class BuyCreditController extends Controller
 
         $modelMethodPay = Methodpay::model()->findAll('id_user = :key AND active = 1',
             array(':key' => $modelServicesUse[0]->idUser->id_user));
+
+        if ($modelServicesUse[0]->idUser->typepaid == 1) {
+            $modelServicesUse[0]->idUser->credit = $modelServicesUse[0]->idUser->credit + $modelServicesUse[0]->idUser->creditlimit;
+        }
 
         $this->render('payservicelink', array(
             'model'            => $model,
