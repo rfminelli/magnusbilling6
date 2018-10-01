@@ -543,7 +543,9 @@ class DidAgi
 
     public function call_did_billing(&$agi, &$MAGNUS, &$CalcAgi, $answeredtime, $dialstatus)
     {
-        if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {
+        if ($answeredtime > 0) {
+            $terminatecauseid = 1;
+        } else if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {
             $terminatecauseid = $MAGNUS->dialstatus_rev_list[$dialstatus];
         } else {
             $terminatecauseid = 0;
