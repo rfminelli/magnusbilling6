@@ -34,7 +34,12 @@ class CallChartCommand extends ConsoleCommand
         for ($i = 0; $i < 12; $i++) {
             $success = CallOnLine::model()->deleteAll();
 
-            $calls = AsteriskAccess::getCoreShowChannels();
+            try {
+                $calls = AsteriskAccess::getCoreShowChannels();
+            } catch (Exception $e) {
+                continue;
+            }
+
             $total = 0;
             if (count($calls) > 0) {
 
