@@ -91,20 +91,23 @@ class VoucherController extends Controller
             ));
         } else {
 
-            $values = array_key_exists($this->nameRoot, $_POST) ? json_decode($_POST[$this->nameRoot], true) : $_POST;
-
+            $values = $this->getAttributesRequest();
             if (isset($values['quantity']) && $values['quantity'] > 1) {
                 for ($i = 0; $i < $values['quantity']; $i++) {
 
                     $voucher                    = $this->geraVoucher();
-                    $modelVoucher               = $this->instanceModel;
+                    $modelVoucher               = new Voucher();
                     $modelVoucher->id_plan      = $values['id_plan'];
                     $modelVoucher->voucher      = $voucher;
                     $modelVoucher->credit       = $values['credit'];
                     $modelVoucher->tag          = $values['tag'];
                     $modelVoucher->language     = $values['language'];
                     $modelVoucher->prefix_local = $values['prefix_local'];
-                    $modelVoucher->save();
+                    try {
+                        $modelVoucher->save();
+                    } catch (Exception $e) {
+                        //print_r($e);
+                    }
                 }
 
                 $newRecord = $this->abstractModel->findAll(array(
