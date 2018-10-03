@@ -456,7 +456,8 @@ fi
 cd /var/www/html/mbilling
 
 echo $'[billing]
-exten => _.,1,AGI("/var/www/html/mbilling/resources/asterisk/mbilling.php")
+exten => _[*0-9].,1,AGI("/var/www/html/mbilling/resources/asterisk/mbilling.php")
+  same => n,Hangup()
 
 exten => h,1,hangup()
 

@@ -29,7 +29,30 @@ class PickupAgi
 
             $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup extension ' . substr($MAGNUS->dnid, 2), 1);
 
-            $agi->execute('Pickup', substr($MAGNUS->dnid, 2));
+            $asmanager = new AGI_AsteriskManager();
+            $asmanager->connect('localhost', 'magnus', 'magnussolution');
+
+            $calls = $asmanager->command("core show channels concise");
+            $asmanager->disconnect();
+
+            $sip      = substr($MAGNUS->dnid, 2);
+            $sql      = "SELECT * FROM pkg_sip WHERE name = '" . $sip . "' LIMIT 1";
+            $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            $channelsData = explode("\n", $calls["data"]);
+            $channel      = '';
+            foreach ($channelsData as $key => $line) {
+                if (preg_match("/^SIP\/($sip)-/", $line) && preg_match("/Ringing/", $line)) {
+                    $channel = explode("!", $line);
+                    $channel = $channel[2];
+                    break;
+                }
+            }
+            if (strlen($channel) > 2) {
+                $agi->verbose("pickup channel $channel");
+                $agi->execute('Pickup', $channel);
+            }
+
         } else {
             $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup from another user extension ' . substr($MAGNUS->dnid, 2), 1);
         }
