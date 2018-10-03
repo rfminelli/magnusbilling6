@@ -143,7 +143,7 @@ Help.load({
     'servicesuse.price': '',
     'servicesuse.method': '',
     //SERVERS
-    'servers.host': '',
+    'servers.host': 'This menu is exclusivity to companies that user MagnusBilling slave or proxy servers.',
     'servers.username': '',
     'servers.password': '',
     'servers.port': '',
@@ -205,13 +205,13 @@ Help.load({
     'queue.ring_or_moh': '',
     'queue.musiconhold': '',
     //PROVIDER
-    'provider.provider_name': '',
-    'provider.credit': '',
-    'provider.credit_control': '',
+    'provider.provider_name': 'Provider name',
+    'provider.credit': 'How much credit do you have in your provider account? This field is not necessary.',
+    'provider.credit_control': 'If you set to YES and your provider credit is < 0, all trunks from this provider will be inactived',
     'provider.description': '',
     //PREFIX
-    'prefix.prefix': '',
-    'prefix.destination': '',
+    'prefix.prefix': 'Prefix code. Prefix will be used to add tariff to bill calls',
+    'prefix.destination': 'Destination name to above prefix',
     //PLAN
     'plan.name': '',
     'plan.lcrtype': 'How will order the tariffs if found more than one tariff to the same prefix? Load balancer will use RAND function to balancer call between all found tariffs.',
