@@ -863,6 +863,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+
+        if ($version == '6.3.5') {
+            $sql = "INSERT INTO pkg_configuration VALUES (NULL, 'Show fields help', 'show_filed_help', '0', 'Show fields help', 'global', '1')";
+            $this->executeDB($sql);
+
+            $version = '6.3.6';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
     }
 
     public function executeDB($sql)

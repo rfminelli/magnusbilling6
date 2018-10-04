@@ -481,6 +481,7 @@ Locale.load({
     'sunStart': 'Sun Start',
     'sunStop': 'Sun Stop',
     'send': 'Send',
+    'sent': 'Sent',
     'sms': 'SMS',
     'sms_res': 'SMS Response',
     'subject': 'Subject',
