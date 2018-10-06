@@ -431,13 +431,14 @@ installEn() {
 installEs() {
   clear
   language='es'
-  cp -n /var/www/html/mbilling/resources/sounds/es/* /var/lib/asterisk/sounds
+  mkdir -p /var/lib/asterisk/sounds/es
   cd /var/lib/asterisk/sounds/es
   wget -O core.zip http://www.asterisksounds.org/es-ar/download/asterisk-sounds-core-es-AR-sln16.zip
   wget -O extra.zip http://www.asterisksounds.org/es-ar/download/asterisk-sounds-extra-es-AR-sln16.zip
   unzip core.zip
   unzip extra.zip
   chown -R asterisk.asterisk /var/lib/asterisk/sounds/es
+  cp -n /var/www/html/mbilling/resources/sounds/es/* /var/lib/asterisk/sounds
 }
 
 
@@ -461,7 +462,7 @@ exten => _[*0-9].,1,AGI("/var/www/html/mbilling/resources/asterisk/mbilling.php"
 
 exten => h,1,hangup()
 
-exten => 111,1,VoiceMailMain(${SIPCHANINFO(peername)}@billing)
+exten => 111,1,VoiceMailMain(${CHANNEL(peername)}@billing)
   same => n,Hangup()
 
 ' > /etc/asterisk/extensions_magnus.conf
