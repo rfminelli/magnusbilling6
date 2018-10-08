@@ -53,7 +53,7 @@ class Ivr extends Model
     public function rules()
     {
         return array(
-            array('id_user', 'numerical', 'integerOnly' => true),
+            array('id_user, direct_extension', 'numerical', 'integerOnly' => true),
             array('monFriStart, monFriStop, satStart, satStop, sunStart, sunStop', 'length', 'max' => 5),
             array('name, option_0, option_1, option_2, option_3, option_4, option_5, option_6, option_7, option_8, option_9, option_10', 'length', 'max' => 50),
             array('option_out_0, option_out_1, option_out_2, option_out_3, option_out_4, option_out_5, option_out_6, option_out_7, option_out_8, option_out_9, option_out_10', 'length', 'max' => 50),

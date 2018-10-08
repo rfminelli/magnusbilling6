@@ -87,7 +87,7 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
     $operators,
     array(
         'empty'    => Yii::t('yii', 'Select the operator'),
-        'options'  => array(isset($_POST['TransferToMobile']['operator_name']) ? $_POST['TransferToMobile']['operator_name'] : null => array('selected' => true)),
+        'options'  => array(isset($_POST['TransferToMobile']['operator_name']) && strlen($_POST['TransferToMobile']['operator_name']) > 2 ? $_POST['TransferToMobile']['operator_name'] : null => array('selected' => true)),
         'onchange' => 'showProducts()',
         'id'       => 'operatorfield',
     )

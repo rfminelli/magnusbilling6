@@ -48,7 +48,7 @@ class SendCreditSummaryController extends Controller
             : 1;
         }
 
-        $this->filter = 'confirmed = 1 ';
+        $this->filter = 'confirmed = 1 AND earned IS NOT NULL ';
         if (isset($_POST['SendCreditSummary']['id']) && $_POST['SendCreditSummary']['id'] > 1) {
             $this->filter .= ' AND id_user = :id_user';
             $this->paramsFilter['id_user'] = $_POST['SendCreditSummary']['id'];

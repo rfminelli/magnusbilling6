@@ -88,9 +88,21 @@ class IvrAgi
                 $continue = false;
                 break;
             }
-            $audio = $MAGNUS->magnusFilesDirectory . '/sounds/' . $audioURA . $DidAgi->modelDestination[0]['id_ivr'];
+            $audio         = $MAGNUS->magnusFilesDirectory . '/sounds/' . $audioURA . $DidAgi->modelDestination[0]['id_ivr'];
+            $digit_timeout = 1;
+            $wait_time     = 3000;
+
+            if ($modelIvr->direct_extension == 1) {
+                $sql            = "SELECT name FROM pkg_sip WHERE name REGEXP '^[0-9]*$' ORDER BY LENGTH(name) DESC LIMIT 1";
+                $modelSipDirect = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                if (isset($modelSipDirect->name)) {
+                    $digit_timeout       = strlen($modelSipDirect->name);
+                    $wait_time           = 6000;
+                    $is_direct_extention = true;
+                }
+            }
             if (file_exists($audio . ".gsm") || file_exists($audio . ".wav")) {
-                $res_dtmf = $agi->get_data($audio, 3000, 1);
+                $res_dtmf = $agi->get_data($audio, $wait_time, $digit_timeout);
                 $option   = $res_dtmf['result'];
             } else {
                 $agi->verbose('NOT EXIST AUDIO TO IVR DEFAULT OPTION ' . $audio, 5);
@@ -105,6 +117,53 @@ class IvrAgi
                 $option     = '10';
                 $continue   = false;
                 $insertCDR  = true;
+            } else if (isset($is_direct_extention) && $is_direct_extention == 1 && strlen($option) > 1) {
+                $agi->verbose('Dial to expecific SIP ACCOUNT', 5);
+
+                $sql      = "SELECT name, dial_timeout, record_call FROM pkg_sip WHERE name = $option LIMIT 1";
+                $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                if (isset($modelSip->name)) {
+
+                    $MAGNUS->record_call = $modelSip->record_call;
+
+                    $dialparams = $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
+                    $dialparams = str_replace("%timeout%", 3600, $dialparams);
+                    $dialparams = str_replace("%timeoutsec%", 3600, $dialparams);
+
+                    $dialparams = explode(',', $dialparams);
+                    if (isset($dialparams[1])) {
+                        $dialparams[1] = $modelSip->dial_timeout;
+                    }
+                    $dialparams = implode(',', $dialparams);
+
+                    $dialstr = 'SIP/' . $modelSip->name . $dialparams;
+                    $agi->verbose($dialstr, 25);
+                    $MAGNUS->sip_account = $modelSip->name;
+                    $MAGNUS->startRecordCall($agi);
+                    $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+                    $MAGNUS->run_dial($agi, $dialstr);
+
+                    $dialstatus      = $agi->get_variable("DIALSTATUS");
+                    $dialstatus      = $dialstatus['data'];
+                    $sql             = "SELECT * FROM pkg_sip WHERE name = '$modelSip->name' LIMIT 1";
+                    $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                    if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
+                        $agi->verbose(" SIP HAVE callForward " . $modelSip->name);
+                        SipCallAgi::callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
+                        $MAGNUS->hangup($agi);
+                    }
+
+                    $agi->verbose("FIM do loop", 25);
+
+                    $continue  = false;
+                    $insertCDR = true;
+                } else {
+                    $agi->verbose('NUMBER EXTENTION');
+                    $agi->stream_file('prepaid-invalid-digits', '#');
+                    continue;
+                }
+
             }
             //se marca uma opÃ§ao que esta em branco
             else if ($modelIvr->{$optionName . $option} == '') {

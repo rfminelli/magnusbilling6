@@ -231,13 +231,18 @@ class TransferToMobileController extends Controller
     public function updateDataBase()
     {
 
-        $profit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
-        SendCreditSummary::model()->updateByPk($this->send_credit_id, array(
-            'profit' => $this->modelTransferToMobile->{$profit},
-            'amount' => $this->cost,
-            'sell'   => number_format($this->sell_price, 2),
-            'earned' => number_format($this->sell_price - $this->user_cost, 2),
-        ));
+        if ($this->sell_price > 0 && $this->user_cost > 0) {
+
+            $profit = 'transfer_' . $_POST['TransferToMobile']['method'] . '_profit';
+            SendCreditSummary::model()->updateByPk($this->send_credit_id, array(
+                'profit' => $this->modelTransferToMobile->{$profit},
+                'amount' => $this->cost,
+                'sell'   => number_format($this->sell_price, 2),
+                'earned' => number_format($this->sell_price - $this->user_cost, 2),
+            ));
+        } else {
+            SendCreditSummary::model()->deleteByPk($this->send_credit_id);
+        }
     }
 
     public function sendActionTransferToMobile($action, $product = null)
@@ -460,11 +465,12 @@ error_txt=Transaction successful';
 
         $this->calculateCost($product);
 
+        $this->addInDataBase();
+
         if ($this->test == true) {
             echo "REMOVE " . $this->user_cost . " from user " . $this->modelTransferToMobile->username . "<br>";
         }
 
-        $this->addInDataBase();
         if ($this->modelTransferToMobile->method == 'international') {
 
             if ($modelSendCreditRates->idProduct->provider == 'Ding') {
@@ -658,29 +664,33 @@ error_txt=Transaction successful';
                     exit;
                 }
 
-                //VOBR
-                //request provider code to ding and chech if exist products to Ding
-                $operatorid              = DingConnect::getProviderCode($_POST['TransferToMobile']['number']);
+                $result = $this->sendActionTransferToMobile('msisdn_info');
+                //print_r($result);
+                if (preg_match("/Transaction successful/", $result)) {
+                    $resultArray = explode("\n", $result);
+                    $operatorid  = trim(end(explode('=', $resultArray[3])));
+                } else {
+                    //echo "Not foun product from TrasnferRo, try ding";
+                    //request provider code to ding and chech if exist products to Ding
+                    $operatorid = DingConnect::getProviderCode($_POST['TransferToMobile']['number']);
+                }
+                //find products whit trasnferto operatorid
                 $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_id = :key AND status = 1', array(':key' => $operatorid));
 
-                if (strlen($operatorid) < 1 || !count($modelSendCreditProducts)) {
-                    //no exists any product with this operator ID in ding, Find in TrasnferTo
-                    $result = $this->sendActionTransferToMobile('msisdn_info');
-                    if (preg_match("/Transaction successful/", $result)) {
-                        $resultArray = explode("\n", $result);
-                        $operatorid  = trim(end(explode('=', $resultArray[3])));
-                        //find products whit trasnferto operatorid
-                        $modelSendCreditProducts = SendCreditProducts::model()->findAll('operator_id = :key AND status = 1', array(':key' => $operatorid));
-                    } else {
-                        //not receive Operator ID FROM API. API OFF LINE. GET operator from country_code
-                        $numberFormate           = $_POST['TransferToMobile']['number'];
-                        $numberFormate           = substr($numberFormate, 0, 2) == '00' ? substr($numberFormate, 2) : $numberFormate;
-                        $modelSendCreditProducts = SendCreditProducts::model()->findAll('country_code = SUBSTRING(:key,1,length(country_code)) AND status = 1',
-                            array(
-                                ':key' => $numberFormate,
-                            ));
-                    }
+                if (!count($modelSendCreditProducts)) {
+
+                    //not receive Operator ID FROM API. API OFF LINE. GET operator from country_code
+                    $numberFormate           = $_POST['TransferToMobile']['number'];
+                    $numberFormate           = substr($numberFormate, 0, 2) == '00' ? substr($numberFormate, 2) : $numberFormate;
+                    $modelSendCreditProducts = SendCreditProducts::model()->findAll('country_code = SUBSTRING(:key,1,length(country_code)) AND status = 1',
+                        array(
+                            ':key' => $numberFormate,
+                        ));
+                    $forceOperatorSelect = true;
+                    // echo $modelSendCreditProducts[0]->id . ' ' . $modelSendCreditProducts[0]->country_code;
+
                 }
+
                 if (!count($modelSendCreditProducts)) {
 
                     echo '<div align=center id="container">';
@@ -725,12 +735,12 @@ error_txt=Transaction successful';
                     $i++;
                 }
 
-                Yii::app()->session['amounts']      = $values;
+                Yii::app()->session['amounts']      = isset($forceOperatorSelect) ? array() : $values;
                 Yii::app()->session['operatorId']   = $operatorid;
                 Yii::app()->session['ids_products'] = $ids_products;
 
                 $this->modelTransferToMobile->country  = $modelSendCreditProducts[0]->country;
-                $this->modelTransferToMobile->operator = $modelSendCreditProducts[0]->operator_name;
+                $this->modelTransferToMobile->operator = isset($forceOperatorSelect) ? '' : $modelSendCreditProducts[0]->operator_name;
 
                 return $this->modelTransferToMobile;
 
