@@ -245,6 +245,7 @@ class UserController extends Controller
 
     public function afterSave($model, $values)
     {
+
         if ($model->idGroup->idUserType->id == 3) {
             $modelSip = $this->isNewRecord ?
             new Sip() :
@@ -268,6 +269,12 @@ class UserController extends Controller
             }
 
             AsteriskAccess::instance()->generateSipPeers();
+        }
+
+        if (isset($values['record_call'])) {
+            Sip::model()->updateAll(array('record_call' => $values['record_call']), 'id_user = :key',
+                array(':key' => $model->id));
+
         }
 
         if (!$this->isNewRecord && isset($model->id_group_agent) && $model->id_group_agent > 1) {
