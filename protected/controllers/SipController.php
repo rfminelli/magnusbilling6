@@ -141,7 +141,7 @@ class SipController extends Controller
     public function afterUpdateAll($strIds)
     {
         if ($_SERVER['HTTP_HOST'] != 'localhost') {
-            $this->sipShowPeers = AsteriskAccess::getSipShowPeers();
+            AsteriskAccess::instance()->generateSipPeers();
         }
         return;
     }
