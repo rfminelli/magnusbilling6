@@ -124,7 +124,9 @@ class TrunkController extends Controller
 
     public function generateSipFile()
     {
-
+        if ($_SERVER['HTTP_HOST'] == 'localhost') {
+            return;
+        }
         $select = 'trunkcode, user, secret, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, fromdomain,fromuser, register_string,port,transport,encryption';
         $model  = Trunk::model()->findAll(
             array(
@@ -150,6 +152,12 @@ class TrunkController extends Controller
             AsteriskAccess::instance()->writeAsteriskFile($model, '/etc/asterisk/iax_magnus.conf', 'trunkcode');
         }
 
+    }
+
+    public function afterUpdateAll($strIds)
+    {
+        $this->generateSipFile();
+        return;
     }
 
     public function afterSave($model, $values)
