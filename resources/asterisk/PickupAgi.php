@@ -44,13 +44,13 @@ class PickupAgi
             foreach ($channelsData as $key => $line) {
                 if (preg_match("/^SIP\/($sip)-/", $line) && preg_match("/Ringing/", $line)) {
                     $channel = explode("!", $line);
-                    $channel = $channel[2];
+                    $channel = $channel[0];
                     break;
                 }
             }
             if (strlen($channel) > 2) {
                 $agi->verbose("pickup channel $channel");
-                $agi->execute('Pickup', $channel);
+                $agi->execute('PickupChan', $channel);
             }
 
         } else {
