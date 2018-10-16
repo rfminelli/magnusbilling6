@@ -19,57 +19,15 @@ class CallSummaryPerTrunkController extends Controller
 {
     public $config;
     public $attributeOrder = 't.id_trunk DESC';
-    public $group          = 't.id_trunk';
-    public $select         = 'SQL_CACHE t.id, t.id_trunk, starttime, c.trunkcode AS idTrunktrunkcode,
-            sum(sessionbill) AS sessionbill,
-            count(*) as nbcall,
-            sum(buycost) AS buycost
-            ';
-    public $join = 'JOIN pkg_trunk c ON t.id_trunk = c.id';
+    public $extraValues    = array('idTrunk' => 'trunkcode');
+    public $join           = 'JOIN pkg_trunk c ON t.id_trunk = c.id';
 
-    public $fieldsInvisibleClient = array(
-        'id',
-        'id_user_package_offer',
-        'id_did',
-        'id_prefix',
-        'id_ratecard',
-        'id_tariffgroup',
-        'id_trunk',
-        'real_sessiontime',
-        'root_cost',
-        'sipiax',
-        'src',
-        'markup',
-        'calledstation',
-        'idTrunktrunkcode',
-        'id_user',
-        'id_user',
-        'lucro',
-        'sumlucro',
-        'sumbuycost',
-        'buycost',
-    );
-
-    public $fieldsInvisibleAgent = array(
-        'uniqueid',
-        'id',
-        'id_user_package_offer',
-        'id_did',
-        'id_prefix',
-        'id_ratecard',
-        'id_tariffgroup',
-        'id_trunk',
-        'real_sessiontime',
-        'root_cost',
-        'sipiax',
-        'src',
-        'markup',
-        'calledstation',
-        'idTrunktrunkcode',
-        'id_user',
-        'id_user',
-        'sumlucro',
-        'sumbuycost',
+    public $fieldsFkReport = array(
+        'id_trunk' => array(
+            'table'       => 'pkg_trunk',
+            'pk'          => 'id',
+            'fieldReport' => 'trunkcode',
+        ),
     );
 
     public function init()
@@ -77,39 +35,42 @@ class CallSummaryPerTrunkController extends Controller
 
         $this->instanceModel = new CallSummaryPerTrunk;
         $this->abstractModel = CallSummaryPerTrunk::model();
-        $this->titleReport   = Yii::t('yii', 'Calls Summary per trunk');
+        $this->titleReport   = Yii::t('yii', 'Calls summary per trunk');
         parent::init();
 
-        if (Yii::app()->session['isAgent'] == 2) {
-            $this->select = 'SQL_CACHE t.id, t.id_user, starttime, c.username AS idUserusername,
-            sum(agent_bill) AS sessionbill,
-            count(*) as nbcall,
-            sum(sessionbill) AS buycost';
-        } else if (Yii::app()->session['isClientAgent'] == true) {
-            $this->select = 'SQL_CACHE t.id, t.id_user, starttime, c.username AS idUserusername,
-            sum(agent_bill) AS sessionbill,
-            count(*) as nbcall';
+    }
+
+    public function recordsExtraSum($records = array())
+    {
+        foreach ($records as $key => $value) {
+            $records[0]->sumsessiontime += $value['sessiontime'] / 60;
+            $records[0]->sumsessionbill += $value['sessionbill'];
+            $records[0]->sumbuycost += $value['buycost'];
+            $records[0]->sumaloc_all_calls += $value['sessiontime'] / $value['nbcall'];
+            $records[0]->sumnbcall += $value['nbcall'];
+            $records[0]->sumnbcallfail += $value['nbcall_fail'];
         }
 
+        $this->nameSum = 'sum';
+
+        return $records;
     }
 
     public function getAttributesModels($models, $itemsExtras = array())
     {
         $attributes = false;
         foreach ($models as $key => $item) {
-            $attributes[$key]                     = $item->attributes;
-            $attributes[$key]['nbcall']           = $item->nbcall;
-            $attributes[$key]['day']              = $item->day;
-            $attributes[$key]['lucro']            = $item->sessionbill - $item->buycost;
-            $attributes[$key]['sessiontime']      = $item->sessiontime / 60;
-            $attributes[$key]['aloc_all_calls']   = $item->aloc_all_calls;
-            $attributes[$key]['sumsessionbill']   = $item->sumsessionbill;
-            $attributes[$key]['sumbuycost']       = $item->sumbuycost;
-            $attributes[$key]['sumlucro']         = $item->sumlucro;
-            $attributes[$key]['sumnbcall']        = $item->sumnbcall;
-            $attributes[$key]['idUserusername']   = $item->idUserusername;
-            $attributes[$key]['idTrunktrunkcode'] = $item->idTrunktrunkcode;
-
+            $attributes[$key]                   = $item->attributes;
+            $attributes[$key]['nbcall']         = $item->nbcall;
+            $attributes[$key]['lucro']          = $item->sessionbill - $item->buycost;
+            $attributes[$key]['sessiontime']    = $item->sessiontime / 60;
+            $attributes[$key]['aloc_all_calls'] = $item->aloc_all_calls;
+            $attributes[$key]['sumsessionbill'] = $item->sumsessionbill;
+            $attributes[$key]['sumbuycost']     = $item->sumbuycost;
+            $attributes[$key]['sumlucro']       = $item->sumsessionbill - $item->sumbuycost;
+            $attributes[$key]['sumnbcall']      = $item->sumnbcall;
+            $attributes[$key]['sumsessiontime'] = $item->sumsessiontime;
+            $attributes[$key]['sumnbcallfail']  = $item->sumnbcallfail;
             if (isset(Yii::app()->session['idClient']) && Yii::app()->session['idClient']) {
                 foreach ($this->fieldsInvisibleClient as $field) {
                     unset($attributes[$key][$field]);
@@ -142,53 +103,6 @@ class CallSummaryPerTrunkController extends Controller
         }
 
         return $attributes;
-    }
-
-    public function filterReplace($filter)
-    {
-
-        if (preg_match('/c.username/', $filter)) {
-            if (!preg_match("/JOIN pkg_user/", $this->join)) {
-                $this->join .= ' LEFT JOIN pkg_user c ON t.id_user = c.id';
-            }
-
-            $filter = preg_replace('/c.username/', "c.username", $filter);
-        }
-
-        if (preg_match('/pkg_trunk.trunkcode/', $filter)) {
-            if (!preg_match("/JOIN pkg_trunk/", $this->join)) {
-                $this->join .= ' LEFT JOIN pkg_trunk ON t.id_trunk = pkg_trunk.id';
-            }
-
-        }
-
-        return $filter;
-    }
-
-    public function extraFilterCustom($filter)
-    {
-
-        //is agent, get only agent customers
-        if (Yii::app()->session['user_type'] == 2) {
-            $filter .= ' AND t.id_user IN (SELECT id FROM pkg_user WHERE id_user = :dfby)  ';
-            $this->paramsFilter[':dfby'] = Yii::app()->session['id_user'];
-        } else if (Yii::app()->session['user_type'] == 3) {
-            $filter .= ' AND t.id_user =  :dfby';
-            $this->paramsFilter[':dfby'] = Yii::app()->session['id_user'];
-        }
-
-        if (!Yii::app()->session['isClient']) {
-            $summary_per_user_days = $this->config['global']['summary_per_user_days'] * -1;
-            if (!preg_match("/starttime/", $filter)) {
-                $filter .= " AND starttime > :dfby ";
-                $this->paramsFilter[':dfby'] = date('Y-m-d', strtotime("$summary_per_user_days days"));
-            }
-        } else {
-            $filter .= " AND c.id_user < :dfby4";
-            $this->paramsFilter[':dfby4'] = 2;
-        }
-
-        return $filter;
     }
 
     public function actionCsv()
@@ -234,7 +148,7 @@ class CallSummaryPerTrunkController extends Controller
 
         $sql = "SELECT SQL_CACHE c.trunkcode AS idTrunktrunkcode,  count(*) as nbcall,
             sum(buycost) AS buycost, sum(sessionbill) AS sessionbill INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
-                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter GROUP BY id_trunk";
+                FROM pkg_cdr t $this->join WHERE $this->filter GROUP BY id_trunk";
         $command = Yii::app()->db->createCommand($sql);
         if (count($this->paramsFilter)) {
             foreach ($this->paramsFilter as $key => $value) {
@@ -255,7 +169,7 @@ class CallSummaryPerTrunkController extends Controller
         }
 
     }
-     public function actionExportCsvCalls()
+    public function actionExportCsvCalls()
     {
 
         if (!Yii::app()->session['isAdmin']) {
@@ -279,7 +193,7 @@ class CallSummaryPerTrunkController extends Controller
         $this->join = 'JOIN pkg_user u ON t.id_user = u.id ';
         $this->join .= 'JOIN pkg_trunk r ON t.id_trunk = r.id ';
         $sql = "SELECT " . $columns . "  INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
-                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
+                FROM pkg_cdr t $this->join WHERE $this->filter";
 
         $command = Yii::app()->db->createCommand($sql);
         if (count($this->paramsFilter)) {
@@ -299,6 +213,36 @@ class CallSummaryPerTrunkController extends Controller
         if (readfile($pathCsv)) {
             unlink($pathCsv);
         }
+
+    }
+
+    public function actionClear()
+    {
+        # recebe os parametros para o filtro
+        if (isset($_POST['filter']) && strlen($_POST['filter']) > 5) {
+            $filter = $_POST['filter'];
+        } else {
+            echo json_encode(array(
+                $this->nameSuccess => false,
+                $this->nameMsg     => 'Por favor realizar um filtro para reprocesar',
+            ));
+            exit;
+        }
+        $filter = $filter ? $this->createCondition(json_decode($filter)) : '';
+
+        $filter = preg_replace("/t\./", '', $filter);
+
+        Trunk::model()->updateAll(array(
+            'call_answered'  => 0,
+            'call_total'     => 0,
+            'secondusedreal' => 0,
+
+        ), $filter, $this->paramsFilter);
+
+        echo json_encode(array(
+            $this->nameSuccess => true,
+            $this->nameMsg     => $this->msgSuccess,
+        ));
 
     }
 

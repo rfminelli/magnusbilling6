@@ -15,16 +15,26 @@
  * 17/08/2012
  */
 
-class CallSummaryController extends Controller
+class CallSummaryMonthTrunkController extends Controller
 {
-    public $attributeOrder = 'day DESC';
+    public $attributeOrder = 'month DESC';
+
+    public $extraValues = array('idTrunk' => 'trunkcode');
+
+    public $fieldsFkReport = array(
+        'id_trunk' => array(
+            'table'       => 'pkg_trunk',
+            'pk'          => 'id',
+            'fieldReport' => 'trunkcode',
+        ),
+    );
 
     public function init()
     {
 
-        $this->instanceModel = new CallSummary;
-        $this->abstractModel = CallSummary::model();
-        $this->titleReport   = Yii::t('yii', 'Calls Summary');
+        $this->instanceModel = new CallSummaryMonthTrunk;
+        $this->abstractModel = CallSummaryMonthTrunk::model();
+        $this->titleReport   = Yii::t('yii', 'Calls Summary per Month per trunk');
         parent::init();
     }
 
@@ -49,11 +59,10 @@ class CallSummaryController extends Controller
         foreach ($models as $key => $item) {
             $attributes[$key]                   = $item->attributes;
             $attributes[$key]['nbcall']         = $item->nbcall;
-            $attributes[$key]['day']            = $item->day;
             $attributes[$key]['aloc_all_calls'] = $item->aloc_all_calls;
 
-            $attributes[$key]['lucro'] = $item->sessionbill - $item->buycost;
-
+            $attributes[$key]['lucro']       = $item->sessionbill - $item->buycost;
+            $attributes[$key]['month']       = substr($item->month, 0, 4) . '-' . substr($item->month, 4);
             $attributes[$key]['sessiontime'] = $item->sessiontime / 60;
 
             $attributes[$key]['aloc_all_calls'] = $item->nbcall > 0
@@ -66,8 +75,6 @@ class CallSummaryController extends Controller
             $attributes[$key]['sumlucro']          = $item->sumsessionbill - $item->sumbuycost;
             $attributes[$key]['sumaloc_all_calls'] = $item->sumaloc_all_calls;
             $attributes[$key]['sumnbcall']         = $item->sumnbcall;
-            $attributes[$key]['idCardusername']    = $item->idCardusername;
-            $attributes[$key]['idTrunktrunkcode']  = $item->idTrunktrunkcode;
 
             if (isset(Yii::app()->session['isClient']) && Yii::app()->session['isClient']) {
                 foreach ($this->fieldsInvisibleClient as $field) {

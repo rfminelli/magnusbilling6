@@ -881,6 +881,261 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.3.7') {
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    day varchar(10) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    nbcall_fail int(11) DEFAULT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float DEFAULT NULL,
+                    asr float DEFAULT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY day (day)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_user (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    day varchar(10) NOT NULL,
+                    id_user int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float  NULL DEFAULT '0',
+                    sessionbill float NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    KEY day (day),
+                    KEY id_user (id_user)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_trunk (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    day varchar(10) NOT NULL,
+                    id_trunk int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    KEY day (day),
+                    KEY id_trunk (id_trunk)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_agent (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    day varchar(10) NOT NULL,
+                    id_user int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    KEY day (day),
+                    KEY id_user (id_user)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    month varchar(20) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    UNIQUE KEY month (month)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month_user (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    month varchar(20) NOT NULL,
+                    id_user int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    KEY month (month),
+                    KEY id_user (id_user)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month_trunk (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    month varchar(20) NOT NULL,
+                    id_trunk int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float NULL DEFAULT '0',
+                    PRIMARY KEY (id),
+                    KEY month (month),
+                    KEY id_trunk (id_trunk)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_user (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    id_user int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    nbcall_fail int(11) DEFAULT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float DEFAULT NULL,
+                    asr float DEFAULT NULL,
+                    PRIMARY KEY (id),
+                    KEY id_user (id_user)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_trunk (
+                    id int(11) NOT NULL AUTO_INCREMENT,
+                    id_trunk int(11) NOT NULL,
+                    sessiontime bigint(25) NOT NULL,
+                    aloc_all_calls int(11) NOT NULL,
+                    nbcall int(11) NOT NULL,
+                    nbcall_fail int(11) DEFAULT NULL,
+                    buycost float NOT NULL DEFAULT '0',
+                    sessionbill float NOT NULL DEFAULT '0',
+                    lucro float DEFAULT NULL,
+                    asr float DEFAULT NULL,
+                    PRIMARY KEY (id),
+                    KEY id_trunk (id_trunk)
+                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE `pkg_module` ADD `priority` INT(11) NULL DEFAULT NULL AFTER `id_module`;";
+            $this->executeDB($sql);
+
+            $sql = "UPDATE `pkg_module` SET priority = id;";
+            $this->executeDB($sql);
+
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per day\')', module = 'callsummaryperday', priority = 3 WHERE module = 'callsummary'";
+            $this->executeDB($sql);
+
+            $sql       = "SELECT id FROM pkg_module WHERE `icon_cls` LIKE 'report' AND module IS NULL AND id_module IS NULL";
+            $result    = Yii::app()->db->createCommand($sql)->queryAll();
+            $cdrModule = $result[0]['id'];
+
+            //day user
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Summary Day User'')', 'callsummarydayuser', 'callsummary',  $cdrModule, 4)";
+            $this->executeDB($sql);
+            $idModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            //day trunk
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Summary Day Trunk'')', 'callsummarydaytrunk', 'callsummary',  $cdrModule,5)";
+            $this->executeDB($sql);
+            $idModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            //day agent
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Summary Day Agent'')', 'callsummarydayagent', 'callsummary',  $cdrModule,6)";
+            $this->executeDB($sql);
+            $idModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            //month
+            //update to callsummary to summary/month
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per Month\')', priority = 7, module = 'callsummarypermonth' WHERE module = 'callsummarybymonth'";
+            $this->executeDB($sql);
+
+            //month user
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Summary Month User'')', 'callsummarymonthuser', 'callsummarybymonth',  $cdrModule,8)";
+            $this->executeDB($sql);
+            $idModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            //month trunk
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Summary Month Trunk'')', 'callsummarymonthtrunk', 'callsummarybymonth',  $cdrModule,9)";
+            $this->executeDB($sql);
+            $idModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idModule . "', 'r', '1', '1', '1');";
+            $this->executeDB($sql);
+
+            //per user
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per User\')', priority = 11 WHERE module = 'callsummaryperuser'";
+            $this->executeDB($sql);
+
+            //per trunk
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per Trunk\')', priority = 12 WHERE module = 'callsummarypertrunk'";
+            $this->executeDB($sql);
+
+            //per trunk
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per Agent\')', priority = 13 WHERE module = 'callsummaryperagent'";
+            $this->executeDB($sql);
+
+            $sql = "UPDATE `pkg_module` SET `icon_cls` = 'campaignpollinfo' WHERE module = 'trunkreport' OR  module = 'sendcreditsummary' OR  module = 'callsummaryperuser' OR   module = 'callsummarypertrunk' OR  module = 'callsummaryperagent' ";
+            $this->executeDB($sql);
+
+            //delete old modules
+            $sql = "DELETE FROM pkg_group_module WHERE id_module = (SELECT id FROM pkg_module WHERE module = 'trunkreport')";
+            $this->executeDB($sql);
+            $sql = "DELETE FROM pkg_module WHERE module = 'trunkreport'";
+            $this->executeDB($sql);
+
+            $sql = "DELETE FROM pkg_group_module WHERE id_module = (SELECT id FROM pkg_module WHERE module = 'callsummaryperagent')";
+            $this->executeDB($sql);
+            $sql = "DELETE FROM pkg_module WHERE module = 'callsummaryperagent'";
+            $this->executeDB($sql);
+
+            $sql = "UPDATE pkg_module SET priority = 1 WHERE module = 'call' AND icon_cls = 'cdr';
+            UPDATE pkg_module SET priority = 2 WHERE module = 'callfailed' AND icon_cls = 'cdr'";
+            $this->executeDB($sql);
+
+            $sql = "DELETE FROM pkg_group_module WHERE id_module = (SELECT id FROM pkg_module WHERE module = 'callsummaryperday') AND id_group IN (SELECT id FROM pkg_group_user WHERE id_user_type != 1)";
+            $this->executeDB($sql);
+
+            $sql = "DELETE FROM pkg_group_module WHERE id_module = (SELECT id FROM pkg_module WHERE module = 'callsummarypermonth') AND id_group IN (SELECT id FROM pkg_group_user WHERE id_user_type != 1)";
+            $this->executeDB($sql);
+
+            $sql    = "SELECT id FROM pkg_group_user WHERE id_user_type = 3";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+            foreach ($result as $key => $value) {
+                $sql = "INSERT INTO pkg_group_module (id_group,id_module,action,show_menu) VALUES (" . $value['id'] . ",(SELECT id FROM pkg_module WHERE module = 'callsummaryperuser'),'r',1)";
+                $this->executeDB($sql);
+
+                $sql = "INSERT INTO pkg_group_module (id_group,id_module,action,show_menu) VALUES (" . $value['id'] . ",(SELECT id FROM pkg_module WHERE module = 'callsummarydayuser'),'r',1)";
+                $this->executeDB($sql);
+
+                $sql = "INSERT INTO pkg_group_module (id_group,id_module,action,show_menu) VALUES (" . $value['id'] . ",(SELECT id FROM pkg_module WHERE module = 'callsummarymonthuser'),'r',1)";
+                $this->executeDB($sql);
+            }
+
+            $version = '6.3.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

@@ -18,55 +18,6 @@
 class CallSummaryByMonthController extends Controller
 {
     public $attributeOrder = 'month DESC';
-    public $limit          = 7;
-    public $group          = 'month';
-    public $select         = 'SQL_CACHE t.id, EXTRACT(YEAR_MONTH FROM starttime) AS month, starttime,
-            sum(sessiontime) AS sessiontime,
-            sum(sessionbill) AS sessionbill,
-            count(*) as nbcall,
-            sum(buycost) AS buycost';
-
-    public $fieldsInvisibleClient = array(
-        'id',
-        'id_user_package_offer',
-        'id_did',
-        'id_prefix',
-        'id_ratecard',
-        'id_tariffgroup',
-        'id_trunk',
-        'real_sessiontime',
-        'root_cost',
-        'sipiax',
-        'src',
-        'markup',
-        'buycost',
-        'calledstation',
-        'idCardusername',
-        'idTrunktrunkcode',
-        'id_user',
-        'id_user',
-        'lucro',
-    );
-
-    public $fieldsInvisibleAgent = array(
-        'uniqueid',
-        'id',
-        'id_user_package_offer',
-        'id_did',
-        'id_prefix',
-        'id_ratecard',
-        'id_tariffgroup',
-        'id_trunk',
-        'real_sessiontime',
-        'root_cost',
-        'sipiax',
-        'src',
-        'markup',
-        'calledstation',
-        'idCardusername',
-        'idTrunktrunkcode',
-        'id_user',
-    );
 
     public function init()
     {
@@ -75,40 +26,8 @@ class CallSummaryByMonthController extends Controller
         $this->titleReport   = Yii::t('yii', 'Calls Summary');
 
         parent::init();
-
-        if (Yii::app()->session['isAgent'] == true) {
-            $this->select = 'SQL_CACHE t.id, EXTRACT(YEAR_MONTH FROM starttime) AS month, starttime,
-            sum(sessiontime) AS sessiontime,
-            sum(agent_bill) AS sessionbill,
-            sum(sessionbill) AS buycost,
-            count(*) as nbcall';
-        } else if (Yii::app()->session['isClientAgent'] == true) {
-            $this->select = 'SQL_CACHE t.id, EXTRACT(YEAR_MONTH FROM starttime) AS month, starttime,
-            sum(sessiontime) AS sessiontime,
-            sum(agent_bill) AS sessionbill,
-            count(*) as nbcall';
-        } elseif (Yii::app()->session['isClient'] == true) {
-            $this->select = 'SQL_CACHE t.id, EXTRACT(YEAR_MONTH FROM starttime) AS month, starttime,
-            sum(sessiontime) AS sessiontime,
-            sum(sessionbill) AS sessionbill,
-            count(*) as nbcall';
-        }
-
     }
 
-    public function actionRead($asJson = true, $condition = null)
-    {
-        # recebe os parametros para o filtro
-        $filter = isset($_GET['filter']) ? $_GET['filter'] : null;
-        $filter = $filter ? $this->createCondition(json_decode($filter)) : $this->defaultFilter;
-        $limit  = strlen($filter) > 2 && preg_match("/starttime/", $filter) ? $_GET[$this->nameParamLimit] : $this->limit;
-
-        //nao permite mais de 31 registros
-        $limit                       = $limit > 31 ? $limit                       = 31 : $limit;
-        $_GET[$this->nameParamLimit] = $limit;
-        parent::actionRead($asJson = true, $condition = null);
-
-    }
     public function recordsExtraSum($records = array())
     {
         foreach ($records as $key => $value) {
@@ -140,11 +59,11 @@ class CallSummaryByMonthController extends Controller
 
             $attributes[$key]['sessiontime'] = $item->sessiontime / 60;
 
-            $attributes[$key]['starttime']         = substr($item->starttime, 0, 7);
+            $attributes[$key]['month']             = substr($item->month, 0, 4) . '-' . substr($item->month, 4);
             $attributes[$key]['sumsessiontime']    = $item->sumsessiontime;
             $attributes[$key]['sumsessionbill']    = $item->sumsessionbill;
             $attributes[$key]['sumbuycost']        = $item->sumbuycost;
-            $attributes[$key]['sumlucro']          = $item->sumlucro;
+            $attributes[$key]['sumlucro']          = $item->sumsessionbill - $item->sumbuycost;
             $attributes[$key]['sumaloc_all_calls'] = $item->sumaloc_all_calls;
             $attributes[$key]['sumnbcall']         = $item->sumnbcall;
 
@@ -180,29 +99,5 @@ class CallSummaryByMonthController extends Controller
         }
 
         return $attributes;
-    }
-
-    public function extraFilter($filter)
-    {
-        if ($this->defaultFilter != 1) {
-            $filter = $filter . ' AND ' . $this->defaultFilter;
-        }
-
-        if (preg_match('/c.username/', $filter)) {
-            if (!preg_match("/JOIN pkg_user/", $this->join)) {
-                $this->join .= ' LEFT JOIN pkg_user c ON t.id_user = c.id';
-            }
-
-            $filter = preg_replace('/c.username/', "c.username", $filter);
-        }
-
-        if (preg_match('/pkg_trunk.trunkcode/', $filter)) {
-            if (!preg_match("/JOIN pkg_trunk/", $this->join)) {
-                $this->join .= ' LEFT JOIN pkg_trunk ON t.id_trunk = pkg_trunk.id';
-            }
-
-        }
-
-        return $this->extraFilterCustom($filter);
     }
 }

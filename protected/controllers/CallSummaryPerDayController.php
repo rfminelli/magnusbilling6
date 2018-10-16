@@ -15,16 +15,16 @@
  * 17/08/2012
  */
 
-class CallSummaryController extends Controller
+class CallSummaryPerDayController extends Controller
 {
     public $attributeOrder = 'day DESC';
 
     public function init()
     {
 
-        $this->instanceModel = new CallSummary;
-        $this->abstractModel = CallSummary::model();
-        $this->titleReport   = Yii::t('yii', 'Calls Summary');
+        $this->instanceModel = new CallSummaryPerDay;
+        $this->abstractModel = CallSummaryPerDay::model();
+        $this->titleReport   = Yii::t('yii', 'Calls summary per day');
         parent::init();
     }
 
@@ -36,6 +36,7 @@ class CallSummaryController extends Controller
             $records[0]->sumbuycost += $value['buycost'];
             $records[0]->sumaloc_all_calls += $value['sessiontime'] / $value['nbcall'];
             $records[0]->sumnbcall += $value['nbcall'];
+            $records[0]->sumnbcallfail += $value['nbcall_fail'];
         }
 
         $this->nameSum = 'sum';
@@ -60,14 +61,13 @@ class CallSummaryController extends Controller
             ? $item->sessiontime / $item->nbcall
             : 0;
 
+            $attributes[$key]['sumnbcallfail']     = $item->sumnbcallfail;
             $attributes[$key]['sumsessiontime']    = $item->sumsessiontime;
             $attributes[$key]['sumsessionbill']    = $item->sumsessionbill;
             $attributes[$key]['sumbuycost']        = $item->sumbuycost;
             $attributes[$key]['sumlucro']          = $item->sumsessionbill - $item->sumbuycost;
             $attributes[$key]['sumaloc_all_calls'] = $item->sumaloc_all_calls;
             $attributes[$key]['sumnbcall']         = $item->sumnbcall;
-            $attributes[$key]['idCardusername']    = $item->idCardusername;
-            $attributes[$key]['idTrunktrunkcode']  = $item->idTrunktrunkcode;
 
             if (isset(Yii::app()->session['isClient']) && Yii::app()->session['isClient']) {
                 foreach ($this->fieldsInvisibleClient as $field) {

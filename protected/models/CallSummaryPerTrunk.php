@@ -22,19 +22,15 @@
 class CallSummaryPerTrunk extends Model
 {
     protected $_module = 'callsummarypertrunk';
-    public $lucro;
-    public $day;
-    public $nbcall;
-    public $aloc_all_calls;
-    public $sumsessiontime;
+
     public $sumsessionbill;
     public $sumbuycost;
     public $sumlucro;
     public $sumaloc_all_calls;
     public $sumnbcall;
     public $sumasr;
-    public $idUserusername;
-    public $idTrunktrunkcode;
+    public $sumnbcallfail;
+    public $sumsessiontime;
 
     /**
      * Retorna a classe estatica da model.
@@ -50,7 +46,7 @@ class CallSummaryPerTrunk extends Model
      */
     public function tableName()
     {
-        return 'pkg_cdr';
+        return 'pkg_cdr_summary_trunk';
     }
 
     /**
@@ -67,15 +63,14 @@ class CallSummaryPerTrunk extends Model
     public function rules()
     {
         return array(
+            array('id_trunk', 'numerical', 'integerOnly' => true),
             array('sessiontime, sessionbill, nbcall, buycost, lucro, aloc_all_calls, sumaloc_all_calls', 'length', 'max' => 50),
         );
     }
     public function relations()
     {
         return array(
-            'idPrefix' => array(self::BELONGS_TO, 'Prefix', 'id_prefix'),
-            'idTrunk'  => array(self::BELONGS_TO, 'Trunk', 'id_trunk'),
-            'idUser'   => array(self::BELONGS_TO, 'User', 'id_user'),
+            'idTrunk' => array(self::BELONGS_TO, 'Trunk', 'id_trunk'),
         );
     }
 

@@ -15,16 +15,18 @@
  * 17/08/2012
  */
 
-class CallSummaryController extends Controller
+class CallSummaryDayUserController extends Controller
 {
     public $attributeOrder = 'day DESC';
+
+    public $extraValues = array('idUser' => 'username');
 
     public function init()
     {
 
-        $this->instanceModel = new CallSummary;
-        $this->abstractModel = CallSummary::model();
-        $this->titleReport   = Yii::t('yii', 'Calls Summary');
+        $this->instanceModel = new CallSummaryDayUser;
+        $this->abstractModel = CallSummaryDayUser::model();
+        $this->titleReport   = Yii::t('yii', 'Calls Summary Per Day Per User');
         parent::init();
     }
 
@@ -66,8 +68,6 @@ class CallSummaryController extends Controller
             $attributes[$key]['sumlucro']          = $item->sumsessionbill - $item->sumbuycost;
             $attributes[$key]['sumaloc_all_calls'] = $item->sumaloc_all_calls;
             $attributes[$key]['sumnbcall']         = $item->sumnbcall;
-            $attributes[$key]['idCardusername']    = $item->idCardusername;
-            $attributes[$key]['idTrunktrunkcode']  = $item->idTrunktrunkcode;
 
             if (isset(Yii::app()->session['isClient']) && Yii::app()->session['isClient']) {
                 foreach ($this->fieldsInvisibleClient as $field) {

@@ -20,9 +20,9 @@ class CallSummaryPerAgentController extends Controller
     public $config;
     public $attributeOrder = 'c.id_user DESC';
     public $extraValues    = array('idUser' => 'username', 'idTrunk' => 'trunkcode');
-    public $limit          = 7;
-    public $group          = 'c.id_user';
-    public $select         = 't.id, c.id_user,c.id_user AS idUserusername, sum(sessionbill) AS sessionbill, count(*) as nbcall,
+    //public $limit          = 7;
+    public $group  = 'c.id_user';
+    public $select = 't.id, c.id_user,c.id_user AS idUserusername, sum(sessionbill) AS sessionbill, count(*) as nbcall,
             sum(buycost) AS buycost, starttime, sum(sessionbill) - sum(buycost) AS lucro, id_trunk';
 
     public $join = 'JOIN pkg_user c ON t.id_user = c.id';
@@ -78,8 +78,8 @@ class CallSummaryPerAgentController extends Controller
         if (!Yii::app()->session['isAdmin']) {
             exit();
         }
-        $this->instanceModel = new CallSummaryPerUser;
-        $this->abstractModel = CallSummaryPerUser::model();
+        $this->instanceModel = new CallSummary;
+        $this->abstractModel = CallSummary::model();
         $this->titleReport   = Yii::t('yii', 'Calls Summary');
         parent::init();
     }

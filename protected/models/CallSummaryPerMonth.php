@@ -19,22 +19,16 @@
  * 17/08/2012
  */
 
-class CallSummary extends Model
+class CallSummaryPerMonth extends Model
 {
-    protected $_module = 'callsummary';
-    public $lucro;
-    public $day;
-    public $nbcall;
-    public $aloc_all_calls;
+    protected $_module = 'callsummarypermonth';
+
     public $sumsessiontime;
     public $sumsessionbill;
     public $sumbuycost;
     public $sumlucro;
     public $sumaloc_all_calls;
     public $sumnbcall;
-    public $sumasr;
-    public $idCardusername;
-    public $idTrunktrunkcode;
 
     /**
      * Retorna a classe estatica da model.
@@ -50,7 +44,7 @@ class CallSummary extends Model
      */
     public function tableName()
     {
-        return 'pkg_cdr_summary_day';
+        return 'pkg_cdr_summary_month';
     }
 
     /**
@@ -67,8 +61,7 @@ class CallSummary extends Model
     public function rules()
     {
         return array(
-            array('day, sessiontime, sessionbill, nbcall, buycost, lucro, asr, aloc_all_calls, nbcall_fail', 'length', 'max' => 50),
+            array('month,sessiontime, sessionbill, nbcall, buycost, lucro, aloc_all_calls', 'length', 'max' => 50),
         );
     }
-
 }

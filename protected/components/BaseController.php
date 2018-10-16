@@ -1744,6 +1744,10 @@ class BaseController extends CController
                 $columns[$i]['dataIndex'] = 'id_phonebook';
             } else if ($columns[$i]['dataIndex'] == 'idDiddid') {
                 $columns[$i]['dataIndex'] = 'id_did';
+            } else if ($columns[$i]['dataIndex'] == 'idTrunktrunkcode') {
+                $columns[$i]['dataIndex'] = 'id_trunk';
+            } else if ($columns[$i]['dataIndex'] == 'id') {
+                $columns[$i]['dataIndex'] = 't.id';
             }
 
         }

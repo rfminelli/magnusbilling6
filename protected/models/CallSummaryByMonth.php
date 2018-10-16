@@ -49,7 +49,7 @@ class CallSummaryByMonth extends Model
      */
     public function tableName()
     {
-        return 'pkg_cdr';
+        return 'pkg_cdr_summary_month';
     }
 
     /**
@@ -66,15 +66,7 @@ class CallSummaryByMonth extends Model
     public function rules()
     {
         return array(
-            array('sessiontime, sessionbill, nbcall, buycost, lucro, aloc_all_calls', 'length', 'max' => 50),
+            array('month,sessiontime, sessionbill, nbcall, buycost, lucro, aloc_all_calls', 'length', 'max' => 50),
         );
     }
-
-    public function relations()
-    {
-        return array(
-            'idUser' => array(self::BELONGS_TO, 'User', 'id_user'),
-        );
-    }
-
 }

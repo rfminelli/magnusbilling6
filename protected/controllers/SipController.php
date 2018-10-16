@@ -224,26 +224,31 @@ class SipController extends Controller
 
             foreach ($attributes[$i] as $key => $value) {
                 if ($key == 'forward') {
+                    if (preg_match("/\|/", $value)) {
 
-                    $itemOption = explode("|", $value);
-                    $itemKey    = explode("_", $key);
+                        $itemOption = explode("|", $value);
+                        $itemKey    = explode("_", $key);
 
-                    if (!isset($attributes[$i]['type_forward'])) {
-                        $attributes[$i]['type_forward'] = $itemOption[0];
-                    }
-
-                    if (isset($itemOption[1]) && preg_match("/number|group|custom|hangup/", $itemOption[0])) {
-                        $attributes[$i]['extension'] = $itemOption[1];
-                    } else if (isset($itemOption[1])) {
-                        $attributes[$i]['id_' . $itemOption[0]] = end($itemOption);
-                        if (is_numeric($itemOption[1])) {
-                            $model = ucfirst($itemOption[0]);
-                            $model = $model::model()->findByPk(end($itemOption));
-
-                            $attributes[$i]['id_' . $itemOption[0] . '_name'] = isset($model->name) ? $model->name : '';
-                        } else {
-                            $attributes[$i]['id_' . $itemOption[0] . '_name'] = '';
+                        if (!isset($attributes[$i]['type_forward'])) {
+                            $attributes[$i]['type_forward'] = $itemOption[0];
                         }
+
+                        if (isset($itemOption[1]) && preg_match("/number|group|custom|hangup/", $itemOption[0])) {
+                            $attributes[$i]['extension'] = $itemOption[1];
+                        } else if (isset($itemOption[1])) {
+                            $attributes[$i]['id_' . $itemOption[0]] = end($itemOption);
+                            if (is_numeric($itemOption[1])) {
+                                $model = ucfirst($itemOption[0]);
+                                $model = $model::model()->findByPk(end($itemOption));
+
+                                $attributes[$i]['id_' . $itemOption[0] . '_name'] = isset($model->name) ? $model->name : '';
+                            } else {
+                                $attributes[$i]['id_' . $itemOption[0] . '_name'] = '';
+                            }
+                        }
+                    } else {
+                        $attributes[$i]['forward']      = '';
+                        $attributes[$i]['type_forward'] = '';
                     }
                 }
             }
