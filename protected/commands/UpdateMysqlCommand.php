@@ -882,6 +882,16 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
         if ($version == '6.3.7') {
+
+            $sql = "ALTER TABLE  `pkg_cdr` ADD INDEX (  `id_trunk` ) ;";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE  `pkg_cdr_failed` ADD INDEX (  `id_trunk` ) ;";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE  `pkg_cdr_failed` ADD INDEX (  `id_user` ) ;";
+            $this->executeDB($sql);
+
             $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day (
                     id int(11) NOT NULL AUTO_INCREMENT,
                     day varchar(10) NOT NULL,
@@ -1030,7 +1040,7 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql = "UPDATE `pkg_module` SET priority = id;";
             $this->executeDB($sql);
 
-            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per day\')', module = 'callsummaryperday', priority = 3 WHERE module = 'callsummary'";
+            $sql = "UPDATE `pkg_module` SET `text` = 't(\'Summary per Day\')', module = 'callsummaryperday', priority = 3 WHERE module = 'callsummary'";
             $this->executeDB($sql);
 
             $sql       = "SELECT id FROM pkg_module WHERE `icon_cls` LIKE 'report' AND module IS NULL AND id_module IS NULL";
@@ -1134,6 +1144,9 @@ class UpdateMysqlCommand extends ConsoleCommand
             $version = '6.3.8';
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
+
+            exec("php /var/www/html/mbilling/cron.php SummaryTablesCdr");
+            exec("echo '\n0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days\n0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday\n' >> /var/spool/cron/root");
         }
 
     }
