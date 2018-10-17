@@ -91,8 +91,11 @@ class CallChartCommand extends ConsoleCommand
                             $modelUser = User::model()->find('callingcard_pin = :key', array(':key' => substr($ndiscado, 0, 6)));
 
                             if (isset($modelUser->id_user)) {
-                                $ndiscado = substr($ndiscado, 6);
+                                $modelSip = Sip::model()->find('id_user = :key', array(':key' => $modelUser->id));
+                                //$ndiscado = substr($ndiscado, 6);
                             }
+                        } else {
+                            $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
                         }
                         $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
 

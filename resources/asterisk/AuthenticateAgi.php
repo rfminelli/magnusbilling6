@@ -102,7 +102,7 @@ class AuthenticateAgi
             $from = explode(':', $from[0]);
             $from = $from[0];
 
-            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE username = '$MAGNUS->accountcode' AND callingcard_pin = '$tech_prefix'  LIMIT 1";
+            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE callingcard_pin = '$tech_prefix'  LIMIT 1";
             $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
             if (isset($modelUser->id)) {
