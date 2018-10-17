@@ -117,7 +117,7 @@ elif  [ ${DIST} = "CENTOS" ]; then
     yum -y install jansson.`uname -m` jansson-devel.`uname -m` unzip.`uname -m`
     yum -y install mysql mariadb-server  mariadb-devel mariadb php-mysql mysql-connector-odbc
     yum -y install xmlstarlet libsrtp libsrtp-devel dmidecode gtk2-devel binutils-devel svn libtermcap-devel libtiff-devel audiofile-devel cronie cronie-anacron
-    yum -y install perl perl-libwww-perl perl-LWP-Protocol-https perl-JSON cpan flac libcurl-devel
+    yum -y install perl perl-libwww-perl perl-LWP-Protocol-https perl-JSON cpan flac libcurl-devel nss
 fi
 
 echo
@@ -630,6 +630,8 @@ echo "
 * * * * * php /var/www/html/mbilling/cron.php Sms
 0 2 * * * php /var/www/html/mbilling/cron.php Backup
 0 4 * * * /var/www/html/mbilling/protected/commands/verificamemoria
+0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days
+0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
 " > $CRONPATH
 chmod 600 $CRONPATH
 crontab $CRONPATH

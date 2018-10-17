@@ -1,8 +1,8 @@
--- MySQL dump 10.14  Distrib 5.5.52-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.16  Distrib 10.1.36-MariaDB, for Linux (x86_64)
 --
 -- Host: localhost    Database: mbilling
 -- ------------------------------------------------------
--- Server version	5.5.52-MariaDB
+-- Server version 10.1.36-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -103,13 +103,15 @@ DROP TABLE IF EXISTS `pkg_call_online`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `pkg_call_online` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uniqueid` varchar(25) DEFAULT NULL,
+  `sip_account` varchar(50) DEFAULT NULL,
   `id_user` int(11) DEFAULT NULL,
   `canal` varchar(50) DEFAULT NULL,
   `tronco` varchar(50) DEFAULT NULL,
   `ndiscado` varchar(25) DEFAULT '0',
   `codec` varchar(5) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `status` varchar(16) NOT NULL,
-  `duration` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `duration` int(11) NOT NULL DEFAULT '0',
   `reinvite` varchar(5) NOT NULL,
   `from_ip` varchar(50) DEFAULT NULL,
   `server` varchar(50) NOT NULL DEFAULT '',
@@ -218,17 +220,17 @@ CREATE TABLE `pkg_callshop` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sessionid` varchar(100) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `id_user` int(11) NOT NULL,
-  `id_prefix` int(11) NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '0',
   `buycost` decimal(15,5) NOT NULL DEFAULT '0.00000',
   `price` decimal(15,5) NOT NULL,
+  `price_min` decimal(15,5) NOT NULL DEFAULT '0.00000',
   `calledstation` varchar(50) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `destination` varchar(100) DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `sessiontime` int(11) NOT NULL,
   `cabina` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `markup` decimal(15,5) NOT NULL DEFAULT '0.00000',
   PRIMARY KEY (`id`),
-  KEY `id_prefix` (`id_prefix`),
   KEY `cabina` (`cabina`),
   KEY `fk_pkg_user_pkg_callshop` (`id_user`),
   CONSTRAINT `fk_pkg_user_pkg_callshop` FOREIGN KEY (`id_user`) REFERENCES `pkg_user` (`id`) ON DELETE CASCADE
@@ -280,6 +282,10 @@ CREATE TABLE `pkg_campaign` (
   `restrict_phone` int(1) NOT NULL DEFAULT '0',
   `enable_max_call` int(1) NOT NULL DEFAULT '0',
   `digit_authorize` smallint(1) NOT NULL DEFAULT '1',
+  `tts_audio` varchar(200) DEFAULT NULL,
+  `tts_audio2` varchar(200) DEFAULT NULL,
+  `asr_audio` varchar(200) DEFAULT NULL,
+  `asr_options` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_pkg_user_pkg_campaign` (`id_user`),
   KEY `fk_pkg_plan_pkg_campaign` (`id_plan`),
@@ -464,7 +470,7 @@ CREATE TABLE `pkg_cdr` (
   `id_offer` int(11) DEFAULT '0',
   `id_prefix` int(11) DEFAULT NULL,
   `id_campaign` int(11) DEFAULT NULL,
-  `sessionid` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `callerid` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `uniqueid` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `starttime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `sessiontime` int(11) DEFAULT NULL,
@@ -477,7 +483,8 @@ CREATE TABLE `pkg_cdr` (
   `terminatecauseid` int(1) DEFAULT '1',
   `agent_bill` decimal(15,6) DEFAULT '0.000000',
   PRIMARY KEY (`id`),
-  KEY `id_user` (`id_user`)
+  KEY `id_user` (`id_user`),
+  KEY `id_trunk` (`id_trunk`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -544,13 +551,14 @@ CREATE TABLE `pkg_cdr_failed` (
   `id_plan` int(11) DEFAULT NULL,
   `id_trunk` int(11) DEFAULT NULL,
   `id_prefix` int(11) DEFAULT NULL,
-  `sessionid` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `sessionid` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
   `uniqueid` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `starttime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `calledstation` varchar(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `sipiax` int(11) DEFAULT '0',
   `src` varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `terminatecauseid` int(1) DEFAULT '1',
+  `hangupcause` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `id_user` (`id_user`),
   KEY `id_plan` (`id_plan`),
@@ -558,7 +566,9 @@ CREATE TABLE `pkg_cdr_failed` (
   KEY `calledstation` (`calledstation`),
   KEY `terminatecauseid` (`terminatecauseid`),
   KEY `id_prefix` (`id_prefix`),
-  KEY `uniqueid` (`uniqueid`)
+  KEY `uniqueid` (`uniqueid`),
+  KEY `id_trunk_2` (`id_trunk`),
+  KEY `id_user_2` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -569,6 +579,292 @@ CREATE TABLE `pkg_cdr_failed` (
 LOCK TABLES `pkg_cdr_failed` WRITE;
 /*!40000 ALTER TABLE `pkg_cdr_failed` DISABLE KEYS */;
 /*!40000 ALTER TABLE `pkg_cdr_failed` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_day`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_day`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_day` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `day` varchar(10) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `nbcall_fail` int(11) DEFAULT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT NULL,
+  `asr` float DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `day` (`day`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_day`
+--
+
+LOCK TABLES `pkg_cdr_summary_day` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_day_agent`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_day_agent`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_day_agent` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `day` varchar(10) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `day` (`day`),
+  KEY `id_user` (`id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_day_agent`
+--
+
+LOCK TABLES `pkg_cdr_summary_day_agent` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_agent` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_agent` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_day_trunk`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_day_trunk`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_day_trunk` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `day` varchar(10) NOT NULL,
+  `id_trunk` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `day` (`day`),
+  KEY `id_trunk` (`id_trunk`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_day_trunk`
+--
+
+LOCK TABLES `pkg_cdr_summary_day_trunk` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_trunk` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_trunk` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_day_user`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_day_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_day_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `day` varchar(10) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float DEFAULT '0',
+  `sessionbill` float DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `day` (`day`),
+  KEY `id_user` (`id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_day_user`
+--
+
+LOCK TABLES `pkg_cdr_summary_day_user` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_day_user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_month`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_month`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_month` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `month` varchar(20) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `month` (`month`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_month`
+--
+
+LOCK TABLES `pkg_cdr_summary_month` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_month_trunk`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_month_trunk`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_month_trunk` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `month` varchar(20) NOT NULL,
+  `id_trunk` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `month` (`month`),
+  KEY `id_trunk` (`id_trunk`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_month_trunk`
+--
+
+LOCK TABLES `pkg_cdr_summary_month_trunk` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month_trunk` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month_trunk` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_month_user`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_month_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_month_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `month` varchar(20) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `month` (`month`),
+  KEY `id_user` (`id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_month_user`
+--
+
+LOCK TABLES `pkg_cdr_summary_month_user` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_month_user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_trunk`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_trunk`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_trunk` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_trunk` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `nbcall_fail` int(11) DEFAULT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT NULL,
+  `asr` float DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_trunk` (`id_trunk`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_trunk`
+--
+
+LOCK TABLES `pkg_cdr_summary_trunk` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_trunk` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_trunk` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_cdr_summary_user`
+--
+
+DROP TABLE IF EXISTS `pkg_cdr_summary_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_cdr_summary_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_user` int(11) NOT NULL,
+  `sessiontime` bigint(25) NOT NULL,
+  `aloc_all_calls` int(11) NOT NULL,
+  `nbcall` int(11) NOT NULL,
+  `nbcall_fail` int(11) DEFAULT NULL,
+  `buycost` float NOT NULL DEFAULT '0',
+  `sessionbill` float NOT NULL DEFAULT '0',
+  `lucro` float DEFAULT NULL,
+  `asr` float DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_user` (`id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_cdr_summary_user`
+--
+
+LOCK TABLES `pkg_cdr_summary_user` WRITE;
+/*!40000 ALTER TABLE `pkg_cdr_summary_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_cdr_summary_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -587,7 +883,7 @@ CREATE TABLE `pkg_configuration` (
   `config_group_title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `status` int(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=266 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=282 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -596,7 +892,7 @@ CREATE TABLE `pkg_configuration` (
 
 LOCK TABLES `pkg_configuration` WRITE;
 /*!40000 ALTER TABLE `pkg_configuration` DISABLE KEYS */;
-INSERT INTO `pkg_configuration` VALUES (1,'System Currency','base_currency','0','System Currency','global',1),(2,'Language','base_language','en','Allow \n en English \nes Espanhol \npt_BR Portugues','global',1),(3,'Version','version','6.0.0','MBilling Version','global',1),(4,'Licence','licence','free','MBilling Licence','global',0),(5,'Server IP','ip_servers','','Ip do servidor MBilling','global',1),(6,'Template','template','blue-neptune','Allowed values:\ngreen, gray, blue, yellow, red, orange, purple','global',0),(7,'Country','base_country','','ISO CODE values\nUSA United States,\nBRL Brasil,\nARG Argentina,\nNLD Netherlands,\nESP Spanish','global',1),(8,'Desktop layout','layout','0','Active Desktop template, only to FULL version\n1 - Enable (Only to full version)\n0 - Disable','global',0),(9,'Wallpaper','wallpaper','Azul','Default Wallpaper, only FULL version.','global',0),(10,'SMTP Host','smtp_host','mail.magnusbilling.com','SMTP Hostname','global',0),(11,'SMTP UserName','smtp_username','billing@magnusbilling.com','SMTP server Username','global',0),(12,'SMTP Password','smtp_password','magnus','SMTP server Password','global',0),(13,'SMTP Encryption','smtp_encryption','null','SMTP Encryption: tls, ssl or blank','global',0),(14,'SMTP Port','smtp_port','587','SMTP Port','global',0),(15,'Admin Email','admin_email','info@magnusbilling.com','Email for receive notifications','global',1),(16,'Send email copy to admin','admin_received_email','1','Send copy for admin email','global',1),(19,'Days notification','delay_notifications','3','Number of days to generate low balance warning to customers','global',1),(20,'Rounding calls','bloc_time_call','1','Round the lead time as charging sales.\n1: Yes\n0: No','global',1),(21,'Days to pay offers','planbilling_daytopay','5','Set how many days before maturity you wanna collect the bid offers','global',1),(22,'Agent refill limit','agent_limit_refill','5','Limit to agent refill yours customers','global',1),(23,'Archive cdr','archive_call_prior_x_month','4','Calls to file before 10 months.','global',1),(24,'Payment, Accepted values','purchase_amount','8:10:12:15:18:20:30:50:100','Accepted values ​​in module payments, no enable in FREE version.','global',1),(25,'Decimal precision','decimal_precision','0000','Decimal precision.','global',1),(26,'Active paypal for new customer','paypal_new_user','0','Active paypal for new customer. \n\n0 - Disable (RECOMENDED )\n1 - Enable','global',1),(29,'Portabilidade Usuário','portabilidadeUsername','0','Usuário da portabilidade para consulta via WebService','global',0),(30,'Portabilidade Senha','portabilidadePassword','0','Senha da portabilidade para consulta via WebService','global',0),(31,'AGI 1 - Answer Call','answer_call','0','If enabled the MBilling answers the call that starts.\nDefault: 0','agi-conf1',1),(32,'AGI 1 - User DNID','use_dnid','1','If the client does not need active schedule again the number he wish to call after entering the PIN.\n\n1 - Enable (DEFAULT)\n0 - Disable','agi-conf1',1),(33,'AGI 1 - Notices with Audio','play_audio','1','Notices with Audio, if disable, MBilling will send code 603.\n\n1 - Ativo\n0 - Desativado\n','agi-conf1',1),(34,'AGI 1 - Intro Prompt','intro_prompt','','To specify a prompt to play at the beginning of the calls','agi-conf1',1),(36,'AGI 1 - Recording calls','record_call','0','Enables recording of all customers.\nCAUTION, THIS OPTION REQUIRES A LOT OF SERVER PERFORMANCE. SO YOU CAN RECORD CUSTOMER SPECIFIC.\n\n0: Disable\n1: Enable','agi-conf1',1),(37,'AGI 1 - International prefixes','international_prefixes','00,09','List the prefixes you want stripped off if the call number','agi-conf1',1),(38,'AGI 1 - Say sell price','say_rateinitial','0','Play the initial cost of the tariff.\n\n0 - No\n1 - Yes','agi-conf1',1),(39,'AGI 1 - Say Duration','say_timetocall','0','Play the amount of time that the user can call.\n\n0 - No\n1 - Yes','agi-conf1',1),(40,'AGI 1 - CallerID Authentication','cid_enable','0','Active CallerID Authentication.\n\n0 - Disable\n1 - Enable','agi-conf1',1),(41,'AGI 1 - FailOver LCR/LCD','failover_lc_prefix','1','If anable and have two hidden tariff in de plan, MBilling gonna get the cheaper','agi-conf1',1),(42,'AGI 1 - Dial Command Params','dialcommand_param',',60,L(%timeout%:61000:30000)','More info: http://voip-info.org/wiki-Asterisk+cmd+dial','agi-conf1',1),(43,'AGI 1 - Internal Call, Dial Command Params','dialcommand_param_sipiax_friend',',60,TtiL(3600000:61000:30000)','Dial paramater for call between users.\n\nby default (3600000  =  1HOUR MAX CALL).','agi-conf1',1),(44,'AGI 1 - DID Dial Command Params','dialcommand_param_call_2did',',45,TtiL(%timeout%:61000:30000)','Dial paramater to DID calls','agi-conf1',1),(45,'AGI 1 - Failover Retry Limit','failover_recursive_limit','5','Define how many time we want to authorize the research of the failover trunk when a call fails','agi-conf1',1),(46,'AGI 1 - Number of attempt','number_try','1','Number of attempts to dial the number\n Minimum value 1','agi-conf1',1),(47,'AGI 1 - Outbound Call','switchdialcommand','0','Define the order to make the outbound call<br>YES -> SIP/number@trunk - NO  SIP/trunk/number<br>Both should work exactly the same but i experimented one case when gateway was supporting number@trunk, So in case of trouble, try it out.','agi-conf1',1),(48,'AGI 1 - Say Balance After Call','say_balance_after_call','0','Play the balance to the user after the call\n\n0 - No\n1 - Yes','agi-conf1',1),(85,'SIP Account for spy call','channel_spy','0','SIP Account for spy call','global',1),(142,'Username Auto Generate ','username_generate','0','Generate username automatically ','global',1),(143,'Username Prefix','generate_prefix','0','Prefix for username ','global',1),(144,'Username length','generate_length','0','Username Length','global',1),(145,'Answer Callback','answer_callback','0','Answer callback and play audio','global',1),(146,'Callback add Prefix','callback_add_prefix','','Add prefix in callerd in callback call','global',1),(147,'Callback remove Prefix','callback_remove_prefix','','Remove prefix in callerd in callback call','global',1),(233,'Menu color','color_menu','White','Menu color, Black or White','global',0),(234,'Menu color','color_menu','White','Menu color, Black or White','global',1),(235,'Charge Sip Call','charge_sip_call','0','Charge sip call between clients','global',1),(236,'URL to extra module','module_extra','index.php/extra/read','Url to extra module, default: index.php/extra/read','global',1),(237,'intra/inter Billing','intra-inter','0','Enable Intra-Inter Billing. If you enable this option, and you have another plan with the same name + Intra on the name Mbilling use the new plan to intra call','global',1),(238,'Enable Paypal on Softphone','paypal-softphone','0','Active Paypal on Android Softphones, valid only Softphone version 2.5. 0 - Disable 1 - Enable','global',1),(239,'Enable CallBack on Softphone','callback-softphone','0','Active Callback on Android Softphones, valid only Softphone version 2.5. 0 - Disable 1 - Enable','global',1),(240,'Invoice tax','invoice_tax','0','Tax to add in Invoice.','global',1),(241,'Log nivel','log','0','min 0 - max 5 ','global',1),(242,'Asterisk','asterisk_version','11','Set your Asterisk Version instaled. Default 1.8','global',1),(243,'Tts URL','tts_url','https://translate.google.com/translate_tts?ie=UTF-8&q=$name&tl=pt-BR&total=1&idx=0&textlen=25&client=t&tk=55786|34299.','Set here the URL to use in Massive Call. Use variable $name in the string field','global',1),(244,'fm.transfer-to.com username','fm_transfer_to_username',NULL,'Username in Transfer To','global',1),(245,'fm.transfer-to.com token','fm_transfer_to_ token',NULL,'Token to Transfer To API','global',1),(246,'fm.transfer-to.com Agent profits','fm_transfer_to_profit','0','Percent to Agent','global',1),(247,'Days to find in Summary per user','summary_per_user_days','7','Days to find when you open the menu Summary per User','global',1),(248,'Days to find in Summary per agent','summary_per_agent_days','7','Days to find when you open the menu Summary per Agent','global',1),(249,'MixMonitor Format','MixMonitor_format','gsm','see the availables extensions in http://www.voip-info.org/wiki/view/MixMonitor','global',1),(250,'fm.transfer-to.com show selling price','fm_transfer_show_selling_price','0','Show recommended selling price in the form after select the amount. Set the total to increase. Less than 99%','global',1),(251,'fm.transfer-to.com print Header','fm_transfer_print_header','Change it in configuration menu','Description to print header','global',1),(252,'fm.transfer-to.com print Footer','fm_transfer_print_footer','Change it in configuration menu','Description to print footer','global',1),(253,'fm.transfer-to.com Currency','fm_transfer_currency','€','Set the transfer-to currency','global',1),(254,'Sip trunk short duration call','trunk_short_duration_call','3','SIP TRUNK short duration call','global',1),(255,'Sip trunk short total calls','trunk_short_total_calls','0','Sip trunk short total calls','global',1),(256,'Enable IAX','enable_izx','3','Enable IAX','global',0),(257,'Use CDR Cache','cache','0','Use CDR cache','global',0),(258,'AGI 1 - Use amd macro','amd','','Use amd. Set to CM(amd) . \r\n       Add this macro in your extension_magnus.conf\r\n\r\n        [macro-amd]\r\n       exten => s,1,AMD\r\n        exten => s,n,Noop(AMD_NUMERO - ${CALLERID(num)})\r\n        exten => s,n,Noop(AMD_STATUS - ${AMDSTATUS})\r\n        exten => s,n,Noop(AMD_CAUSE - ${AMDCAUSE})\r\n        exten => s,n,GotoIf($[${AMDSTATUS}=HUMAN]?humn:mach)\r\n        exten => s,n(mach),SoftHangup(${CHANNEL})\r\n       exten => s,n,Hangup()\r\n       exten => s,n(humn),WaitForSilence(20)','agi-conf1',1),(259,'BDService Url','BDService_url','https://req.ovinovo.net','Default https://req.ovinovo.net','global',1),(260,'Generate password automatically on Signup Form','signup_auto_pass','0','Set the number of caracter to password. EX: if you have pass with 10 digits, set it to 10. Minimo value 6','global',1),(261,'Social Media Network to show in customer panel','social_media_network','','Social Media Network to show in customer panel','global',1),(262,'Link to signup terms','accept_terms_link','','Set a link to signup terms','global',1),(263,'Auto gernerate user in Signup form','auto_generate_user_signup','1','Auto gernerate user in Signup form','global',1),(264,'Notificação de  Pagamento de serviços','service_daytopay','5','Total Dias anterior ao vencimento que o MagnusBilling avisara o cliente para pagar os serviços','global',1),(265,'Start User Call Limit','start_user_call_limit','-1','Default call limit for new user','global',0);
+INSERT INTO `pkg_configuration` VALUES (1,'System Currency','base_currency','0','System Currency','global',1),(2,'Language','base_language','en','Allow \n en English \nes Espanhol \npt_BR Portugues','global',1),(3,'Version','version','6.3.8','MBilling Version','global',1),(4,'Licence','licence','free','MBilling Licence','global',0),(5,'Server IP','ip_servers','','Ip do servidor MBilling','global',1),(6,'Template','template','blue-neptune','Allowed values:\ngreen, gray, blue, yellow, red, orange, purple','global',0),(7,'Country','base_country','','ISO CODE values\nUSA United States,\nBRL Brasil,\nARG Argentina,\nNLD Netherlands,\nESP Spanish','global',1),(8,'Desktop layout','layout','0','Active Desktop template, only to FULL version\n1 - Enable (Only to full version)\n0 - Disable','global',0),(9,'Wallpaper','wallpaper','Azul','Default Wallpaper, only FULL version.','global',0),(10,'SMTP Host','smtp_host','mail.magnusbilling.com','SMTP Hostname','global',0),(11,'SMTP UserName','smtp_username','billing@magnusbilling.com','SMTP server Username','global',0),(12,'SMTP Password','smtp_password','magnus','SMTP server Password','global',0),(13,'SMTP Encryption','smtp_encryption','null','SMTP Encryption: tls, ssl or blank','global',0),(14,'SMTP Port','smtp_port','587','SMTP Port','global',0),(15,'Admin Email','admin_email','info@magnusbilling.com','Email for receive notifications','global',1),(16,'Send email copy to admin','admin_received_email','1','Send copy for admin email','global',1),(19,'Days notification','delay_notifications','3','Number of days to generate low balance warning to customers','global',1),(20,'Rounding calls','bloc_time_call','1','Round the lead time as charging sales.\n1: Yes\n0: No','global',1),(21,'Days to pay offers','planbilling_daytopay','5','Set how many days before maturity you wanna collect the bid offers','global',1),(22,'Agent refill limit','agent_limit_refill','5','Limit to agent refill yours customers','global',1),(23,'Archive cdr','archive_call_prior_x_month','4','Calls to file before 10 months.','global',1),(24,'Payment, Accepted values','purchase_amount','8:10:12:15:18:20:30:50:100','Accepted values ​​in module payments, no enable in FREE version.','global',1),(25,'Decimal precision','decimal_precision','0000','Decimal precision.','global',1),(26,'Active paypal for new customer','paypal_new_user','0','Active paypal for new customer. \n\n0 - Disable (RECOMENDED )\n1 - Enable','global',1),(29,'Portabilidade Usuário','portabilidadeUsername','0','Usuário da portabilidade para consulta via WebService','global',0),(30,'Portabilidade Senha','portabilidadePassword','0','Senha da portabilidade para consulta via WebService','global',0),(31,'AGI 1 - Answer Call','answer_call','0','If enabled the MBilling answers the call that starts.\nDefault: 0','agi-conf1',1),(32,'AGI 1 - User DNID','use_dnid','1','If the client does not need active schedule again the number he wish to call after entering the PIN.\n\n1 - Enable (DEFAULT)\n0 - Disable','agi-conf1',1),(33,'AGI 1 - Notices with Audio','play_audio','1','Notices with Audio, if disable, MBilling will send code 603.\n\n1 - Ativo\n0 - Desativado\n','agi-conf1',1),(34,'AGI 1 - Intro Prompt','intro_prompt','','To specify a prompt to play at the beginning of the calls','agi-conf1',1),(36,'AGI 1 - Recording calls','record_call','0','Enables recording of all customers.\nCAUTION, THIS OPTION REQUIRES A LOT OF SERVER PERFORMANCE. SO YOU CAN RECORD CUSTOMER SPECIFIC.\n\n0: Disable\n1: Enable','agi-conf1',1),(37,'AGI 1 - International prefixes','international_prefixes','00,09','List the prefixes you want stripped off if the call number','agi-conf1',1),(38,'AGI 1 - Say sell price','say_rateinitial','0','Play the initial cost of the tariff.\n\n0 - No\n1 - Yes','agi-conf1',1),(39,'AGI 1 - Say Duration','say_timetocall','0','Play the amount of time that the user can call.\n\n0 - No\n1 - Yes','agi-conf1',1),(40,'AGI 1 - CallerID Authentication','cid_enable','0','Active CallerID Authentication.\n\n0 - Disable\n1 - Enable','agi-conf1',1),(41,'AGI 1 - FailOver LCR/LCD','failover_lc_prefix','1','If anable and have two hidden tariff in de plan, MBilling gonna get the cheaper','agi-conf1',1),(42,'AGI 1 - Dial Command Params','dialcommand_param',',60,L(%timeout%:61000:30000)','More info: http://voip-info.org/wiki-Asterisk+cmd+dial','agi-conf1',1),(43,'AGI 1 - Internal Call, Dial Command Params','dialcommand_param_sipiax_friend',',60,TtiL(3600000:61000:30000)','Dial paramater for call between users.\n\nby default (3600000  =  1HOUR MAX CALL).','agi-conf1',1),(44,'AGI 1 - DID Dial Command Params','dialcommand_param_call_2did',',45,TtiL(%timeout%:61000:30000)','Dial paramater to DID calls','agi-conf1',1),(45,'AGI 1 - Failover Retry Limit','failover_recursive_limit','5','Define how many time we want to authorize the research of the failover trunk when a call fails','agi-conf1',1),(46,'AGI 1 - Number of attempt','number_try','1','Number of attempts to dial the number\n Minimum value 1','agi-conf1',1),(47,'AGI 1 - Outbound Call','switchdialcommand','0','Define the order to make the outbound call<br>YES -> SIP/number@trunk - NO  SIP/trunk/number<br>Both should work exactly the same but i experimented one case when gateway was supporting number@trunk, So in case of trouble, try it out.','agi-conf1',1),(48,'AGI 1 - Say Balance After Call','say_balance_after_call','0','Play the balance to the user after the call\n\n0 - No\n1 - Yes','agi-conf1',1),(85,'SIP Account for spy call','channel_spy','0','SIP Account for spy call','global',1),(142,'Username Auto Generate ','username_generate','0','Generate username automatically ','global',1),(143,'Username Prefix','generate_prefix','0','Prefix for username ','global',1),(144,'Username length','generate_length','0','Username Length','global',1),(145,'Answer Callback','answer_callback','0','Answer callback and play audio','global',1),(146,'Callback add Prefix','callback_add_prefix','','Add prefix in callerd in callback call','global',1),(147,'Callback remove Prefix','callback_remove_prefix','','Remove prefix in callerd in callback call','global',1),(233,'Menu color','color_menu','White','Menu color, Black or White','global',0),(234,'Menu color','color_menu','White','Menu color, Black or White','global',1),(235,'Charge Sip Call','charge_sip_call','0','Charge sip call between clients','global',1),(236,'URL to extra module','module_extra','index.php/extra/read','Url to extra module, default: index.php/extra/read','global',1),(237,'intra/inter Billing','intra-inter','0','Enable Intra-Inter Billing. If you enable this option, and you have another plan with the same name + Intra on the name Mbilling use the new plan to intra call','global',1),(238,'Enable Paypal on Softphone','paypal-softphone','0','Active Paypal on Android Softphones, valid only Softphone version 2.5. 0 - Disable 1 - Enable','global',1),(239,'Enable CallBack on Softphone','callback-softphone','0','Active Callback on Android Softphones, valid only Softphone version 2.5. 0 - Disable 1 - Enable','global',1),(240,'Invoice tax','invoice_tax','0','Tax to add in Invoice.','global',1),(241,'Log nivel','log','0','min 0 - max 5 ','global',1),(242,'Asterisk','asterisk_version','11','Set your Asterisk Version instaled. Default 1.8','global',1),(243,'Tts URL','tts_url','https://translate.google.com/translate_tts?ie=UTF-8&q=$name&tl=pt-BR&total=1&idx=0&textlen=25&client=t&tk=55786|34299.','Set here the URL to use in Massive Call. Use variable $name in the string field','global',1),(244,'fm.transfer-to.com username','fm_transfer_to_username',NULL,'Username in Transfer To','global',1),(245,'fm.transfer-to.com token','fm_transfer_to_ token',NULL,'Token to Transfer To API','global',1),(247,'Days to find in Summary per user','summary_per_user_days','7','Days to find when you open the menu Summary per User','global',1),(248,'Days to find in Summary per agent','summary_per_agent_days','7','Days to find when you open the menu Summary per Agent','global',1),(249,'MixMonitor Format','MixMonitor_format','gsm','see the availables extensions in http://www.voip-info.org/wiki/view/MixMonitor','global',1),(251,'fm.transfer-to.com print Header','fm_transfer_print_header','Change it in configuration menu','Description to print header','global',1),(252,'fm.transfer-to.com print Footer','fm_transfer_print_footer','Change it in configuration menu','Description to print footer','global',1),(253,'fm.transfer-to.com Currency','fm_transfer_currency','€','Set the transfer-to currency','global',1),(254,'Sip trunk short duration call','trunk_short_duration_call','3','SIP TRUNK short duration call','global',1),(255,'Sip trunk short total calls','trunk_short_total_calls','0','Sip trunk short total calls','global',1),(256,'Enable IAX','enable_izx','3','Enable IAX','global',0),(257,'Use CDR Cache','cache','0','Use CDR cache','global',0),(258,'AGI 1 - Use amd macro','amd','','Use amd. Set to CM(amd) . \r\n       Add this macro in your extension_magnus.conf\r\n\r\n        [macro-amd]\r\n       exten => s,1,AMD\r\n        exten => s,n,Noop(AMD_NUMERO - ${CALLERID(num)})\r\n        exten => s,n,Noop(AMD_STATUS - ${AMDSTATUS})\r\n        exten => s,n,Noop(AMD_CAUSE - ${AMDCAUSE})\r\n        exten => s,n,GotoIf($[${AMDSTATUS}=HUMAN]?humn:mach)\r\n        exten => s,n(mach),SoftHangup(${CHANNEL})\r\n       exten => s,n,Hangup()\r\n       exten => s,n(humn),WaitForSilence(20)','agi-conf1',1),(259,'BDService Url','BDService_url','https://req.ovinovo.net','Default https://req.ovinovo.net','global',1),(260,'Generate password automatically on Signup Form','signup_auto_pass','0','Set the number of caracter to password. EX: if you have pass with 10 digits, set it to 10. Minimo value 6','global',1),(261,'Social Media Network to show in customer panel','social_media_network','','Social Media Network to show in customer panel','global',1),(262,'Link to signup terms','accept_terms_link','','Set a link to signup terms','global',1),(263,'Auto gernerate user in Signup form','auto_generate_user_signup','1','Auto gernerate user in Signup form','global',1),(264,'Notificação de  Pagamento de serviços','service_daytopay','5','Total Dias anterior ao vencimento que o MagnusBilling avisara o cliente para pagar os serviços','global',1),(265,'Start User Call Limit','start_user_call_limit','-1','Default call limit for new user','global',0),(266,'CallingCard answer call','callingcard_answer','1','Answer call in CallingCard','agi-conf1',1),(267,'CallingCard enable CID authentication','callingcard_cid_enable','1','CID authentication in CallingCard','agi-conf1',1),(268,'CallingCard number try','callingcard_number_try','3','Number try call in CallingCard','agi-conf1',1),(269,'CallingCard say sall rate','callingcard_say_rateinitial','0','CallingCard say sall rate','agi-conf1',1),(270,'CallingCard say timecall','callingcard_say_timetocall','0','CallingCard say timecall','agi-conf1',1),(271,'reCaptchaKey sitekey','reCaptchaKey','','Generate your sitekey in https://www.google.com/recaptcha/admin#list','global',1),(272,'BDService Username','BDService_username','','BDService username','global',1),(273,'BDService token','BDService_token','','BDService token','global',1),(274,'BDService flexiload values','BDService_flexiload','10-1000','BDService flexiload values','global',1),(275,'BDService bkash values','BDService_bkash','50-2500','BDService bkash values','global',1),(276,'BDService currency translation','BDService_cambio','0.01','BDService currency translation','global',1),(277,'BDService DBBL/Rocket values','BDService_dbbl_rocket','10-1000','DBBL/Rocket flexiload values','global',1),(278,'BDService Credit','BDService_credit_provider','0','BDService Credit','global',1),(279,'Session timeout','session_timeout','3600','Time in seconds to close user session','global',1),(280,'Show Play icon on CDR','show_playicon_cdr','0','Show Play icon on CDR menu. Set to 1 for show the icon','global',1),(281,'Show fields help','show_filed_help','0','Show fields help','global',1);
 /*!40000 ALTER TABLE `pkg_configuration` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -646,6 +942,7 @@ CREATE TABLE `pkg_did` (
   `TimeOfDay_sun` varchar(150) DEFAULT NULL,
   `workaudio` varchar(150) DEFAULT NULL,
   `noworkaudio` varchar(150) DEFAULT NULL,
+  `calllimit` int(11) NOT NULL DEFAULT '-1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `did` (`did`),
   KEY `fk_pkg_user_pkg_did` (`id_user`),
@@ -809,7 +1106,7 @@ CREATE TABLE `pkg_group_module` (
 
 LOCK TABLES `pkg_group_module` WRITE;
 /*!40000 ALTER TABLE `pkg_group_module` DISABLE KEYS */;
-INSERT INTO `pkg_group_module` VALUES (1,1,'crud',1,0,0),(1,2,'crud',0,0,0),(1,3,'crud',1,0,0),(1,4,'rcud',0,0,0),(1,5,'crud',1,0,0),(1,6,'crud',1,0,0),(1,7,'crud',1,0,0),(1,8,'crud',1,0,0),(1,9,'crud',1,0,0),(1,10,'crud',1,0,0),(1,12,'crud',1,0,0),(1,13,'crud',1,0,0),(1,14,'crud',1,0,0),(1,15,'crud',1,1,1),(1,16,'crud',1,0,0),(1,17,'crud',1,1,1),(1,19,'crud',1,1,1),(1,20,'crud',1,0,0),(1,21,'crud',1,1,1),(1,22,'crud',1,0,0),(1,23,'crud',1,1,1),(1,25,'crud',1,0,0),(1,26,'crud',1,0,0),(1,27,'crud',1,0,0),(1,28,'crud',1,0,0),(1,29,'crud',1,1,1),(1,30,'rud',1,1,1),(1,31,'crud',1,0,0),(1,32,'crud',1,0,0),(1,33,'crud',1,0,0),(1,34,'crud',1,0,0),(1,36,'crud',1,0,0),(1,40,'crud',1,1,1),(1,41,'crud',1,0,0),(1,42,'crud',1,0,0),(1,43,'crud',1,0,0),(1,44,'crud',1,0,0),(1,45,'crud',1,0,0),(1,46,'crud',1,0,0),(1,48,'crud',1,0,0),(1,49,'crud',1,0,0),(1,50,'crud',1,0,0),(1,51,'crud',1,0,0),(1,52,'crud',1,0,0),(1,53,'crud',1,0,0),(1,54,'crud',1,0,0),(1,56,'crud',1,0,0),(1,57,'crud',1,0,0),(1,58,'crud',1,0,0),(1,59,'crud',1,0,0),(1,60,'crud',1,1,0),(1,62,'crud',1,0,0),(1,63,'crud',1,1,1),(1,64,'r',1,1,1),(1,66,'crud',1,1,1),(1,67,'rud',1,1,1),(1,70,'r',1,1,1),(1,71,'r',1,1,1),(1,72,'crud',1,1,1),(1,77,'crud',1,1,1),(1,78,'r',1,1,1),(1,80,'r',1,1,1),(1,81,'r',1,1,1),(1,82,'crud',1,0,0),(1,83,'crud',1,1,1),(1,84,'crud',1,1,1),(2,1,'crud',1,0,0),(2,2,'crud',1,0,0),(2,7,'crud',1,0,0),(2,8,'crud',1,0,0),(2,9,'crud',1,0,0),(2,15,'crud',1,1,1),(2,19,'crud',1,1,1),(2,20,'crud',1,0,0),(2,21,'r',1,1,1),(2,23,'crud',1,1,1),(2,25,'r',0,0,0),(2,28,'crud',1,0,0),(2,29,'crud',1,1,1),(2,30,'r',1,1,1),(2,33,'r',0,0,0),(2,40,'r',1,1,0),(2,51,'r',1,0,0),(2,53,'r',1,0,0),(2,61,'r',1,1,1),(3,1,'ru',1,0,0),(3,5,'r',1,0,0),(3,7,'r',1,0,0),(3,8,'r',1,0,0),(3,9,'r',1,0,0),(3,15,'ru',1,1,1),(3,19,'ru',1,0,0),(3,20,'crud',1,0,0),(3,21,'r',1,1,1),(3,22,'crud',1,0,0),(3,23,'r',1,1,1),(3,25,'r',0,0,0),(3,28,'r',0,0,0),(3,29,'r',1,1,1),(3,30,'r',1,1,1),(3,31,'r',1,0,0),(3,32,'crud',1,0,0),(3,33,'r',0,0,0),(3,34,'r',0,0,0),(3,40,'r',1,0,0),(3,61,'r',1,1,1),(1, 85, 'crud', 1,1,1),(1, 86, 'crud', 1,1,1),(1, 87, 'crud', 1,1,1);
+INSERT INTO `pkg_group_module` VALUES (1,1,'crud',1,0,0),(1,2,'crud',0,0,0),(1,3,'crud',1,0,0),(1,4,'rcud',0,0,0),(1,5,'crud',1,0,0),(1,6,'crud',1,0,0),(1,7,'crud',1,0,0),(1,8,'crud',1,0,0),(1,9,'crud',1,0,0),(1,10,'crud',1,0,0),(1,12,'crud',1,0,0),(1,13,'crud',1,0,0),(1,14,'crud',1,0,0),(1,15,'crud',1,1,1),(1,16,'crud',1,0,0),(1,17,'crud',1,1,1),(1,19,'crud',1,1,1),(1,20,'crud',1,0,0),(1,21,'crud',1,1,1),(1,22,'crud',1,0,0),(1,23,'crud',1,1,1),(1,25,'crud',1,0,0),(1,26,'crud',1,0,0),(1,27,'crud',1,0,0),(1,28,'crud',1,0,0),(1,29,'crud',1,1,1),(1,30,'rud',1,1,1),(1,31,'crud',1,0,0),(1,32,'crud',1,0,0),(1,33,'crud',1,0,0),(1,34,'crud',1,0,0),(1,36,'crud',1,0,0),(1,40,'crud',1,1,1),(1,41,'crud',1,0,0),(1,42,'crud',1,0,0),(1,43,'crud',1,0,0),(1,44,'crud',1,0,0),(1,45,'crud',1,0,0),(1,46,'crud',1,0,0),(1,48,'crud',1,0,0),(1,49,'crud',1,0,0),(1,50,'crud',1,0,0),(1,51,'crud',1,0,0),(1,52,'crud',1,0,0),(1,53,'crud',1,0,0),(1,54,'crud',1,0,0),(1,56,'crud',1,0,0),(1,57,'crud',1,0,0),(1,58,'crud',1,0,0),(1,59,'crud',1,0,0),(1,60,'crud',1,1,0),(1,62,'crud',1,0,0),(1,63,'crud',1,1,1),(1,64,'r',1,1,1),(1,66,'crud',1,1,1),(1,67,'rud',1,1,1),(1,71,'r',1,1,1),(1,72,'crud',1,1,1),(1,77,'crud',1,1,1),(1,78,'r',1,1,1),(1,80,'r',1,1,1),(1,82,'crud',1,0,0),(1,83,'crud',1,1,1),(1,84,'crud',1,1,1),(1,85,'crud',1,1,1),(1,86,'crud',1,1,1),(1,87,'crud',1,1,1),(1,89,'r',1,1,1),(1,90,'r',1,1,1),(1,91,'r',1,1,1),(1,92,'r',1,1,1),(1,93,'r',1,1,1),(1,94,'r',1,1,1),(2,1,'crud',1,0,0),(2,2,'crud',1,0,0),(2,7,'crud',1,0,0),(2,8,'crud',1,0,0),(2,9,'crud',1,0,0),(2,15,'crud',1,1,1),(2,19,'crud',1,1,1),(2,20,'crud',1,0,0),(2,21,'r',1,1,1),(2,23,'crud',1,1,1),(2,25,'r',0,0,0),(2,28,'crud',1,0,0),(2,29,'crud',1,1,1),(2,30,'r',1,1,1),(2,33,'r',0,0,0),(2,51,'r',1,0,0),(2,53,'r',1,0,0),(2,61,'r',1,1,1),(3,1,'ru',1,0,0),(3,5,'r',1,0,0),(3,7,'r',1,0,0),(3,8,'r',1,0,0),(3,9,'r',1,0,0),(3,15,'ru',1,1,1),(3,19,'ru',1,0,0),(3,20,'crud',1,0,0),(3,21,'r',1,1,1),(3,22,'crud',1,0,0),(3,23,'r',1,1,1),(3,25,'r',0,0,0),(3,28,'r',0,0,0),(3,29,'r',1,1,1),(3,30,'r',1,1,1),(3,31,'r',1,0,0),(3,32,'crud',1,0,0),(3,33,'r',0,0,0),(3,34,'r',0,0,0),(3,61,'r',1,1,1),(3,80,'r',1,0,0),(3,90,'r',1,0,0),(3,93,'r',1,0,0);
 /*!40000 ALTER TABLE `pkg_group_module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -898,7 +1195,7 @@ CREATE TABLE `pkg_iax` (
   `nat` varchar(25) COLLATE utf8_bin DEFAULT 'force_rport,comedia',
   `permit` varchar(95) COLLATE utf8_bin NOT NULL,
   `deny` varchar(95) COLLATE utf8_bin NOT NULL,
-  `mask` varchar(95) COLLATE utf8_bin NOT NULL,
+  `mask` varchar(95) COLLATE utf8_bin DEFAULT NULL,
   `pickupgroup` char(10) COLLATE utf8_bin DEFAULT NULL,
   `port` char(5) COLLATE utf8_bin NOT NULL DEFAULT '',
   `qualify` char(7) COLLATE utf8_bin DEFAULT 'yes',
@@ -910,7 +1207,7 @@ CREATE TABLE `pkg_iax` (
   `username` varchar(80) COLLATE utf8_bin NOT NULL,
   `disallow` varchar(100) COLLATE utf8_bin NOT NULL,
   `allow` varchar(100) COLLATE utf8_bin NOT NULL,
-  `musiconhold` varchar(100) COLLATE utf8_bin NOT NULL,
+  `musiconhold` varchar(100) COLLATE utf8_bin DEFAULT NULL,
   `regseconds` int(11) NOT NULL DEFAULT '0',
   `ipaddr` char(15) COLLATE utf8_bin NOT NULL DEFAULT '',
   `cancallforward` char(3) COLLATE utf8_bin DEFAULT 'yes',
@@ -965,6 +1262,7 @@ CREATE TABLE `pkg_ivr` (
   `option_8` varchar(50) DEFAULT NULL,
   `option_9` varchar(50) DEFAULT NULL,
   `option_10` varchar(50) DEFAULT NULL,
+  `direct_extension` tinyint(1) DEFAULT '0',
   `workaudio` varchar(100) DEFAULT NULL,
   `noworkaudio` varchar(100) DEFAULT NULL,
   `option_out_0` varchar(50) DEFAULT NULL,
@@ -1098,7 +1396,7 @@ CREATE TABLE `pkg_method_pay` (
   PRIMARY KEY (`id`),
   KEY `fk_pkg_user_pkg_method_pay` (`id_user`),
   CONSTRAINT `fk_pkg_user_pkg_method_pay` FOREIGN KEY (`id_user`) REFERENCES `pkg_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1107,18 +1405,7 @@ CREATE TABLE `pkg_method_pay` (
 
 LOCK TABLES `pkg_method_pay` WRITE;
 /*!40000 ALTER TABLE `pkg_method_pay` DISABLE KEYS */;
-INSERT INTO `pkg_method_pay` VALUES 
-(1,1,'Pagseguro','Pagseguro','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN '),
-(2,1,'BoletoBancario','BoletoBancario','Brasil',0,0,'','','','',0,'','','','','','18','1.20','Até vencimento pagável em qualquer banco e agência','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,boleto_convenio,boleto_inicio_nosso_numeroa,boleto_banco,boleto_agencia,boleto_conta_corrente,boleto_carteira,boleto_taxa,boleto_instrucoes,boleto_nome_emp,boleto_end_emp,boleto_cidade_emp,boleto_estado_emp,boleto_cpf_emp'),
-(3,1,'Moip','Moip','Brasil',0,0,'','https://www.moip.com.br/PagamentoMoIP.do','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,id_user,show_name,country,active,min,max,username,url'),
-(4,1,'Paypal','Paypal','Global',1,0,'','https://www.paypal.com/cgi-bin/webscr','info@magnusbilling.com','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,500,'payment_method,show_name,id_user,country,active,min,max,username,url,fee'),
-(5,1,'CuentaDigital','PagoFacil o Rapipago','Argentina',0,0,'','http://www.cuentadigital.com/api.php','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,url'),
-(6,1,'DineroMail','Tarjeta de crédito, DineroMail','Brasil',0,0,'','https://argentina.dineromail.com/Shop/Shop_Ingreso.asp','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,min,max,username,url'),
-(7,1,'PlacetoPay','PlacetoPay','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,P2P_CustomerSiteID,P2P_KeyID,P2P_Passphrase,P2P_RecipientKeyID,P2P_tax_amount'),
-(8,1,'GerenciaNet','GerenciaNet','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','','','',NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,client_id,client_secret'),
-(9,1,'Pagseguro','Pagseguro','Brasil',0,0,'','','','',0,'','Banco do Brasil','','','','','','','','','','','','','','','','','','','','','',0,'',10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),
-(10,1,'MercadoPago','MercadoPago','Brasil',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,20,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),
-(11,1,'paghiper','Boleto Bancario  paghiper','Brasil',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN');
+INSERT INTO `pkg_method_pay` VALUES (1,1,'Pagseguro','Pagseguro','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),(2,1,'BoletoBancario','BoletoBancario','Brasil',0,0,'','','','',0,'','','','','','18','1.20','Até vencimento pagável em qualquer banco e agência','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,boleto_convenio,boleto_inicio_nosso_numeroa,boleto_banco,boleto_agencia,boleto_conta_corrente,boleto_carteira,boleto_taxa,boleto_instrucoes,boleto_nome_emp,boleto_end_emp,boleto_cidade_emp,boleto_estado_emp,boleto_cpf_emp'),(3,1,'Moip','Moip','Brasil',0,0,'','https://www.moip.com.br/PagamentoMoIP.do','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,id_user,show_name,country,active,min,max,username,url'),(4,1,'Paypal','Paypal','Global',1,0,'','https://www.paypal.com/cgi-bin/webscr','info@magnusbilling.com','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,500,'payment_method,show_name,id_user,country,active,min,max,username,url,fee'),(5,1,'CuentaDigital','PagoFacil o Rapipago','Argentina',0,0,'','http://www.cuentadigital.com/api.php','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,url'),(6,1,'DineroMail','Tarjeta de crédito, DineroMail','Brasil',0,0,'','https://argentina.dineromail.com/Shop/Shop_Ingreso.asp','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,min,max,username,url'),(7,1,'PlacetoPay','PlacetoPay','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,P2P_CustomerSiteID,P2P_KeyID,P2P_Passphrase,P2P_RecipientKeyID,P2P_tax_amount'),(8,1,'GerenciaNet','GerenciaNet','Brasil',0,0,'','','','',0,'','','','','','','','','','','','','','','','','','','','',NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,client_id,client_secret'),(9,1,'Pagseguro','Pagseguro','Brasil',0,0,'','','','',0,'','Banco do Brasil','','','','','','','','','','','','','','','','','','','','','',0,'',10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),(10,1,'MercadoPago','MercadoPago','Brasil',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,20,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),(11,1,'paghiper','Boleto Bancario  paghiper','Brasil',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),(12,1,'MercadoPago','MercadoPago','Brasil',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN'),(13,1,'molpay','MoPay','Global',0,0,NULL,'','','',0,'','','','','','','','','','','','','','','','','','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,10,500,'payment_method,show_name,id_user,country,active,min,max,username,pagseguro_TOKEN');
 /*!40000 ALTER TABLE `pkg_method_pay` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1135,10 +1422,11 @@ CREATE TABLE `pkg_module` (
   `module` varchar(100) DEFAULT NULL,
   `icon_cls` varchar(100) DEFAULT NULL,
   `id_module` int(11) DEFAULT NULL,
+  `priority` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_pkg_module_pkg_module` (`id_module`),
   CONSTRAINT `fk_pkg_module_pkg_module` FOREIGN KEY (`id_module`) REFERENCES `pkg_module` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=95 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1147,7 +1435,7 @@ CREATE TABLE `pkg_module` (
 
 LOCK TABLES `pkg_module` WRITE;
 /*!40000 ALTER TABLE `pkg_module` DISABLE KEYS */;
-INSERT INTO `pkg_module` VALUES (1,'t(\'users Module\')',NULL,'customer',NULL),(2,'t(\'groupmodule\')','groupmodule',NULL,12),(3,'t(\'groupuser\')','groupuser','modules',12),(4,'t(\'module\')','module','module',12),(5,'t(\'did Module\')',NULL,'did',NULL),(6,'t(\'settings\')','configuration','config',12),(7,'t(\'billing Module\')',NULL,'finances',NULL),(8,'t(\'rates Module\')',NULL,'rates',NULL),(9,'t(\'reports Module\')',NULL,'report',NULL),(10,'t(\'routes Module\')',NULL,'routes',NULL),(12,'t(\'config Module\')',NULL,'administrators',NULL),(13,'t(\'callcenter Module\')',NULL,'callcenter',NULL),(14,'t(\'callshop Module\')',NULL,'callshop',NULL),(15,'t(\'users\')','user','users',1),(16,'t(\'provider\')','provider','provider',10),(17,'t(\'trunk\')','trunk','trunk',10),(19,'t(\'sip\')','sip','sipbuddies',1),(20,'t(\'sipuras\')','sipuras','sipuras',1),(21,'t(\'callonline\')','callonline','callonline',1),(22,'t(\'callerid\')','callerid','callerid',1),(23,'t(\'refill\')','refill','refill',7),(25,'t(\'paymentmethods\')','methodpay','paymentmethods',7),(26,'t(\'voucher\')','voucher','voucher',7),(27,'t(\'refillprovider\')','refillprovider','refillprovider',7),(28,'t(\'plans\')','plan','plan',8),(29,'t(\'tariffs\')','rate','tariffs',8),(30,'t(\'cdr\')','call','cdr',9),(31,'t(\'did\')','did','did',5),(32,'t(\'diddestination\')','diddestination','diddestination',5),(33,'t(\'prefixs\')','prefix','prefixs',8),(34,'t(\'offer\')','offer','offer',8),(36,'t(\'diduse\')','diduse','diduse',5),(40,'t(\'callsummary\')','callsummary','callsummary',9),(41,'t(\'campaigns\')','campaign','callcenter',13),(42,'t(\'polls\')','campaignpoll','polls',13),(43,'t(\'phonebooks\')','phonebook','phonebooks',13),(44,'t(\'numbers\')','phonenumber','numbers',13),(45,'t(\'offercdr\')','offercdr','offercdr',8),(46,'t(\'offeruse\')','offeruse','offeruse',8),(48,'t(\'restrictedphonenumber\')','restrictedphonenumber','restrictedphonenumber',1),(49,'t(\'sms\')','sms','sms',13),(50,'t(\'cabinas\')','callshop','cabinas',14),(51,'t(\'callshopcdr\')','callshopcdr','cdr',14),(52,'t(\'boleto\')','boleto','boleto',7),(53,'t(\'callshoptariffs\')','ratecallshop','tariffs',14),(54,'t(\'templatemail\')','templatemail','templatemail',12),(55,'t(\'callback\')','callback','callback',1),(56,'t(\'ivr\')','ivr','ivr',5),(57,'t(\'campaignpollinfo\')','campaignpollinfo','campaignpollinfo',13),(58,'t(\'queues\')','queue','queues',5),(59,'t(\'queuesmember\')','queuemember','queuesmember',5),(60,'t(\'callsummarybymonth\')','callsummarybymonth','callsummarybymonth',9),(61,'t(\'buycredit\')','buycredit','buycredit',1),(62,'t(\'Restrict Phone\')','campaignrestrictphone','restrictedphonenumber',13),(63,'t(\'Quick Campaign\')','campaignsend','campaignsend',13),(64,'t(\'Log Users\')','logusers','diddestination',12),(65,'t(\'Call per Minutes\')','campaignlog','diddestination',12),(66,'t(\'User Rate\')','userrate','callback',8),(67,'t(\'Call Failed\')','callfailed','cdr',9),(68,'t(\'Buy DID\')','didbuy','buycredit',5),(69,'t(\'Extra\')','extra','buycredit',12),(70,'t(\'Trunk Report\')','trunkreport','campaignpollinfo',9),(71,'t(\'Dashboard\')','dashboard','callback',12),(72,'t(\'Smtp\')','smtps','templatemail',12),(73,'t(\'CallShop per Day\')','callsummarycallshop','callsummary',14),(77,'t(\'Servers\')','servers','tariffs',10),(78,'t(\'Queue DashBoard\')','dashboardqueue','tariffs',5),(79,'t(\'Transfer to Mobile\')','transfertomobile','refillprovider',1),(80,'t(\'callsummaryperuser\')','callsummaryperuser','callsummarybymonth',9),(81,'t(\'callsummaryperagent\')','callsummaryperagent','callsummarybymonth',9),(82,'t(\'Firewall\')','firewall','modules',12),(83,'t(\'Iax\')','iax','sipbuddies',1),(84,'t(\'Group to Admins\')','groupusergroup','prefixs',12),(85, 't(\'Services\')', NULL, 'prefixs', NULL),(86, 't(\'Services\')', 'services', 'offer', 85),(87, 't(\'Services Use\')', 'servicesuse', 'offer', 85);
+INSERT INTO `pkg_module` VALUES (1,'t(\'users Module\')',NULL,'customer',NULL,1),(2,'t(\'groupmodule\')','groupmodule',NULL,12,2),(3,'t(\'groupuser\')','groupuser','modules',12,3),(4,'t(\'module\')','module','module',12,4),(5,'t(\'did Module\')',NULL,'did',NULL,5),(6,'t(\'settings\')','configuration','config',12,6),(7,'t(\'billing Module\')',NULL,'finances',NULL,7),(8,'t(\'rates Module\')',NULL,'rates',NULL,8),(9,'t(\'reports Module\')',NULL,'report',NULL,9),(10,'t(\'routes Module\')',NULL,'routes',NULL,10),(12,'t(\'config Module\')',NULL,'administrators',NULL,12),(13,'t(\'callcenter Module\')',NULL,'callcenter',NULL,13),(14,'t(\'callshop Module\')',NULL,'callshop',NULL,14),(15,'t(\'users\')','user','users',1,15),(16,'t(\'provider\')','provider','provider',10,16),(17,'t(\'trunk\')','trunk','trunk',10,17),(19,'t(\'sip\')','sip','sipbuddies',1,19),(20,'t(\'sipuras\')','sipuras','sipuras',1,20),(21,'t(\'callonline\')','callonline','callonline',1,21),(22,'t(\'callerid\')','callerid','callerid',1,22),(23,'t(\'refill\')','refill','refill',7,23),(25,'t(\'paymentmethods\')','methodpay','paymentmethods',7,25),(26,'t(\'voucher\')','voucher','voucher',7,26),(27,'t(\'refillprovider\')','refillprovider','refillprovider',7,27),(28,'t(\'plans\')','plan','plan',8,28),(29,'t(\'tariffs\')','rate','tariffs',8,29),(30,'t(\'cdr\')','call','cdr',9,1),(31,'t(\'did\')','did','did',5,31),(32,'t(\'diddestination\')','diddestination','diddestination',5,32),(33,'t(\'prefixs\')','prefix','prefixs',8,33),(34,'t(\'offer\')','offer','offer',8,34),(36,'t(\'diduse\')','diduse','diduse',5,36),(40,'t(\'Summary per Day\')','callsummaryperday','callsummary',9,3),(41,'t(\'campaigns\')','campaign','callcenter',13,41),(42,'t(\'polls\')','campaignpoll','polls',13,42),(43,'t(\'phonebooks\')','phonebook','phonebooks',13,43),(44,'t(\'numbers\')','phonenumber','numbers',13,44),(45,'t(\'offercdr\')','offercdr','offercdr',8,45),(46,'t(\'offeruse\')','offeruse','offeruse',8,46),(48,'t(\'restrictedphonenumber\')','restrictedphonenumber','restrictedphonenumber',1,48),(49,'t(\'sms\')','sms','sms',13,49),(50,'t(\'cabinas\')','callshop','cabinas',14,50),(51,'t(\'callshopcdr\')','callshopcdr','cdr',14,51),(52,'t(\'boleto\')','boleto','boleto',7,52),(53,'t(\'callshoptariffs\')','ratecallshop','tariffs',14,53),(54,'t(\'templatemail\')','templatemail','templatemail',12,54),(55,'t(\'callback\')','callback','callback',1,55),(56,'t(\'ivr\')','ivr','ivr',5,56),(57,'t(\'campaignpollinfo\')','campaignpollinfo','campaignpollinfo',13,57),(58,'t(\'queues\')','queue','queues',5,58),(59,'t(\'queuesmember\')','queuemember','queuesmember',5,59),(60,'t(\'Summary per Month\')','callsummarypermonth','callsummarybymonth',9,7),(61,'t(\'buycredit\')','buycredit','buycredit',1,61),(62,'t(\'Restrict Phone\')','campaignrestrictphone','restrictedphonenumber',13,62),(63,'t(\'Quick Campaign\')','campaignsend','campaignsend',13,63),(64,'t(\'Log Users\')','logusers','diddestination',12,64),(65,'t(\'Call per Minutes\')','campaignlog','diddestination',12,65),(66,'t(\'User Rate\')','userrate','callback',8,66),(67,'t(\'Call Failed\')','callfailed','cdr',9,2),(68,'t(\'Buy DID\')','didbuy','buycredit',5,68),(69,'t(\'Extra\')','extra','buycredit',12,69),(71,'t(\'Dashboard\')','dashboard','callback',12,71),(72,'t(\'Smtp\')','smtps','templatemail',12,72),(73,'t(\'CallShop per Day\')','callsummarycallshop','callsummary',14,73),(77,'t(\'Servers\')','servers','tariffs',10,77),(78,'t(\'Queue DashBoard\')','dashboardqueue','tariffs',5,78),(79,'t(\'Send Credit\')','transfertomobile','refillprovider',1,79),(80,'t(\'Summary per User\')','callsummaryperuser','campaignpollinfo',9,11),(82,'t(\'Firewall\')','firewall','modules',12,82),(83,'t(\'Iax\')','iax','sipbuddies',1,83),(84,'t(\'Group to Admins\')','groupusergroup','prefixs',12,84),(85,'t(\'Services\')',NULL,'prefixs',NULL,85),(86,'t(\'Services\')','services','offer',85,86),(87,'t(\'Services Use\')','servicesuse','offer',85,87),(88,'t(\'Send Credit Summary\')','sendcreditsummary','campaignpollinfo',9,88),(89,'t(\'Summary per Trunk\')','callsummarypertrunk','campaignpollinfo',9,12),(90,'t(\'Summary Day User\')','callsummarydayuser','callsummary',9,4),(91,'t(\'Summary Day Trunk\')','callsummarydaytrunk','callsummary',9,5),(92,'t(\'Summary Day Agent\')','callsummarydayagent','callsummary',9,6),(93,'t(\'Summary Month User\')','callsummarymonthuser','callsummarybymonth',9,8),(94,'t(\'Summary Month Trunk\')','callsummarymonthtrunk','callsummarybymonth',9,9);
 /*!40000 ALTER TABLE `pkg_module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1359,20 +1647,6 @@ CREATE TABLE `pkg_prefix` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-
---
--- Table structure for table `pkg_prefix_length`
---
-
-CREATE TABLE IF NOT EXISTS `pkg_prefix_length` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` int(11) NOT NULL,
-  `length` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-    UNIQUE KEY `code` (`code`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 ;
-
-
 --
 -- Dumping data for table `pkg_prefix`
 --
@@ -1380,6 +1654,31 @@ CREATE TABLE IF NOT EXISTS `pkg_prefix_length` (
 LOCK TABLES `pkg_prefix` WRITE;
 /*!40000 ALTER TABLE `pkg_prefix` DISABLE KEYS */;
 /*!40000 ALTER TABLE `pkg_prefix` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pkg_prefix_length`
+--
+
+DROP TABLE IF EXISTS `pkg_prefix_length`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_prefix_length` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` int(11) NOT NULL,
+  `length` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_prefix_length`
+--
+
+LOCK TABLES `pkg_prefix_length` WRITE;
+/*!40000 ALTER TABLE `pkg_prefix_length` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pkg_prefix_length` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1394,7 +1693,7 @@ CREATE TABLE `pkg_provider` (
   `provider_name` char(30) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `creationdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `description` mediumtext CHARACTER SET utf8 COLLATE utf8_bin,
-  `credit` decimal(20,5) NOT NULL DEFAULT '0.00000',
+  `credit` decimal(18,5) NOT NULL DEFAULT '0.00000',
   `credit_control` smallint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `cons_pkg_provider_provider_name` (`provider_name`)
@@ -1453,6 +1752,7 @@ CREATE TABLE `pkg_queue` (
   `var_talktime` int(11) NOT NULL DEFAULT '0',
   `var_totalCalls` int(11) NOT NULL DEFAULT '0',
   `var_answeredCalls` int(11) NOT NULL DEFAULT '0',
+  `ring_or_moh` varchar(4) NOT NULL DEFAULT 'moh',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `fk_pkg_user_pkg_queue` (`id_user`),
@@ -1553,6 +1853,7 @@ CREATE TABLE `pkg_queue_status` (
   `answeredCalls` int(11) DEFAULT NULL,
   `callduration` int(11) DEFAULT NULL,
   `oldtime` int(11) NOT NULL DEFAULT '0',
+  `agentName` varchar(50) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `callerId` (`callerId`),
   KEY `status` (`status`),
@@ -1797,6 +2098,39 @@ LOCK TABLES `pkg_restrict_phone` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `pkg_send_credit`
+--
+
+DROP TABLE IF EXISTS `pkg_send_credit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_send_credit` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_user` int(11) NOT NULL,
+  `date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `service` varchar(50) NOT NULL,
+  `number` varchar(30) NOT NULL,
+  `profit` varchar(10) DEFAULT '0',
+  `earned` varchar(20) DEFAULT NULL,
+  `amount` varchar(10) DEFAULT NULL,
+  `total_sale` int(11) DEFAULT NULL,
+  `count` int(11) DEFAULT NULL,
+  `confirmed` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15255 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_send_credit`
+--
+
+LOCK TABLES `pkg_send_credit` WRITE;
+/*!40000 ALTER TABLE `pkg_send_credit` DISABLE KEYS */;
+INSERT INTO `pkg_send_credit` VALUES (15254,0,'2018-10-17 22:08:10','','','0',NULL,NULL,NULL,NULL,1);
+/*!40000 ALTER TABLE `pkg_send_credit` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `pkg_servers`
 --
 
@@ -2019,7 +2353,7 @@ CREATE TABLE `pkg_sip` (
   `useragent` varchar(100) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
   `calllimit` int(11) DEFAULT NULL,
   `status` smallint(1) DEFAULT '1',
-  `directmedia` enum('yes','no','nonat','update') DEFAULT 'no',
+  `directmedia` varchar(10) DEFAULT 'no',
   `sippasswd` varchar(50) DEFAULT NULL,
   `callshopnumber` varchar(15) DEFAULT NULL,
   `callshoptime` int(11) DEFAULT '0',
@@ -2027,6 +2361,11 @@ CREATE TABLE `pkg_sip` (
   `group` varchar(20) DEFAULT NULL,
   `ringfalse` tinyint(1) NOT NULL DEFAULT '0',
   `record_call` tinyint(1) NOT NULL DEFAULT '0',
+  `voicemail` tinyint(1) NOT NULL DEFAULT '0',
+  `forward` varchar(50) NOT NULL DEFAULT '',
+  `url_events` varchar(150) DEFAULT NULL,
+  `block_call_reg` varchar(100) NOT NULL DEFAULT '',
+  `dial_timeout` int(11) NOT NULL DEFAULT '60',
   PRIMARY KEY (`id`),
   KEY `host` (`host`),
   KEY `ipaddr` (`ipaddr`),
@@ -2306,6 +2645,31 @@ INSERT INTO `pkg_smtp` VALUES (1,1,'mail.magnusbilling.com','billing@magnusbilli
 UNLOCK TABLES;
 
 --
+-- Table structure for table `pkg_tables_changes`
+--
+
+DROP TABLE IF EXISTS `pkg_tables_changes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkg_tables_changes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `module` varchar(300) NOT NULL,
+  `last_time` varchar(18) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pkg_tables_changes`
+--
+
+LOCK TABLES `pkg_tables_changes` WRITE;
+/*!40000 ALTER TABLE `pkg_tables_changes` DISABLE KEYS */;
+INSERT INTO `pkg_tables_changes` VALUES (1,'pkg_rate','1525439132'),(2,'pkg_prefix_length','1525439132'),(3,'pkg_prefix','1525439132');
+/*!40000 ALTER TABLE `pkg_tables_changes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `pkg_templatemail`
 --
 
@@ -2322,7 +2686,7 @@ CREATE TABLE `pkg_templatemail` (
   `messagehtml` varchar(3000) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
   `language` varchar(5) DEFAULT 'br',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2331,7 +2695,7 @@ CREATE TABLE `pkg_templatemail` (
 
 LOCK TABLES `pkg_templatemail` WRITE;
 /*!40000 ALTER TABLE `pkg_templatemail` DISABLE KEYS */;
-INSERT INTO `pkg_templatemail` VALUES (1,1,'signup','noreply@site.com','VoIP','Ativação de conta','<p>$firstname$ $lastname$, bem vindo ao nosso sistema de comunicação IP!</p>\n<p>Para concluir o processo de ativação de sua conta por favor clique no link abaixo:</p>\n<p><a href=\"http://ip/mbilling//index.php/signup/$idcard$?username=$cardnumber$&password=$password$&loginkey=$loginkey$\">\nhttp://ip/mbilling/index.php/signup/$idcard$?username=$cardnumber$&password=$password$&loginkey=$loginkey$</a></p>\n<br>\n<p>Por favor não esqueça de ativar sua conta.</p>\n<br>\n<p>  Usuário=$login$  </p>\n<p> Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(2,1,'reminder','noreply@site.com','VoIP','Sua conta esta com saldo baixo ( R$ $credit$)','<p>Olá $firstname$ $lastname$, </p>\n<p>Sua conta VoIP número $cardnumber$ está com saldo baixo.</p>\n<br>\n<p>Seu saldo atual é de R$ $credit$, valor abaixo do mánimo configurado em sua conta (R$ $credit_notification$,00).</p>\n<p>Adquiria novos créditos e não fique sem falar.</p>\n<br>  \n<p>Para adquirir créditos, entrar em contato conosco ou desativar o aviso de saldo baixo acesse sua Ã¡rea de cliente através de nosso site.</p>\n<p>Observação: Caso possua limite de crédito conosco ele Ã© somado ao seu saldo para o envio de notificação de saldo baixo.</p>\n<br> \n<p>Atenciosamente,<br>\n ','br'),(3,1,'signupconfirmed','noreply@site.com','VoIP','Bem Vindo','<p>Bem vindo !</p>\n<p>Configure seu softphone com os dados abaixo e comece a ligar agora mesmo:</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(4,1,'did_paid','noreply@site.com','VoIP','Pagamento de Numero Virtual - ($did$)','<p>SALDO DISPONÍVEL $balance_remaining$ $base_currency$</p>\n<p>Foi debitado automaticamente de seu saldo o valor de R$ $did_cost$,00   referente ao pagamento de seu número virtual (DID) ($did$).</p> <p>Custo mensal de seu número virtual: R$ $did_cost$,00</p> \n<br> \n<p>Atenciosamente,<br> ','br'),(5,1,'did_unpaid','noreply@site.com','VoIP','Notificação para pagamento de Número Virtual ($did$)','<p>Olá.</p>\n<p>Seu crédito atual (R$ $balance_remaining$ $base_currency$) não é suficiente para o pagamento mensal de seu número virtual DID ($did$).</p>\n<p>O custo mensal de seu DID é  $did_cost$ $base_currency$</p>\n<br>\n<p>Você tem $days_remaining$ para efetuar uma recarga no valor suficiente para o pagamento do seu número virtual.</p>\n<p>Qualquer dúvida por favor entre em contato através de nosso suporte<br> </p> \n<br> \n<p>Atenciosamente,<br>','br'),(6,1,'did_released','noreply@site.com','VoIP','Did Cancelado','<p>Olá</p> <p>Seu Número Virtual (DID) $did$ foi automaticamente cancelado até que o pagamento de sua sua ultima fatura seja confirmado. </p> <p>Durante esse período não será possí­vel receber chamadas através do mesmo.</p>\n<br> \n<p>Atenciosamente,<br>','br'),(7,1,'did_confirmation','noreply@site.com','VoIP','Número DID $did$ ativado','<p>Olá  $firstname$ $lastname$</p>\n<p>O número  $did$ foi ativado para a conta $login$.</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(8,1,'refill','noreply@site.com','VoIP','Recarga de crédito confirmada','<p>Olá $firstname$ $lastname$</p>\n<p>Uma recarga de crédito foi realizada com sucesso em sua conta $login$.</p>\n<p>Número da recarga = $itemID$</p>\n<br> \n<p>Valor = $itemAmount$ $base_currency$</p>\n<br>\n<p>Descrição= $description$</p>\n<br>\n<p>Seu crédito atual é de $credit$ $base_currency$</p>\n<br> \n<p>Atenciosamente,<br>\n','br'),(9,1,'plan_unpaid','noreply@site.com','VoIP','Aviso de Vencimento do Plano Mensal','<p>Estimado $firstname$ $lastname$. <br>\n  Enviamos esta mensagem para avisar que seu plano esta por vencer e não tem crédito para efetuar o pagamento. </p>\n<p>Por favor, entre em sua área de cliente, menu, Comprar Crédito, e compre mínimo $plancost$  $base_currency$ de crédito. </p>\n<br>\n<p>Usário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Você tem $dias_vencimento$ dias para fazer o pagamento, ou seu plano sera cancelado.</p>\n<br> \n<p>Atenciosamente,<br>','br'),(10,1,'plan_paid','noreply@site.com','VoIP','Pagamento do plano recebido','<p>Estimado $firstname$ $lastname$.</p>\n<p>O pagamento do seu plano já foi efetuado.</p>\n<br>\n<p>Seu crédito atual é de $credit$ $base_currency$</p>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(11,1,'plan_released','noreply@site.com','VoIP','Plano cancelado','<p>Estimado $firstname$ $lastname$.</p>\n<p>Seu plano foi cancelado por falta de pagamento</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(32,1,'signup','noreply@site.com','VoIP','Confirmación de email','<p style=\"color: rgb(0, 0, 0);\">$lastname$ $firstname$, gracias por registrarse con nosotros.</p>\n<p style=\"color: rgb(0, 0, 0);\">Por favor, copie y pegue el código a continuación en la página de registro para activar su cuenta. <br></p>\n<p style=\"color: rgb(0, 0, 0);\">$loginkey$</p>\n<p style=\"color: rgb(0, 0, 0);\">o haga clic aquí &nbsp;<a href=\"http://SU_IP/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$\">http://SU_IP/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$</a></p>\n<p style=\"color: rgb(0, 0, 0);\"><br>\n  \n\n\n  Por favor, asegúrese de activar su cuenta.</p><p style=\"color: rgb(0, 0, 0);\">Un cordial saludo<br></p>','es'),(33,1,'reminder','noreply@site.com','VoIP','Su cuenta VoIP tiene poco crédito ( $credit$ $currency$)','Hola $lastname$ $firstname$, su cuenta esta con poco crédito USUARIO $login$.\n\n<p>En la actualidad, solo hay $credit$ $currency$ en su cuenta, que es menor que el nivel de alerta definido por usted, que es de ($credit_notification$ ).</p>\n<p>Por favor recargue su cuenta lo antes posible para garantizar la continuidad del servicio.</p>\n<p><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br></p><p>Nombre de usuario: $login$</p>\n<p>Contraseña: $password$</p>\n<p>Un cordial saludo</p>\n\n\n','es'),(34,1,'signupconfirmed','noreply@site.com','VoIP','Confirmación de registro','<p><strong>Ahora usted es un usuario registrado.</strong></p>\n<p>Para entrar en su panel de cliente:</p><p><br>\n  <a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Su usuario es: $login$<br>\n  Su clave es : $password$</p>\n<p></p><p><br></p>\n<p>Un cordial saludo</p>\n','es'),(35,1,'did_paid','noreply@site.com','VoIP','Cobranza de su número DID - $did$','<p>Hola $lastname$ $firstname$.</p>\n<p>El importe de $did_cost$ $base_currency$ fue cobrado de su cuenta por el pago mensual de su DID  ($did$)</p>\n<p>Costo mensual por su DID : $did_cost$ $base_currency$</p>\n<p>El crédito actual de su cuenta $login$, es de $credit$  $base_currency$</p>\n<p>Un cordial saludo</p>\n<p><b>$obs$</b><br></p>','es'),(36,1,'did_unpaid','noreply@site.com','VoIP','Notificación de vencimiento de su número $did$','<p>Hola $firstname$ $lastname$, el crédito actual de su cuenta $login$ es de $balance_remaining$ $base_currency$</p>\n<p>Su crédito no es suficiente para pagar su número DID  ($did$), el costo mensual por su DID es de $did_cost$ $base_currency$</p>\n<p>Por favor agregue crédito a su cuenta antes del día de vencimiento del DID, o el DID será dado de baja automáticamente.</p>\n<p>Para cargar crédito, entre en su cuenta, y haga clic en el menú Comprar Crédito.<br>\n</p>\n<p>Un cordial saludo</p>\n<b>$obs$</b>','es'),(37,1,'did_released','noreply@site.com','VoIP','DID desactivado - ($did$)','<p>Hola $firstname$ $lastname$</p>\n<p>Esta es una notificación que el número DID  $did$ ha sido desactivado de su cuenta $login$.</p>\n<p>Se dará de baja definitivamente si no se renueva inmediatamente.<br>\n  <br>Una notificación anterior ha sido enviada al correo electrónico de contacto que aparece en su cuenta.</p>\n<p>Un cordial saludo<br><br></p>\n<b>$obs$</b>\n','es'),(38,1,'did_confirmation','noreply@site.com','VoIP','Activación de número Fijo DID','<p style=\"color: rgb(0, 0, 0);\">Hola  $firstname$ $lastname$, Felicitaciones! </p>\n<p style=\"color: rgb(0, 0, 0);\">El número  $did$ fue activado con éxito para la cuenta $login$.</p>\n<p style=\"color: rgb(0, 0, 0);\">Usted puede reenviar su número para un fijo o celular, para esto entre en su panel de cliente.</p><p style=\"color: rgb(0, 0, 0);\"><br><a href=\"http://SU_IP/mbilling\">\n  http://SU_IP/mbilling</a><br>\n  Nombre de usuario : $login$<br>\n  Contraseña : $password$</p>\n<p style=\"color: rgb(0, 0, 0);\">Un cordial saludo<br></p>','es'),(39,1,'refill','noreply@site.com','VoIP','Recarga de crédito confirmada','<p>Hola $firstname$ $lastname$</p>\n<p>Una recarga de crédito fue realizada con éxito en su cuenta $login$.</p>\n\n<p>Número de la recarga = $itemID$</p>\n<p>Importe = $itemAmount$ $base_currency$</p>\n<p>Descripción = $description$</p>\n\n<p>Su crédito actual es de $credit$ $base_currency$</p>\n<br>\nUn cordial saludo<br>\n','es'),(40,1,'plan_unpaid','noreply@site.com','VoIP','Aviso de Vencimiento del Plan Mensual','<p>Estimado $firstname$ $lastname$. <br>\n  Le enviamos este mensaje para comunicarle que su plan esta por vencer y no posee crédito para efectuar el pago. </p>\n<p>Ud. puede ingresar a su área de Cliente con estos datos:<br></p><p><br><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Usuario=$login$ <br>\n  Clave:$password$ </p>\n<p>Por favor recargue su cuenta o su plan sera dado de baja automáticamente en el dia del vencimiento. </p>\n<p>Un cordial saludo<br></p>\n<p><br></p>\n\n<b>$obs$</b>','es'),(41,1,'plan_paid','noreply@site.com','VoIP','Confirmación de pago del plan mensual recibido','<p>Estimado $firstname$ $lastname$.</p>\n<p>El pago de su plan mensual ya fue efectuado.</p>\n<p>Su crédito actual es de $credit$ $base_currency$</p>\n<p>Quedamos a su entera disposición ante  cualquier inquietud.</p>\n<p>Un cordial saludo</p>\n<b>$obs$</b>','es'),(42,1,'plan_released','noreply@site.com','VoIP','Su plan fue dado de baja.','<p>Estimado $firstname$ $lastname$.</p>\n<p>Su plan venció hoy y no recibimos la confirmación de pago.</p>\n<p>Su plan fue suspendido automáticamente hasta que nos sea informado el pago.</p>\n<p>Ud. puede ingresar a su Área de Cliente con estos datos:&nbsp;<br></p><p><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Usuario=$login$<br>\n  Clave:$password$</p>\n<p>Un cordial saludo<br></p>\n$obs$','es'),(43,1,'signup','noreply@site.com','VoIP','Account Activation','<p><span style=\"font-family: arial, sans, sans-serif;\">$lastname$ $firstname$, thank you for signing up with us</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please click in this link to activate your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><font face=\"arial, sans, sans-serif\"><a href=\"http://your_ip/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$\">http://your_ip/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$</a></font><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please make sure to activate your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><br></p><p><span style=\"font-family: arial, sans, sans-serif;\">Best regards</span></p>','en'),(44,1,'reminder','noreply@site.com','VoIP','Your VOIP Account has a low credit balance of ( $credit$ $currency$)','<span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$, your account is low on credit. User $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Right now, there is $credit$ $currency$ in your account, which is lower than the alert level you defined, ($credit_notification$ ).</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To make sure your account continues working, please recharge your account as soon as possible.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you don\'t want to receive this notification any longer or want to change the balance amount for this alert, please login in the customer web page and change the alerts settings as needed.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username: $login$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password: $password$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br>\n\n\n','en'),(45,1,'signupconfirmed','noreply@site.com','VoIP','Welcome. Your account login information in included','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Here is you account infornation to access the client web site portal:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username : $login$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password : $password$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>\n','en'),(46,1,'did_paid','noreply@site.com','VoIP','Your DID number charges - $did$','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">The following charge $did_cost$ $base_currency$, was charged to your account for the monthly fees for your DID ($did$)</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">DID monthly fees: $did_cost$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current credit balance for account $login$, is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(47,1,'did_unpaid','noreply@site.com','VoIP','Notification alert, DID due date $did$','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$, your account $login$ current credit is $balance_remaining$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your credit is insufficient to pay for your DID number ($did$), as the monthly cost is $did_cost$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please add credit to your account so that the DID this is not released from your account automatically on the due date.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To add credits to your account, login to the client web site and click on Buy Credits.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(48,1,'did_released','noreply@site.com','VoIP','Cancelled DID - ($did$)','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">This is a notification that the DID number $did$ has been deactivated from your account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">It will be released if its not paid immediately.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Past notifications has been send to the contact Email address set in your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(49,1,'did_confirmation','noreply@site.com','VoIP','DID number $did$ activated','<p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$,&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Congratulations!&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">The DID number $did$ was successfully activated in your account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">You can forward your DID number to a PSTN or Mobile number.&nbsp; If you wish to do this, login to your account at:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username : $login$</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password : $password$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you have a problem getting it to forward to the desired number, please contact us.</span><br></p><p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\"><br></span></p><p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><span style=\"font-family: arial, sans, sans-serif;\"><br></span></p>','en'),(50,1,'refill','noreply@site.com','VoIP','Credit recharge confirmed','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">A credit recharge was applied to the account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Recharge number = $itemID$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Value = $itemAmount$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Description = $description$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current account credit balance is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>\n','en'),(51,1,'plan_unpaid','noreply@site.com','VoIP','Balance Due Alert for your Monthly plan','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">We are sending you this message to notify that your call plan is approaching the due date and your account does not have enough credit balance to make the payment.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please, login in you account area, select: Menu, Buy Credits, and recharge your account with at least $plancost$ $base_currency$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">You can login the client are with the following data:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username=$login$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password=$password$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please recharge your account or your call plan will be deactivated automatically on the due date.</span><br style=\"font-family: arial, sans, sans-serif;\"><br><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(52,1,'plan_paid','noreply@site.com','VoIP','Confirmation of call plan payment','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">We have received your monthly call plan payment.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current credit balance is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you have any questions or need additional help please contact us.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(53,1,'plan_released','noreply@site.com','VoIP','Your call plan has been suspended','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your call plan is due today and we have not receive a payment confirmation.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your plan has been automatically suspended until we receive a payment confirmation.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To reactivate your call plan, please login in your account web site, select: Menu, Buy Credits and recharge your account with a minimum credit of $plancost$ $base_currency$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(54,1,'services_unpaid','usuario','VoIP','Aviso de Vencimento de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Você tem serviços com vencimento em aberto e não possiu saldo para o pagamento. Por favor entre no link $service_pending_url$ para iniciar o pagamento. </p>\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(55,1,'services_unpaid','usuario','VoIP','Aviso de Vencimiento de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Usted tien servicios por vencer o vencido. Por favor entre en este link $service_pending_url$ para iniciar el pago.</p> \r\n<p>Saludos,<br>\r\n ','es'),(56,1,'services_unpaid','username','VoIP','Balance Due Alert for your','<p>Hello $firstname$ $lastname$, </p>\r\n<p>You have services pendent. Please use this link $service_pending_url$ to start the payment</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(57,1,'services_activation','usuario','VoIP','Ativação de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi ativado o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p>Este valor sera descontado do credito de sua conta automaticamente todos os meses.</p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(58,1,'services_activation','usuario','VoIP','Activacion de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue activado el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>Este importe sera descontado del credito de su cuenta automaticamente todos los meses..</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(59,1,'services_activation','username','VoIP','Service activation','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was activated. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<p>This amount will be charged of your account every month.</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(60,1,'services_pending','usuario','VoIP','Serviço pendente de pagamento','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi solicitado o serviço $service_name$ com valor de $service_price$. </p>\r\n\r\n				<p>A ativaçao do serviço esta pendente de pagamento.</p>\r\n\r\n				<p>Link para pagamento $service_pending_url$.</p>\r\n\r\n				<br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(61,1,'services_pending','usuario','VoIP','Servicio pendente de pagao','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue solicitado la activacion del servicio $service_name$ con importe $service_price$.</p>\r\n<p>La activacion del servicio esta pendiente de pago.</p>\r\n\r\n				<p>Link para el pago: $service_pending_url$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(62,1,'services_pending','username','VoIP','Service pending','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was pending. Service price: $service_price$ .</p>\r\n\r\n				<p>Please make the payment to active the service.</p>\r\n\r\n				<p>Payment Link:  $service_pending_url$.</p>\r\n\r\n				<br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(63,1,'services_released','usuario','VoIP','Cancelamento de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi desativado o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(64,1,'services_released','usuario','VoIP','Baja de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue dado de baja el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(65,1,'services_released','username','VoIP','Service canceled','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was canceled. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(66,1,'services_paid','usuario','VoIP','Serviço Pago','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi pago o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(67,1,'services_paid','usuario','VoIP','Servicio pago','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue pago el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(68,1,'services_paid','username','VoIP','Service paid','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was paid. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(69,1,'user_disk_space','usuario','VoIP','Armazenamento em disco superado','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Sua conta VoIP número $cardnumber$ superou o limite de $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>Para manter o serviço foi deletado automaticamente os audios anteriores a $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(70,1,'user_disk_space','usuario','VoIP','Armazenamento en disco superado','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Su cuenta VoIP número $cardnumber$ supero el limite de $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>Para mantener el servicio fue borrado automaticamente los audios anteriores a $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(71,1,'user_disk_space','username','VoIP','Disk space surpassed','<p>Hello $firstname$ $lastname$, </p>\r\n<p>Your account $cardnumber$ surpassed the disk space limit of $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>To keep the service was deleted the records before than $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en');
+INSERT INTO `pkg_templatemail` VALUES (1,1,'signup','noreply@site.com','VoIP','Ativação de conta','<p>$firstname$ $lastname$, bem vindo ao nosso sistema de comunicação IP!</p>\n<p>Para concluir o processo de ativação de sua conta por favor clique no link abaixo:</p>\n<p><a href=\"http://ip/mbilling//index.php/signup/$idcard$?username=$cardnumber$&password=$password$&loginkey=$loginkey$\">\nhttp://ip/mbilling/index.php/signup/$idcard$?username=$cardnumber$&password=$password$&loginkey=$loginkey$</a></p>\n<br>\n<p>Por favor não esqueça de ativar sua conta.</p>\n<br>\n<p>  Usuário=$login$  </p>\n<p> Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(2,1,'reminder','noreply@site.com','VoIP','Sua conta esta com saldo baixo ( R$ $credit$)','<p>Olá $firstname$ $lastname$, </p>\n<p>Sua conta VoIP número $cardnumber$ está com saldo baixo.</p>\n<br>\n<p>Seu saldo atual é de R$ $credit$, valor abaixo do mánimo configurado em sua conta (R$ $credit_notification$,00).</p>\n<p>Adquiria novos créditos e não fique sem falar.</p>\n<br>  \n<p>Para adquirir créditos, entrar em contato conosco ou desativar o aviso de saldo baixo acesse sua Ã¡rea de cliente através de nosso site.</p>\n<p>Observação: Caso possua limite de crédito conosco ele Ã© somado ao seu saldo para o envio de notificação de saldo baixo.</p>\n<br> \n<p>Atenciosamente,<br>\n ','br'),(3,1,'signupconfirmed','noreply@site.com','VoIP','Bem Vindo','<p>Bem vindo !</p>\n<p>Configure seu softphone com os dados abaixo e comece a ligar agora mesmo:</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(4,1,'did_paid','noreply@site.com','VoIP','Pagamento de Numero Virtual - ($did$)','<p>SALDO DISPONÍVEL $balance_remaining$ $base_currency$</p>\n<p>Foi debitado automaticamente de seu saldo o valor de R$ $did_cost$,00   referente ao pagamento de seu número virtual (DID) ($did$).</p> <p>Custo mensal de seu número virtual: R$ $did_cost$,00</p> \n<br> \n<p>Atenciosamente,<br> ','br'),(5,1,'did_unpaid','noreply@site.com','VoIP','Notificação para pagamento de Número Virtual ($did$)','<p>Olá.</p>\n<p>Seu crédito atual (R$ $balance_remaining$ $base_currency$) não é suficiente para o pagamento mensal de seu número virtual DID ($did$).</p>\n<p>O custo mensal de seu DID é  $did_cost$ $base_currency$</p>\n<br>\n<p>Você tem $days_remaining$ para efetuar uma recarga no valor suficiente para o pagamento do seu número virtual.</p>\n<p>Qualquer dúvida por favor entre em contato através de nosso suporte<br> </p> \n<br> \n<p>Atenciosamente,<br>','br'),(6,1,'did_released','noreply@site.com','VoIP','Did Cancelado','<p>Olá</p> <p>Seu Número Virtual (DID) $did$ foi automaticamente cancelado até que o pagamento de sua sua ultima fatura seja confirmado. </p> <p>Durante esse período não será possí­vel receber chamadas através do mesmo.</p>\n<br> \n<p>Atenciosamente,<br>','br'),(7,1,'did_confirmation','noreply@site.com','VoIP','Número DID $did$ ativado','<p>Olá  $firstname$ $lastname$</p>\n<p>O número  $did$ foi ativado para a conta $login$.</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(8,1,'refill','noreply@site.com','VoIP','Recarga de crédito confirmada','<p>Olá $firstname$ $lastname$</p>\n<p>Uma recarga de crédito foi realizada com sucesso em sua conta $login$.</p>\n<p>Número da recarga = $itemID$</p>\n<br> \n<p>Valor = $itemAmount$ $base_currency$</p>\n<br>\n<p>Descrição= $description$</p>\n<br>\n<p>Seu crédito atual é de $credit$ $base_currency$</p>\n<br> \n<p>Atenciosamente,<br>\n','br'),(9,1,'plan_unpaid','noreply@site.com','VoIP','Aviso de Vencimento do Plano Mensal','<p>Estimado $firstname$ $lastname$. <br>\n  Enviamos esta mensagem para avisar que seu plano esta por vencer e não tem crédito para efetuar o pagamento. </p>\n<p>Por favor, entre em sua área de cliente, menu, Comprar Crédito, e compre mínimo $plancost$  $base_currency$ de crédito. </p>\n<br>\n<p>Usário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Você tem $dias_vencimento$ dias para fazer o pagamento, ou seu plano sera cancelado.</p>\n<br> \n<p>Atenciosamente,<br>','br'),(10,1,'plan_paid','noreply@site.com','VoIP','Pagamento do plano recebido','<p>Estimado $firstname$ $lastname$.</p>\n<p>O pagamento do seu plano já foi efetuado.</p>\n<br>\n<p>Seu crédito atual é de $credit$ $base_currency$</p>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(11,1,'plan_released','noreply@site.com','VoIP','Plano cancelado','<p>Estimado $firstname$ $lastname$.</p>\n<p>Seu plano foi cancelado por falta de pagamento</p>\n<br>\n<p>Usuário=$login$  </p>\n<p>Senha:$password$  </p>\n<br> \n<p>Atenciosamente,<br>','br'),(32,1,'signup','noreply@site.com','VoIP','Confirmación de email','<p style=\"color: rgb(0, 0, 0);\">$lastname$ $firstname$, gracias por registrarse con nosotros.</p>\n<p style=\"color: rgb(0, 0, 0);\">Por favor, copie y pegue el código a continuación en la página de registro para activar su cuenta. <br></p>\n<p style=\"color: rgb(0, 0, 0);\">$loginkey$</p>\n<p style=\"color: rgb(0, 0, 0);\">o haga clic aquí &nbsp;<a href=\"http://SU_IP/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$\">http://SU_IP/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$</a></p>\n<p style=\"color: rgb(0, 0, 0);\"><br>\n  \n\n\n  Por favor, asegúrese de activar su cuenta.</p><p style=\"color: rgb(0, 0, 0);\">Un cordial saludo<br></p>','es'),(33,1,'reminder','noreply@site.com','VoIP','Su cuenta VoIP tiene poco crédito ( $credit$ $currency$)','Hola $lastname$ $firstname$, su cuenta esta con poco crédito USUARIO $login$.\n\n<p>En la actualidad, solo hay $credit$ $currency$ en su cuenta, que es menor que el nivel de alerta definido por usted, que es de ($credit_notification$ ).</p>\n<p>Por favor recargue su cuenta lo antes posible para garantizar la continuidad del servicio.</p>\n<p><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br></p><p>Nombre de usuario: $login$</p>\n<p>Contraseña: $password$</p>\n<p>Un cordial saludo</p>\n\n\n','es'),(34,1,'signupconfirmed','noreply@site.com','VoIP','Confirmación de registro','<p><strong>Ahora usted es un usuario registrado.</strong></p>\n<p>Para entrar en su panel de cliente:</p><p><br>\n  <a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Su usuario es: $login$<br>\n  Su clave es : $password$</p>\n<p></p><p><br></p>\n<p>Un cordial saludo</p>\n','es'),(35,1,'did_paid','noreply@site.com','VoIP','Cobranza de su número DID - $did$','<p>Hola $lastname$ $firstname$.</p>\n<p>El importe de $did_cost$ $base_currency$ fue cobrado de su cuenta por el pago mensual de su DID  ($did$)</p>\n<p>Costo mensual por su DID : $did_cost$ $base_currency$</p>\n<p>El crédito actual de su cuenta $login$, es de $credit$  $base_currency$</p>\n<p>Un cordial saludo</p>\n<p><b>$obs$</b><br></p>','es'),(36,1,'did_unpaid','noreply@site.com','VoIP','Notificación de vencimiento de su número $did$','<p>Hola $firstname$ $lastname$, el crédito actual de su cuenta $login$ es de $balance_remaining$ $base_currency$</p>\n<p>Su crédito no es suficiente para pagar su número DID  ($did$), el costo mensual por su DID es de $did_cost$ $base_currency$</p>\n<p>Por favor agregue crédito a su cuenta antes del día de vencimiento del DID, o el DID será dado de baja automáticamente.</p>\n<p>Para cargar crédito, entre en su cuenta, y haga clic en el menú Comprar Crédito.<br>\n</p>\n<p>Un cordial saludo</p>\n<b>$obs$</b>','es'),(37,1,'did_released','noreply@site.com','VoIP','DID desactivado - ($did$)','<p>Hola $firstname$ $lastname$</p>\n<p>Esta es una notificación que el número DID  $did$ ha sido desactivado de su cuenta $login$.</p>\n<p>Se dará de baja definitivamente si no se renueva inmediatamente.<br>\n  <br>Una notificación anterior ha sido enviada al correo electrónico de contacto que aparece en su cuenta.</p>\n<p>Un cordial saludo<br><br></p>\n<b>$obs$</b>\n','es'),(38,1,'did_confirmation','noreply@site.com','VoIP','Activación de número Fijo DID','<p style=\"color: rgb(0, 0, 0);\">Hola  $firstname$ $lastname$, Felicitaciones! </p>\n<p style=\"color: rgb(0, 0, 0);\">El número  $did$ fue activado con éxito para la cuenta $login$.</p>\n<p style=\"color: rgb(0, 0, 0);\">Usted puede reenviar su número para un fijo o celular, para esto entre en su panel de cliente.</p><p style=\"color: rgb(0, 0, 0);\"><br><a href=\"http://SU_IP/mbilling\">\n  http://SU_IP/mbilling</a><br>\n  Nombre de usuario : $login$<br>\n  Contraseña : $password$</p>\n<p style=\"color: rgb(0, 0, 0);\">Un cordial saludo<br></p>','es'),(39,1,'refill','noreply@site.com','VoIP','Recarga de crédito confirmada','<p>Hola $firstname$ $lastname$</p>\n<p>Una recarga de crédito fue realizada con éxito en su cuenta $login$.</p>\n\n<p>Número de la recarga = $itemID$</p>\n<p>Importe = $itemAmount$ $base_currency$</p>\n<p>Descripción = $description$</p>\n\n<p>Su crédito actual es de $credit$ $base_currency$</p>\n<br>\nUn cordial saludo<br>\n','es'),(40,1,'plan_unpaid','noreply@site.com','VoIP','Aviso de Vencimiento del Plan Mensual','<p>Estimado $firstname$ $lastname$. <br>\n  Le enviamos este mensaje para comunicarle que su plan esta por vencer y no posee crédito para efectuar el pago. </p>\n<p>Ud. puede ingresar a su área de Cliente con estos datos:<br></p><p><br><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Usuario=$login$ <br>\n  Clave:$password$ </p>\n<p>Por favor recargue su cuenta o su plan sera dado de baja automáticamente en el dia del vencimiento. </p>\n<p>Un cordial saludo<br></p>\n<p><br></p>\n\n<b>$obs$</b>','es'),(41,1,'plan_paid','noreply@site.com','VoIP','Confirmación de pago del plan mensual recibido','<p>Estimado $firstname$ $lastname$.</p>\n<p>El pago de su plan mensual ya fue efectuado.</p>\n<p>Su crédito actual es de $credit$ $base_currency$</p>\n<p>Quedamos a su entera disposición ante  cualquier inquietud.</p>\n<p>Un cordial saludo</p>\n<b>$obs$</b>','es'),(42,1,'plan_released','noreply@site.com','VoIP','Su plan fue dado de baja.','<p>Estimado $firstname$ $lastname$.</p>\n<p>Su plan venció hoy y no recibimos la confirmación de pago.</p>\n<p>Su plan fue suspendido automáticamente hasta que nos sea informado el pago.</p>\n<p>Ud. puede ingresar a su Área de Cliente con estos datos:&nbsp;<br></p><p><a href=\"http://SU_IP/mbilling\">http://SU_IP/mbilling</a><br>\n  Usuario=$login$<br>\n  Clave:$password$</p>\n<p>Un cordial saludo<br></p>\n$obs$','es'),(43,1,'signup','noreply@site.com','VoIP','Account Activation','<p><span style=\"font-family: arial, sans, sans-serif;\">$lastname$ $firstname$, thank you for signing up with us</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please click in this link to activate your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><font face=\"arial, sans, sans-serif\"><a href=\"http://your_ip/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$\">http://your_ip/mbilling/index.php/signup/$iduser$?username=$login$&amp;password=$password$&amp;loginkey=$loginkey$</a></font><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please make sure to activate your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><br></p><p><span style=\"font-family: arial, sans, sans-serif;\">Best regards</span></p>','en'),(44,1,'reminder','noreply@site.com','VoIP','Your VOIP Account has a low credit balance of ( $credit$ $currency$)','<span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$, your account is low on credit. User $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Right now, there is $credit$ $currency$ in your account, which is lower than the alert level you defined, ($credit_notification$ ).</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To make sure your account continues working, please recharge your account as soon as possible.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you don\'t want to receive this notification any longer or want to change the balance amount for this alert, please login in the customer web page and change the alerts settings as needed.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username: $login$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password: $password$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br>\n\n\n','en'),(45,1,'signupconfirmed','noreply@site.com','VoIP','Welcome. Your account login information in included','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Here is you account infornation to access the client web site portal:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username : $login$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password : $password$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>\n','en'),(46,1,'did_paid','noreply@site.com','VoIP','Your DID number charges - $did$','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $lastname$ $firstname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">The following charge $did_cost$ $base_currency$, was charged to your account for the monthly fees for your DID ($did$)</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">DID monthly fees: $did_cost$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current credit balance for account $login$, is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(47,1,'did_unpaid','noreply@site.com','VoIP','Notification alert, DID due date $did$','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$, your account $login$ current credit is $balance_remaining$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your credit is insufficient to pay for your DID number ($did$), as the monthly cost is $did_cost$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please add credit to your account so that the DID this is not released from your account automatically on the due date.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To add credits to your account, login to the client web site and click on Buy Credits.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(48,1,'did_released','noreply@site.com','VoIP','Cancelled DID - ($did$)','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">This is a notification that the DID number $did$ has been deactivated from your account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">It will be released if its not paid immediately.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Past notifications has been send to the contact Email address set in your account.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(49,1,'did_confirmation','noreply@site.com','VoIP','DID number $did$ activated','<p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$,&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Congratulations!&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">The DID number $did$ was successfully activated in your account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">You can forward your DID number to a PSTN or Mobile number.&nbsp; If you wish to do this, login to your account at:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username : $login$</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password : $password$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you have a problem getting it to forward to the desired number, please contact us.</span><br></p><p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\"><br></span></p><p style=\"color: rgb(0, 0, 0);\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><span style=\"font-family: arial, sans, sans-serif;\"><br></span></p>','en'),(50,1,'refill','noreply@site.com','VoIP','Credit recharge confirmed','<p><span style=\"font-family: arial, sans, sans-serif;\">Hello $firstname$ $lastname$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">A credit recharge was applied to the account $login$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Recharge number = $itemID$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Value = $itemAmount$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Description = $description$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current account credit balance is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>\n','en'),(51,1,'plan_unpaid','noreply@site.com','VoIP','Balance Due Alert for your Monthly plan','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">We are sending you this message to notify that your call plan is approaching the due date and your account does not have enough credit balance to make the payment.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please, login in you account area, select: Menu, Buy Credits, and recharge your account with at least $plancost$ $base_currency$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">You can login the client are with the following data:</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><a moz-do-not-send=\"true\" href=\"http://your_ip/mbilling\" style=\"font-family: arial, sans, sans-serif;\">http://your_ip/mbilling</a><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Username=$login$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Password=$password$&nbsp;</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Please recharge your account or your call plan will be deactivated automatically on the due date.</span><br style=\"font-family: arial, sans, sans-serif;\"><br><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(52,1,'plan_paid','noreply@site.com','VoIP','Confirmation of call plan payment','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">We have received your monthly call plan payment.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your current credit balance is $credit$ $base_currency$</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">If you have any questions or need additional help please contact us.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(53,1,'plan_released','noreply@site.com','VoIP','Your call plan has been suspended','<p><span style=\"font-family: arial, sans, sans-serif;\">Dear $firstname$ $lastname$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your call plan is due today and we have not receive a payment confirmation.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Your plan has been automatically suspended until we receive a payment confirmation.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">To reactivate your call plan, please login in your account web site, select: Menu, Buy Credits and recharge your account with a minimum credit of $plancost$ $base_currency$.</span><br style=\"font-family: arial, sans, sans-serif;\"><br style=\"font-family: arial, sans, sans-serif;\"><span style=\"font-family: arial, sans, sans-serif;\">Greetings</span><br></p>','en'),(54,1,'services_unpaid','usuario','VoIP','Aviso de Vencimento de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Você tem serviços com vencimento em aberto e não possiu saldo para o pagamento. Por favor entre no link $service_pending_url$ para iniciar o pagamento. </p>\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(55,1,'services_unpaid','usuario','VoIP','Aviso de Vencimiento de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Usted tien servicios por vencer o vencido. Por favor entre en este link $service_pending_url$ para iniciar el pago.</p> \r\n<p>Saludos,<br>\r\n ','es'),(56,1,'services_unpaid','username','VoIP','Balance Due Alert for your','<p>Hello $firstname$ $lastname$, </p>\r\n<p>You have services pendent. Please use this link $service_pending_url$ to start the payment</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(57,1,'services_activation','usuario','VoIP','Ativação de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi ativado o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p>Este valor sera descontado do credito de sua conta automaticamente todos os meses.</p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(58,1,'services_activation','usuario','VoIP','Activacion de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue activado el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>Este importe sera descontado del credito de su cuenta automaticamente todos los meses..</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(59,1,'services_activation','username','VoIP','Service activation','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was activated. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<p>This amount will be charged of your account every month.</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(60,1,'services_pending','usuario','VoIP','Serviço pendente de pagamento','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi solicitado o serviço $service_name$ com valor de $service_price$. </p>\r\n\r\n        <p>A ativaçao do serviço esta pendente de pagamento.</p>\r\n\r\n        <p>Link para pagamento $service_pending_url$.</p>\r\n\r\n       <br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(61,1,'services_pending','usuario','VoIP','Servicio pendente de pagao','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue solicitado la activacion del servicio $service_name$ con importe $service_price$.</p>\r\n<p>La activacion del servicio esta pendiente de pago.</p>\r\n\r\n        <p>Link para el pago: $service_pending_url$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(62,1,'services_pending','username','VoIP','Service pending','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was pending. Service price: $service_price$ .</p>\r\n\r\n       <p>Please make the payment to active the service.</p>\r\n\r\n       <p>Payment Link:  $service_pending_url$.</p>\r\n\r\n        <br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(63,1,'services_released','usuario','VoIP','Cancelamento de serviço','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi desativado o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(64,1,'services_released','usuario','VoIP','Baja de servicio','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue dado de baja el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(65,1,'services_released','username','VoIP','Service canceled','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was canceled. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(66,1,'services_paid','usuario','VoIP','Serviço Pago','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Foi pago o serviço $service_name$ com valor de $service_price$. </p>\r\n<br>\r\n\r\n<p></p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(67,1,'services_paid','usuario','VoIP','Servicio pago','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Fue pago el servicio $service_name$ con importe $service_price$.</p>\r\n<br>\r\n\r\n<p>.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(68,1,'services_paid','username','VoIP','Service paid','<p>Hello $firstname$ $lastname$, </p>\r\n<p>The service $service_name$ was paid. Service price: $service_price$ .</p>\r\n<br>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(69,1,'user_disk_space','usuario','VoIP','Armazenamento em disco superado','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Sua conta VoIP número $cardnumber$ superou o limite de $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>Para manter o serviço foi deletado automaticamente os audios anteriores a $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Atenciosamente,<br>\r\n ','br'),(70,1,'user_disk_space','usuario','VoIP','Armazenamento en disco superado','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Su cuenta VoIP número $cardnumber$ supero el limite de $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>Para mantener el servicio fue borrado automaticamente los audios anteriores a $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Saludos,<br>\r\n ','es'),(71,1,'user_disk_space','username','VoIP','Disk space surpassed','<p>Hello $firstname$ $lastname$, </p>\r\n<p>Your account $cardnumber$ surpassed the disk space limit of $disk_usage_limit$ GB.</p>\r\n<br>\r\n\r\n<p>To keep the service was deleted the records before than $time_deleted$.</p>\r\n\r\n<br> \r\n<p>Best Regards<br>\r\n ','en'),(72,1,'forgetpassword','usuário','VoIP','Recuperação de senha','<p>Olá $firstname$ $lastname$, </p>\r\n<p>Você solicitou sua senha por email. </p>\r\nSua senha é: $password$<br>\r\n \r\n<p>Atenciosamente,<br>\r\n ','br'),(73,1,'forgetpassword','usuario','VoIP','Recuperacion de contraseña','<p>Hola $firstname$ $lastname$, </p>\r\n<p>Usted solicito su contraseña por email. </p>\r\nSu contraseña es: $password$<br>\r\n \r\n<p>Saludos,<br>\r\n ','es'),(74,1,'forgetpassword','username','VoIP','Password recovery','<p>Hello $firstname$ $lastname$, </p>\r\n<p>You request your password. </p>\r\nYour password is: $password$<br>\r\n \r\n<p>Best Regards,<br>\r\n ','en');
 /*!40000 ALTER TABLE `pkg_templatemail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2366,7 +2730,7 @@ CREATE TABLE `pkg_trunk` (
   `secret` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `allow` varchar(50) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `link_sms` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `directmedia` char(6) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'no',
+  `directmedia` char(10) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'no',
   `context` char(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'billing',
   `dtmfmode` char(7) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'RFC2833',
   `insecure` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'port,invite',
@@ -2381,6 +2745,9 @@ CREATE TABLE `pkg_trunk` (
   `short_time_call` int(11) NOT NULL DEFAULT '0',
   `fromuser` varchar(80) NOT NULL DEFAULT '',
   `register_string` varchar(300) NOT NULL DEFAULT '',
+  `transport` varchar(3) NOT NULL DEFAULT 'no',
+  `encryption` varchar(3) NOT NULL DEFAULT 'no',
+  `port` varchar(5) NOT NULL DEFAULT '5060',
   PRIMARY KEY (`id`),
   KEY `fk_pkg_provider_pkg_trunk` (`id_provider`),
   KEY `fk_pkg_trunk_pkg_trunk` (`failover_trunk`),
@@ -2461,7 +2828,19 @@ CREATE TABLE `pkg_user` (
   `disk_space` int(10) NOT NULL DEFAULT '-1',
   `sipaccountlimit` int(10) NOT NULL DEFAULT '-1',
   `calllimit` int(10) NOT NULL DEFAULT '-1',
+  `cpslimit` int(11) NOT NULL DEFAULT '-1',
+  `calllimit_error` varchar(3) NOT NULL DEFAULT '503',
   `mix_monitor_format` varchar(5) DEFAULT 'gsm',
+  `transfer_show_selling_price` tinyint(1) DEFAULT '0',
+  `transfer_bdservice_rate` int(11) DEFAULT '0',
+  `transfer_dbbl_rocket_profit` int(11) DEFAULT '0',
+  `transfer_bkash_profit` int(11) DEFAULT '0',
+  `transfer_flexiload_profit` int(11) DEFAULT '0',
+  `transfer_international_profit` int(11) DEFAULT '0',
+  `transfer_dbbl_rocket` tinyint(1) NOT NULL DEFAULT '0',
+  `transfer_bkash` tinyint(1) DEFAULT '0',
+  `transfer_flexiload` tinyint(1) DEFAULT '0',
+  `transfer_international` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `callingcard_pin` (`callingcard_pin`),
   KEY `fk_pkg_group_user_pkg_user` (`id_group`),
@@ -2482,7 +2861,7 @@ CREATE TABLE `pkg_user` (
 
 LOCK TABLES `pkg_user` WRITE;
 /*!40000 ALTER TABLE `pkg_user` DISABLE KEYS */;
-INSERT INTO `pkg_user` VALUES (1,1,1,NULL,NULL,NULL,'root','9f4ca770b638615ac5c3e0d2da16b77c80c2f2c6',0.0000,1,'0000-00-00 00:00:00','0000-00-00 00:00:00','0000-00-00 00:00:00',0,0,'','','','','','','','','','','0','','',NULL,'0000-00-00 00:00:00',0,0,'en','','',NULL,10,0,534565,'21','0',1,0,0,0,0,'','0000-00-00 00:00:00',0,'',NULL,NULL,-1,-1,-1,'gsm');
+INSERT INTO `pkg_user` VALUES (1,1,1,NULL,NULL,NULL,'root','9f4ca770b638615ac5c3e0d2da16b77c80c2f2c6',0.0000,1,'0000-00-00 00:00:00','0000-00-00 00:00:00','0000-00-00 00:00:00',0,0,'','','','','','','','','','','0','','',NULL,'0000-00-00 00:00:00',0,0,'en','','',NULL,10,0,534565,'21','0',1,0,0,0,0,'','0000-00-00 00:00:00',0,'',NULL,NULL,-1,-1,-1,-1,'503','gsm',0,0,0,0,0,0,0,0,0,0);
 /*!40000 ALTER TABLE `pkg_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2628,4 +3007,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-07-17 18:40:07
+-- Dump completed on 2018-10-17 18:11:09
