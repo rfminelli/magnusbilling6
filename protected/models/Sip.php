@@ -83,7 +83,26 @@ class Sip extends Model
             array('defaultuser', 'checkusername'),
             array('secret', 'checksecret'),
             array('defaultuser', 'unique', 'caseSensitive' => 'false'),
+            array('techprefix', 'length', 'max' => 6),
+            array('techprefix', 'checktechprefix'),
+            array('techprefix', 'unique'),
         );
+    }
+
+    public function checktechprefix($attribute, $params)
+    {
+        if (strlen($this->techprefix) > 0) {
+
+            $config = LoadConfig::getConfig();
+            $length = $config['global']['ip_tech_length'];
+
+            if (strlen($this->techprefix) != $length) {
+                $this->addError($attribute, Yii::t('yii', 'Techprefix have a invalid length'));
+            }
+            if (strlen($this->techprefix) > 6) {
+                $this->addError($attribute, Yii::t('yii', 'Techprefix maximum length is 6'));
+            }
+        }
     }
 
     public function checkusername($attribute, $params)

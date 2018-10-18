@@ -51,8 +51,7 @@ class Util
     {
         $existsUsername = true;
 
-        $config = LoadConfig::getConfig();
-
+        $config            = LoadConfig::getConfig();
         $generate_username = $config['global']['username_generate'];
 
         if ($generate_username == 1) {
@@ -102,11 +101,33 @@ class Util
         return $randVoucher;
     }
 
+    public static function generateTechPrefix()
+    {
+
+        $config = LoadConfig::getConfig();
+        $length = $config['global']['ip_tech_length'];
+
+        $exists = true;
+        while ($exists) {
+            $randPrefix = Util::generatePassword($length, false, false, true, false);
+            $sql        = "SELECT count(id) FROM pkg_user WHERE techprefix = :key";
+            $command    = Yii::app()->db->createCommand($sql);
+            $command->bindValue(":key", $randPrefix, PDO::PARAM_STR);
+            $countUser = $command->queryAll();
+
+            if (count($countUser) > 0) {
+                $exists = false;
+                break;
+            }
+        }
+        return $randPrefix;
+    }
+
     public static function generatePassword($tamanho, $maiuscula, $minuscula, $numeros, $codigos)
     {
         $maius = "ABCDEFGHIJKLMNOPQRSTUWXYZ";
         $minus = "abcdefghijklmnopqrstuwxyz";
-        $numer = "0123456789";
+        $numer = "123456789";
         $codig = '!@#%';
 
         $base = '';

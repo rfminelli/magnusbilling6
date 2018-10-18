@@ -90,10 +90,14 @@ class AuthenticateAgi
 
     public static function techPrefixAuthenticate(&$MAGNUS, &$agi, $authentication)
     {
-        if ($authentication != true && strlen($MAGNUS->dnid) > 16) {
-            $tech_prefix = substr($MAGNUS->dnid, 0, 6);
 
-            $agi->verbose('Try accountcode + techprefix authentication ' . $tech_prefix, 15);
+        $tech     = substr($MAGNUS->dnid, 0, $MAGNUS->config['global']['ip_tech_length']);
+        $sql      = "SELECT * FROM pkg_sip WHERE techprefix = '$tech' AND host != 'dynamic' LIMIT 1";
+        $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+        if ($authentication != true && isset($modelSip->id)) {
+
+            $agi->verbose('Try accountcode + techprefix authentication ' . $tech, 15);
 
             $from = $agi->get_variable("SIP_HEADER(Contact)", true);
 
@@ -102,17 +106,13 @@ class AuthenticateAgi
             $from = explode(':', $from[0]);
             $from = $from[0];
 
-            $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE callingcard_pin = '$tech_prefix'  LIMIT 1";
-            $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            if ($modelSip->host == $from) {
 
-            if (isset($modelUser->id)) {
-                $sql      = "SELECT * FROM pkg_sip WHERE id_user = $modelUser->id AND host = '$from'  LIMIT 1";
-                $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-            }
+                $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE id_user =  $modelSip->id_user LIMIT 1";
+                $modelUser = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
-            if (isset($modelSip->id)) {
                 AuthenticateAgi::setMagnusAttrubutes($MAGNUS, $agi, $modelUser, $modelSip);
-                $MAGNUS->dnid = substr($MAGNUS->dnid, 6);
+                $MAGNUS->dnid = substr($MAGNUS->dnid, $MAGNUS->config['global']['ip_tech_length']);
                 $agi->verbose("AUTHENTICATION BY TECHPREFIX $tech_prefix - Username: " . $MAGNUS->username . '  ' . $MAGNUS->dnid, 6);
                 $authentication = true;
             }

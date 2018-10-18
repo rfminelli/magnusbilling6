@@ -63,6 +63,10 @@ class PortabilidadeAgi
                             && ($resultNextel->company == '55377' || $resultNextel->company == '55390'
                                 || $resultNextel->company == '55391')) {
                             $agi->verbose("é Nextel", 15);
+                            $company = str_replace("55", "", $resultNextel->company);
+                            $number  = "1111" . $company . $number;
+                            $agi->verbose("CONSULTA DA PORTABILIDADE ->" . $modelPortabilidade->company, 1);
+                            return $number;
                         } else {
 
                             $agi->verbose("Numero sem o nono digito, MBilling adicionou", 8);
@@ -71,8 +75,7 @@ class PortabilidadeAgi
 
                         }
                     }
-                    $sql = "SELECT company FROM pkg_portabilidade
-                            WHERE number = '$ddd' ORDER BY id DESC LIMIT 1";
+                    $sql                = "SELECT company FROM pkg_portabilidade WHERE number = '$ddd' ORDER BY id DESC LIMIT 1";
                     $modelPortabilidade = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                     if (isset($modelPortabilidade->company)) {
@@ -80,13 +83,12 @@ class PortabilidadeAgi
                         $number  = "1111" . $company . $number;
                         $agi->verbose("CONSULTA DA PORTABILIDADE ->" . $modelPortabilidade->company, 25);
                     } else {
-                        if (strlen($ddd) == 11) {
-                            $sql = "SELECT company FROM pkg_portabilidade_prefix
-                                        WHERE number = " . substr($ddd, 0, 7) . " LIMIT 1";
-                            $modelPortabilidade = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                        if ($mobile == true) {
+                            $sql = "SELECT company FROM pkg_portabilidade_prefix WHERE number = " . substr($ddd, 0, 7) . " LIMIT 1";
                         } else {
-                            $modelPortabilidade = $resultNextel;
+                            $sql = "SELECT company FROM pkg_portabilidade_prefix WHERE number = " . substr($ddd, 0, 6) . " LIMIT 1";
                         }
+                        $modelPortabilidade = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                         if (isset($modelPortabilidade->company)) {
                             $company = str_replace("55", "", $modelPortabilidade->company);

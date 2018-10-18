@@ -1149,6 +1149,34 @@ class UpdateMysqlCommand extends ConsoleCommand
             exec("echo '\n0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days\n0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday\n' >> /var/spool/cron/root");
         }
 
+        if ($version == '6.3.8') {
+            $sql = "INSERT INTO pkg_configuration VALUES
+				(NULL, 'Authentication IP/tech length', 'ip_tech_length', '6', 'Authentication IP/tech length 4, 5 or 6 digits', 'global', '1')";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE `pkg_user` ADD `techprefix` INT(6) NULL DEFAULT NULL AFTER `transfer_international`, ADD UNIQUE (`techprefix`);";
+            $this->executeDB($sql);
+
+            $sql = "UPDATE `pkg_user` SET techprefix = callingcard_pin;";
+            $this->executeDB($sql);
+
+            $version = '6.3.9';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
+        if ($version == '6.3.9') {
+            $sql = "ALTER TABLE `pkg_user` DROP `techprefix`";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE `pkg_sip` ADD `techprefix` INT(6) NULL DEFAULT NULL , ADD UNIQUE (`techprefix`);";
+            $this->executeDB($sql);
+
+            $version = '6.4.0';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

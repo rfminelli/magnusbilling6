@@ -97,7 +97,6 @@ class CallChartCommand extends ConsoleCommand
                         } else {
                             $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
                         }
-                        $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
 
                         if (count($modelSip)) {
                             $userType = 'User';
