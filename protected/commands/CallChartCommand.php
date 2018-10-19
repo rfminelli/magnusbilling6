@@ -93,6 +93,8 @@ class CallChartCommand extends ConsoleCommand
                             if (isset($modelUser->id_user)) {
                                 $modelSip = Sip::model()->find('id_user = :key', array(':key' => $modelUser->id));
                                 //$ndiscado = substr($ndiscado, 6);
+                            } else {
+                                $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
                             }
                         } else {
                             $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
@@ -250,7 +252,10 @@ class CallChartCommand extends ConsoleCommand
 
                 if (count($sql) > 0) {
 
-                    CallOnLine::model()->insertCalls($sql);
+                    $result = CallOnLine::model()->insertCalls($sql);
+                    if ($this->debug > 1) {
+                        print_r($result);
+                    }
                 }
             }
             sleep(4);
