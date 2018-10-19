@@ -91,7 +91,7 @@ class Sip extends Model
 
     public function checktechprefix($attribute, $params)
     {
-        if (strlen($this->techprefix) > 0) {
+        if (strlen($this->techprefix) > 2) {
 
             $config = LoadConfig::getConfig();
             $length = $config['global']['ip_tech_length'];

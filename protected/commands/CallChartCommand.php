@@ -87,16 +87,11 @@ class CallChartCommand extends ConsoleCommand
                         //verifico quem iniciou a chamada user ou tronco
 
                         //se é autenticado por techprefix
-                        if (strlen($ndiscado) > 16) {
-                            $modelUser = User::model()->find('callingcard_pin = :key', array(':key' => substr($ndiscado, 0, 6)));
+                        $config = LoadConfig::getConfig();
+                        $tech   = substr($ndiscado, 0, $config['global']['ip_tech_length']);
 
-                            if (isset($modelUser->id_user)) {
-                                $modelSip = Sip::model()->find('id_user = :key', array(':key' => $modelUser->id));
-                                //$ndiscado = substr($ndiscado, 6);
-                            } else {
-                                $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
-                            }
-                        } else {
+                        $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
+                        if (!count($modelSip)) {
                             $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
                         }
 

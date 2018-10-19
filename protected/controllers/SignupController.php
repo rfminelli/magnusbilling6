@@ -17,19 +17,43 @@ class SignupController extends Controller
     }
     public function actionView($id)
     {
-        $signup = Signup::model()->findByAttributes(array('username' => $_GET['username'], 'password' => $_GET['password'], 'id' => $id));
-        if (count($signup) < 1) {
-            $this->redirect(array('add'));
+        if (isset($_GET['loginkey']) && strlen($_GET['loginkey']) > 5 and strlen($_GET['loginkey']) < 30) {
+            $modelUser = User::model()->find('loginkey = :key AND id = :key1', array(':key' => $_GET['loginkey'], ':key1' => $_GET['id']));
+            if (count($modelUser) < 1) {
+                $this->redirect(array('add'));
+            }
+
+            if (isset($_GET['loginkey']) && $_GET['loginkey'] == $modelUser->loginkey) {
+                $modelUser->active   = 1;
+                $modelUser->loginkey = '';
+                $modelUser->save();
+                $mail = new Mail(Mail::$TYPE_SIGNUP, $id);
+                $mail->send();
+                $idUserType                                     = $modelUser->idGroup->idUserType->id;
+                Yii::app()->session['isAdmin']                  = $idUserType == 1 ? true : false;
+                Yii::app()->session['isAgent']                  = $idUserType == 2 ? true : false;
+                Yii::app()->session['isClient']                 = $idUserType == 3 ? true : false;
+                Yii::app()->session['isClientAgent']            = isset($modelUser->id_user) && $modelUser->id_user > 1 ? true : false;
+                Yii::app()->session['id_plan']                  = $modelUser->id_plan;
+                Yii::app()->session['credit']                   = isset($modelUser->credit) ? $modelUser->credit : 0;
+                Yii::app()->session['username']                 = $modelUser->username;
+                Yii::app()->session['logged']                   = true;
+                Yii::app()->session['id_user']                  = $modelUser->id;
+                Yii::app()->session['id_agent']                 = is_null($modelUser->id_user) ? 1 : $modelUser->id_user;
+                Yii::app()->session['name_user']                = $modelUser->firstname . ' ' . $modelUser->lastname;
+                Yii::app()->session['id_group']                 = $modelUser->id_group;
+                Yii::app()->session['user_type']                = $idUserType;
+                Yii::app()->session['language']                 = $modelUser->language;
+                Yii::app()->session['currency']                 = $this->config['global']['base_currency'];
+                Yii::app()->session['showGoogleCode']           = false;
+                Yii::app()->session['newGoogleAuthenticator']   = false;
+                Yii::app()->session['checkGoogleAuthenticator'] = false;
+                Yii::app()->session['googleAuthenticatorKey']   = false;
+
+            }
+
+            $this->redirect('/');
         }
-        $loginkey = isset($_GET['loginkey']) ? true : false;
-
-        if (!$loginkey) {
-
-            $mail = new Mail(Mail::$TYPE_SIGNUP, $id);
-            $mail->send();
-        }
-
-        $this->render('view', array('signup' => $signup));
     }
 
     public function actionAdd()
