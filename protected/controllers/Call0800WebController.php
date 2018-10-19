@@ -34,7 +34,7 @@ class Call0800WebController extends Controller
 
         Yii::app()->setLanguage($this->config['global']['base_language']);
 
-        if (!isset($_POST['number'])) {
+        if (!isset($_REQUEST['number'])) {
 
             $this->render('index', array(
                 'send' => false,
@@ -42,7 +42,7 @@ class Call0800WebController extends Controller
 
         } else {
 
-            $destination = isset($_POST['number']) ? $_POST['number'] : '';
+            $destination = isset($_REQUEST['number']) ? $_REQUEST['number'] : '';
             $user        = isset($_GET['user']) ? $_GET['user'] : '';
 
             $modelSip = Sip::model()->find("name = :user", array(':user' => $user));
@@ -135,13 +135,8 @@ class Call0800WebController extends Controller
                     Yii::log(print_r($destination, true), 'error');
                 }
 
-                $MAGNUS               = new Magnus();
-                $MAGNUS->prefix_local = $modelSip->idUser->prefix_local;
-                $MAGNUS->id_plan      = $modelSip->idUser->id_plan;
-                $MAGNUS->number_translation($this, $yournumber);
-                $yournumber = $MAGNUS->destination;
-                $MAGNUS->number_translation($this, $destination);
-                $destination = $MAGNUS->destination;
+                $yournumber  = Util::number_translation($modelSip->idUser->prefix_local, $yournumber);
+                $destination = Util::number_translation($modelSip->idUser->prefix_local, $destination);
 
                 /*protabilidade*/
 

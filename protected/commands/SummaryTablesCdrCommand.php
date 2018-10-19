@@ -33,7 +33,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             } catch (Exception $e) {
                 $class_methods = get_class_methods('SummaryTablesCdrCommand');
                 echo "Availables comands";
-                for ($i = 1; $i < 14; $i++) {
+                for ($i = 1; $i < 16; $i++) {
                     echo $class_methods[$i] . "\n";
                 }
             }
@@ -391,7 +391,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
     public function dropTables()
     {
-        $sql = "DROP TABLE pkg_cdr_summary_day_agent, pkg_cdr_summary_day_trunk, pkg_cdr_summary_day_user, pkg_cdr_summary_month, pkg_cdr_summary_month_trunk, pkg_cdr_summary_month_user";
+        echo $sql = "DROP TABLE pkg_cdr_summary_day, pkg_cdr_summary_day_agent, pkg_cdr_summary_day_trunk, pkg_cdr_summary_day_user, pkg_cdr_summary_month, pkg_cdr_summary_month_trunk, pkg_cdr_summary_month_user, pkg_cdr_summary_trunk,  pkg_cdr_summary_user";
         Yii::app()->db->createCommand($sql)->execute();
     }
 
@@ -409,7 +409,9 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 TRUNCATE pkg_cdr_summary_day_user;
                 TRUNCATE pkg_cdr_summary_month;
                 TRUNCATE pkg_cdr_summary_month_trunk;
-                TRUNCATE pkg_cdr_summary_month_user;";
+                TRUNCATE pkg_cdr_summary_month_user;
+                TRUNCATE pkg_cdr_summary_trunk;
+                TRUNCATE pkg_cdr_summary_user;";
         Yii::app()->db->createCommand($sql)->execute();
     }
 

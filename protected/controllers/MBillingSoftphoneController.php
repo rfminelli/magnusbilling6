@@ -77,8 +77,7 @@ class MBillingSoftphoneController extends Controller
                 $sessiontime = $modelSip->callshoptime;
                 $ndiscado    = $modelSip->callshopnumber;
 
-                $MAGNUS   = new Magnus();
-                $ndiscado = $MAGNUS->number_translation($modelSip->idUser->prefix_local, $ndiscado);
+                $ndiscado = Util::number_translation($modelSip->idUser->prefix_local, $ndiscado);
 
                 $resultCallShop = RateCallshop::model()->findCallShopRate($ndiscado, $modelSip->id_user);
 
@@ -86,7 +85,7 @@ class MBillingSoftphoneController extends Controller
                 $initblock = $resultCallShop[0]['minimo'];
                 $increment = $resultCallShop[0]['block'];
 
-                $sellratecost_callshop = $MAGNUS->calculation_price($buyrate, $sessiontime, $initblock, $increment);
+                $sellratecost_callshop = Util::calculation_price($buyrate, $sessiontime, $initblock, $increment);
 
                 echo number_format($sellratecost_callshop, 2);
             }

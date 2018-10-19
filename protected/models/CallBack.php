@@ -77,11 +77,8 @@ class CallBack extends Model
         if ($this->getIsNewRecord()) {
             $config = LoadConfig::getConfig();
 
-            $modelUser            = User::model()->findByPk((int) $this->id_user);
-            $MAGNUS               = new Magnus();
-            $MAGNUS->prefix_local = $modelUser->prefix_local;
-            $MAGNUS->number_translation($this, $this->exten);
-            $this->exten = $MAGNUS->destination;
+            $modelUser   = User::model()->findByPk((int) $this->id_user);
+            $this->exten = Util::number_translation($modelUser->prefix_local, $this->exten);
         }
         return parent::beforeSave();
     }

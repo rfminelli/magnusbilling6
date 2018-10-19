@@ -205,4 +205,66 @@ class Util
             );
         }
     }
+
+    public static function number_translation($prefix_local, $destination)
+    {
+        #match / replace / if match length
+        #0/54,4/543424/7,15/549342/9
+
+        //$this->prefix_local = "0/54,*/5511/8,15/549342/9";
+        $config = LoadConfig::getConfig();
+        $regexs = preg_split("/,/", $prefix_local);
+
+        foreach ($regexs as $key => $regex) {
+
+            $regra   = preg_split('/\//', $regex);
+            $grab    = $regra[0];
+            $replace = isset($regra[1]) ? $regra[1] : '';
+            $digit   = isset($regra[2]) ? $regra[2] : '';
+
+            $number_prefix = substr($destination, 0, strlen($grab));
+
+            if (strtoupper($config['global']['base_country']) == 'BRL' || strtoupper($config['global']['base_country']) == 'ARG') {
+                if ($grab == '*' && strlen($destination) == $digit) {
+                    $destination = $replace . $destination;
+                } else if (strlen($destination) == $digit && $number_prefix == $grab) {
+                    $destination = $replace . substr($destination, strlen($grab));
+                } elseif ($number_prefix == $grab) {
+                    $destination = $replace . substr($destination, strlen($grab));
+                }
+
+            } else {
+
+                if (strlen($destination) == $digit) {
+                    if ($grab == '*' && strlen($destination) == $digit) {
+                        $destination = $replace . $destination;
+                    } else if ($number_prefix == $grab) {
+                        $destination = $replace . substr($destination, strlen($grab));
+                    }
+                }
+            }
+        }
+
+        return $destination;
+    }
+
+    public static function calculation_price($buyrate, $duration, $initblock, $increment)
+    {
+        $ratecallduration = $duration;
+        $buyratecost      = 0;
+        if ($ratecallduration < $initblock) {
+            $ratecallduration = $initblock;
+        }
+
+        if (($increment > 0) && ($ratecallduration > $initblock)) {
+            $mod_sec = $ratecallduration % $increment;
+            if ($mod_sec > 0) {
+                $ratecallduration += ($increment - $mod_sec);
+            }
+
+        }
+        $ratecost = ($ratecallduration / 60) * $buyrate;
+        $ratecost = $ratecost;
+        return $ratecost;
+    }
 }
