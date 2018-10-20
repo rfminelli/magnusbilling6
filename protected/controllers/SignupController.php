@@ -28,7 +28,7 @@ class SignupController extends Controller
                 $modelUser->loginkey = '';
                 $modelUser->save();
                 $mail = new Mail(Mail::$TYPE_SIGNUP, $id);
-                $mail->send();
+                //$mail->send();
                 $idUserType                                     = $modelUser->idGroup->idUserType->id;
                 Yii::app()->session['isAdmin']                  = $idUserType == 1 ? true : false;
                 Yii::app()->session['isAgent']                  = $idUserType == 2 ? true : false;
@@ -53,6 +53,9 @@ class SignupController extends Controller
             }
 
             $this->redirect('/');
+        } else {
+            $signup = Signup::model()->findByPk((int) $id);
+            $this->render('view', array('signup' => $signup));
         }
     }
 
