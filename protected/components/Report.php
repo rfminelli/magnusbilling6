@@ -79,8 +79,6 @@ class Report extends FPDF
             if (readfile($this->fileReport)) {
                 unlink($this->fileReport);
             }
-        } else {
-            echo $this->fileReport;
         }
     }
 
