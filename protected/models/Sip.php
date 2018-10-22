@@ -85,7 +85,7 @@ class Sip extends Model
             array('defaultuser', 'unique', 'caseSensitive' => 'false'),
             array('techprefix', 'length', 'max' => 6),
             array('techprefix', 'checktechprefix'),
-            array('techprefix', 'unique'),
+
         );
     }
 
@@ -103,6 +103,14 @@ class Sip extends Model
                 $this->addError($attribute, Yii::t('yii', 'Techprefix maximum length is 6'));
             }
         }
+    }
+
+    public function beforeSave()
+    {
+        if ($this->techprefix == 0) {
+            $this->techprefix = null;
+        }
+        return parent::beforeSave();
     }
 
     public function checkusername($attribute, $params)
