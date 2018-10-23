@@ -178,7 +178,7 @@ class DidCheckCommand extends ConsoleCommand
                         $modelDid->id_user  = 'NULL';
                         $modelDid->save();
 
-                        DidDestination::model()->deleteAll('id_did = :key', array(':key' => $didUse->id_did));
+                        Diddestination::model()->deleteAll('id_did = :key', array(':key' => $didUse->id_did));
 
                         if ($id_agent > 1) {
                             $mail = new Mail(Mail::$TYPE_DID_RELEASED, $didUse->id_user, $id_agent);

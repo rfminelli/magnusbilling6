@@ -113,13 +113,13 @@ class DidController extends Controller
                 $modelDidUse->month_payed = 1;
                 $modelDidUse->save();
 
-                $modelDidDestination              = new DidDestination();
-                $modelDidDestination->id_user     = $id_user;
-                $modelDidDestination->id_did      = $id_did;
-                $modelDidDestination->destination = 'SIP/' . $modelUser->username;
-                $modelDidDestination->priority    = 1;
-                $modelDidDestination->voip_call   = 1;
-                $modelDidDestination->save();
+                $modelDiddestination              = new Diddestination();
+                $modelDiddestination->id_user     = $id_user;
+                $modelDiddestination->id_did      = $id_did;
+                $modelDiddestination->destination = 'SIP/' . $modelUser->username;
+                $modelDiddestination->priority    = 1;
+                $modelDiddestination->voip_call   = 1;
+                $modelDiddestination->save();
 
                 if ($priceDid > 0) // se tiver custo
                 {
