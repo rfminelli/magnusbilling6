@@ -424,7 +424,7 @@ class DidAgi
 
         if ($block_expression_1 == 1 || $send_to_callback_1) {
             $agi->verbose("try blocked number match with expression 1, " . $MAGNUS->CallerID . ' ' . $expression_2, 10);
-            if (strlen($expression_1) > 1 && ereg($expression_1, $MAGNUS->CallerID)) {
+            if (strlen($expression_1) > 1 && preg_match('/' . $expression_1 . '/', $MAGNUS->CallerID)) {
 
                 if ($block_expression_1 == 1) {
                     $agi->verbose("Call blocked becouse this number match with expression 1, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
@@ -438,7 +438,7 @@ class DidAgi
 
         if ($block_expression_2 == 1 || $send_to_callback_2) {
             $agi->verbose("try blocked number match with expression 2, " . $MAGNUS->CallerID . ' ' . $expression_2, 1);
-            if (strlen($expression_2) > 1 && ereg($expression_2, $MAGNUS->CallerID)) {
+            if (strlen($expression_2) > 1 && preg_match('/' . $expression_2 . '/', $MAGNUS->CallerID)) {
                 if ($block_expression_2 == 1) {
                     $agi->verbose("Call blocked becouse this number match with expression 2, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
                     $MAGNUS->hangup($agi);
@@ -451,10 +451,9 @@ class DidAgi
 
         if ($block_expression_3 == 1 || $send_to_callback_3) {
             $agi->verbose("try blocked number match with expression 3, " . $MAGNUS->CallerID . ' ' . $expression_3, 10);
-            if (strlen($expression_3) > 0 && (ereg($expression_3, $MAGNUS->CallerID) || $expression_3 == '*') &&
-                strlen($expression_1) > 1 && !ereg($expression_1, $MAGNUS->CallerID) &&
-                strlen($expression_2) > 1 && !ereg($expression_2, $MAGNUS->CallerID)
             if (strlen($expression_3) > 0 && (preg_match('/' . $expression_3 . '/', $MAGNUS->CallerID) || $expression_3 == '*') &&
+                strlen($expression_1) > 1 && !preg_match('/' . $expression_1 . '/', $MAGNUS->CallerID) &&
+                strlen($expression_2) > 1 && !preg_match('/' . $expression_2 . '/', $MAGNUS->CallerID)
             ) {
 
                 if ($block_expression_1 == 3) {
@@ -497,14 +496,14 @@ class DidAgi
         //brazil mobile - ^[4,5,6][1-9][7-9].{7}$|^[1,2,3,7,8,9][1-9]9.{8}$
         //brazil fixed - ^[1-9][0-9][1-5].
         $agi->verbose(print_r($this->modelDestination[0], true), 25);
-        if (strlen($this->modelDid->expression_1) > 0 && ereg($this->modelDid->expression_1, $MAGNUS->CallerID) || $this->modelDid->expression_1 == '*') {
+        if (strlen($this->modelDid->expression_1) > 0 && preg_match('/' . $this->modelDid->expression_1 . '/', $MAGNUS->CallerID) || $this->modelDid->expression_1 == '*') {
             $agi->verbose("CallerID Match regular expression 1 " . $MAGNUS->CallerID, 10);
             $selling_rate = $this->modelDid->selling_rate_1;
 
-        } elseif (strlen($this->modelDid->expression_2) > 0 && ereg($this->modelDid->expression_2, $MAGNUS->CallerID) || $this->modelDid->expression_2 == '*') {
+        } elseif (strlen($this->modelDid->expression_2) > 0 && preg_match('/' . $this->modelDid->expression_2 . '/', $MAGNUS->CallerID) || $this->modelDid->expression_2 == '*') {
             $agi->verbose("CallerID Match regular expression 2 " . $MAGNUS->CallerID, 10);
             $selling_rate = $this->modelDid->selling_rate_2;
-        } elseif (strlen($this->modelDid->expression_3) > 0 && ereg($this->modelDid->expression_3, $MAGNUS->CallerID) || $this->modelDid->expression_3 == '*') {
+        } elseif (strlen($this->modelDid->expression_3) > 0 && preg_match('/' . $this->modelDid->expression_3 . '/', $MAGNUS->CallerID) || $this->modelDid->expression_3 == '*') {
             $agi->verbose("CallerID Match regular expression 3 " . $MAGNUS->CallerID, 10);
             $selling_rate = $this->modelDid->selling_rate_3;
         } else {
