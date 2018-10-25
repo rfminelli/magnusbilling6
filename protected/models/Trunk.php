@@ -68,8 +68,17 @@ class Trunk extends Model
             array('transport,encryption', 'length', 'max' => 3),
             array('port', 'length', 'max' => 5),
             array('register_string', 'length', 'max' => 300),
+            array('trunkcode', 'checkTrunkCode'),
         );
     }
+
+    public function checkTrunkCode($attribute, $params)
+    {
+        if ($this->host == 'dynamic' && $this->trunkcode != $this->user) {
+            $this->addError($attribute, Yii::t('yii', 'When host =dynamic the trunk name and username need be equal.'));
+        }
+    }
+
     /**
      * @return array regras de relacionamento.
      */
