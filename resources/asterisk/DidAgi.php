@@ -454,6 +454,7 @@ class DidAgi
             if (strlen($expression_3) > 0 && (ereg($expression_3, $MAGNUS->CallerID) || $expression_3 == '*') &&
                 strlen($expression_1) > 1 && !ereg($expression_1, $MAGNUS->CallerID) &&
                 strlen($expression_2) > 1 && !ereg($expression_2, $MAGNUS->CallerID)
+            if (strlen($expression_3) > 0 && (preg_match('/' . $expression_3 . '/', $MAGNUS->CallerID) || $expression_3 == '*') &&
             ) {
 
                 if ($block_expression_1 == 3) {
