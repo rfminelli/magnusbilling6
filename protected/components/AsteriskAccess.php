@@ -521,68 +521,12 @@ class AsteriskAccess
 
             if ($fd) {
                 foreach ($modelSip as $key => $sip) {
-                    $line = "\n\n[" . $sip->name . "]\n";
-                    if (fwrite($fd, $line) === false) {
-                        echo "Impossible to write to the file ($buddyfile)";
-                        break;
+
+                    if ($sip->techprefix > 1) {
+                        $line = "\n\n[" . $sip->host . "]\n";
                     } else {
-                        $line = '';
-
-                        $line .= 'host=' . $sip->host . "\n";
-
-                        $line .= 'fromdomain=' . $sip->host . "\n";
+                        $line = "\n\n[" . $sip->name . "]\n";
                         $line .= 'accountcode=' . $sip->idUser->username . "\n";
-                        $line .= 'disallow=' . $sip->disallow . "\n";
-
-                        $codecs = explode(",", $sip->allow);
-                        foreach ($codecs as $codec) {
-                            $line .= 'allow=' . $codec . "\n";
-                        }
-
-                        if (strlen($sip->directmedia) > 1) {
-                            $line .= 'directmedia=' . $sip->directmedia . "\n";
-                        }
-
-                        if (strlen($sip->context) > 1) {
-                            $line .= 'context=' . $sip->context . "\n";
-                        }
-
-                        if (strlen($sip->dtmfmode) > 1) {
-                            $line .= 'dtmfmode=' . $sip->dtmfmode . "\n";
-                        }
-
-                        if (strlen($sip->insecure) > 1) {
-                            $line .= 'insecure=' . $sip->insecure . "\n";
-                        }
-
-                        if (strlen($sip->nat) > 1) {
-                            $line .= 'nat=' . $sip->nat . "\n";
-                        }
-
-                        if (strlen($sip->qualify) > 1) {
-                            $line .= 'qualify=' . $sip->qualify . "\n";
-                        }
-
-                        if (strlen($sip->type) > 1) {
-                            $line .= 'type=' . $sip->type . "\n";
-                        }
-
-                        if (strlen($sip->regexten) > 1) {
-                            $line .= 'regexten=' . $sip->regexten . "\n";
-                        }
-
-                        if (strlen($sip->amaflags) > 1) {
-                            $line .= 'amaflags=' . $sip->amaflags . "\n";
-                        }
-
-                        if (strlen($sip->cid_number) > 1) {
-                            $line .= 'cid_number=' . $sip->cid_number . "\n";
-                        }
-
-                        if (strlen($sip->language) > 1) {
-                            $line .= 'language=' . $sip->language . "\n";
-                        }
-
                         if (strlen($sip->defaultuser) > 1) {
                             $line .= 'defaultuser=' . $sip->defaultuser . "\n";
                         }
@@ -594,39 +538,93 @@ class AsteriskAccess
                         if (strlen($sip->secret) > 1) {
                             $line .= 'secret=' . $sip->secret . "\n";
                         }
-
-                        if ($sip->calllimit > 0) {
-                            $line .= 'call-limit=' . $sip->calllimit . "\n";
-                        }
-
-                        if (strlen($sip->mohsuggest) > 1) {
-                            $line .= 'mohsuggest=' . $sip->mohsuggest . "\n";
-                        }
-
-                        $line .= 'allowtransfer=' . $sip->allowtransfer . "\n";
-
-                        if ($sip->context == 'encryption') {
-                            $line .= "encryption=yes\n";
-                            $line .= "avpf=yes\n";
-                            $line .= "force_avp=yes\n";
-                            $line .= "icesupport=yes\n";
-                            $line .= "dtlsenable=yes\n";
-                            $line .= "dtlsverify=fingerprint\n";
-                            $line .= "dtlscertfile=/etc/asterisk/certificate/asterisk.pem\n";
-                            $line .= "dtlscafile=/etc/asterisk/certificate/ca.crt\n";
-                            $line .= "dtlssetup=actpass\n";
-                            $line .= "rtcp_mux=yes\n";
-                        }
-
-                        if (fwrite($fd, $line) === false) {
-                            echo gettext("Impossible to write to the file") . " ($buddyfile)";
-                            break;
-                        }
-
-                        if (strlen($sip->defaultuser) > 1) {
-                            $subscriber .= 'exten => ' . $sip->defaultuser . ',hint,SIP/' . $sip->defaultuser . "\n";
-                        }
                     }
+
+                    $line .= 'host=' . $sip->host . "\n";
+                    $line .= 'fromdomain=' . $sip->host . "\n";
+                    $line .= 'disallow=' . $sip->disallow . "\n";
+
+                    $codecs = explode(",", $sip->allow);
+                    foreach ($codecs as $codec) {
+                        $line .= 'allow=' . $codec . "\n";
+                    }
+
+                    if (strlen($sip->directmedia) > 1) {
+                        $line .= 'directmedia=' . $sip->directmedia . "\n";
+                    }
+
+                    if (strlen($sip->context) > 1) {
+                        $line .= 'context=' . $sip->context . "\n";
+                    }
+
+                    if (strlen($sip->dtmfmode) > 1) {
+                        $line .= 'dtmfmode=' . $sip->dtmfmode . "\n";
+                    }
+
+                    if (strlen($sip->insecure) > 1) {
+                        $line .= 'insecure=' . $sip->insecure . "\n";
+                    }
+
+                    if (strlen($sip->nat) > 1) {
+                        $line .= 'nat=' . $sip->nat . "\n";
+                    }
+
+                    if (strlen($sip->qualify) > 1) {
+                        $line .= 'qualify=' . $sip->qualify . "\n";
+                    }
+
+                    if (strlen($sip->type) > 1) {
+                        $line .= 'type=' . $sip->type . "\n";
+                    }
+
+                    if (strlen($sip->regexten) > 1) {
+                        $line .= 'regexten=' . $sip->regexten . "\n";
+                    }
+
+                    if (strlen($sip->amaflags) > 1) {
+                        $line .= 'amaflags=' . $sip->amaflags . "\n";
+                    }
+
+                    if (strlen($sip->cid_number) > 1) {
+                        $line .= 'cid_number=' . $sip->cid_number . "\n";
+                    }
+
+                    if (strlen($sip->language) > 1) {
+                        $line .= 'language=' . $sip->language . "\n";
+                    }
+
+                    if ($sip->calllimit > 0) {
+                        $line .= 'call-limit=' . $sip->calllimit . "\n";
+                    }
+
+                    if (strlen($sip->mohsuggest) > 1) {
+                        $line .= 'mohsuggest=' . $sip->mohsuggest . "\n";
+                    }
+
+                    $line .= 'allowtransfer=' . $sip->allowtransfer . "\n";
+
+                    if ($sip->context == 'encryption') {
+                        $line .= "encryption=yes\n";
+                        $line .= "avpf=yes\n";
+                        $line .= "force_avp=yes\n";
+                        $line .= "icesupport=yes\n";
+                        $line .= "dtlsenable=yes\n";
+                        $line .= "dtlsverify=fingerprint\n";
+                        $line .= "dtlscertfile=/etc/asterisk/certificate/asterisk.pem\n";
+                        $line .= "dtlscafile=/etc/asterisk/certificate/ca.crt\n";
+                        $line .= "dtlssetup=actpass\n";
+                        $line .= "rtcp_mux=yes\n";
+                    }
+
+                    if (fwrite($fd, $line) === false) {
+                        echo gettext("Impossible to write to the file") . " ($buddyfile)";
+                        break;
+                    }
+
+                    if (strlen($sip->defaultuser) > 1) {
+                        $subscriber .= 'exten => ' . $sip->defaultuser . ',hint,SIP/' . $sip->defaultuser . "\n";
+                    }
+
                 }
 
                 fclose($fd);
