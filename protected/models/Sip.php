@@ -85,6 +85,7 @@ class Sip extends Model
             array('defaultuser', 'unique', 'caseSensitive' => 'false'),
             array('techprefix', 'length', 'max' => 6),
             array('techprefix', 'checktechprefix'),
+            array('host', 'checkHost'),
 
         );
     }
@@ -105,10 +106,22 @@ class Sip extends Model
         }
     }
 
+    public function checkHost($attribute, $params)
+    {
+        if (strlen($this->techprefix) > 2) {
+            if ($this->host == 'dynamic' && preg_match('/invite/', $this->insecure)) {
+                $this->addError($attribute, Yii::t('yii', 'Never use host=dynamic and insecure=invite'));
+            }
+        }
+    }
+
     public function beforeSave()
     {
         if ($this->techprefix == 0) {
             $this->techprefix = null;
+        }
+        if ($this->host != 'dynamic') {
+            $this->insecure = 'invite';
         }
         return parent::beforeSave();
     }
