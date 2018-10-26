@@ -20,7 +20,7 @@ class CallSummaryPerUserController extends Controller
     public $config;
     public $attributeOrder = 't.id_user DESC';
     public $extraValues    = array('idUser' => 'username');
-
+    public $join           = 'JOIN pkg_user c ON t.id_user = c.id';
     public $fieldsFkReport = array(
         'id_user' => array(
             'table'       => 'pkg_user',

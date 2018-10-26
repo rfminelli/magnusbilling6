@@ -20,6 +20,7 @@ class CallSummaryMonthTrunkController extends Controller
     public $attributeOrder = 'month DESC';
 
     public $extraValues = array('idTrunk' => 'trunkcode');
+    public $join        = 'JOIN pkg_trunk c ON t.id_trunk = c.id';
 
     public $fieldsFkReport = array(
         'id_trunk' => array(

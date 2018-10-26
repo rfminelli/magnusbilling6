@@ -18,8 +18,8 @@
 class CallSummaryDayUserController extends Controller
 {
     public $attributeOrder = 'day DESC';
-
-    public $extraValues = array('idUser' => 'username');
+    public $join           = 'JOIN pkg_user c ON t.id_user = c.id';
+    public $extraValues    = array('idUser' => 'username');
 
     public $fieldsFkReport = array(
         'id_user' => array(

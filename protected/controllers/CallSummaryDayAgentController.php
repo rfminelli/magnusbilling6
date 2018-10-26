@@ -18,8 +18,8 @@
 class CallSummaryDayAgentController extends Controller
 {
     public $attributeOrder = 'day DESC';
-
-    public $extraValues = array('idUser' => 'username');
+    public $join           = 'JOIN pkg_user ON t.id_user = pkg_user.id';
+    public $extraValues    = array('idUser' => 'username');
 
     public function init()
     {

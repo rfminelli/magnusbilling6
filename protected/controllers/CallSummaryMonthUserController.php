@@ -19,8 +19,8 @@ class CallSummaryMonthUserController extends Controller
 {
     public $attributeOrder = 'month DESC';
 
-    public $extraValues = array('idUser' => 'username');
-
+    public $extraValues    = array('idUser' => 'username');
+    public $join           = 'JOIN pkg_user c ON t.id_user = c.id';
     public $fieldsFkReport = array(
         'id_user' => array(
             'table'       => 'pkg_user',

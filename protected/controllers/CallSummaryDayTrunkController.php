@@ -18,8 +18,8 @@
 class CallSummaryDayTrunkController extends Controller
 {
     public $attributeOrder = 'day DESC';
-
-    public $extraValues = array('idTrunk' => 'trunkcode');
+    public $join           = 'JOIN pkg_trunk c ON t.id_trunk = c.id';
+    public $extraValues    = array('idTrunk' => 'trunkcode');
 
     public $fieldsFkReport = array(
         'id_trunk' => array(
