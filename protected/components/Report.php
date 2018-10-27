@@ -96,7 +96,7 @@ class Report extends FPDF
             $user = isset($_SESSION[$this->idxUserSession]) ? utf8_decode($this->strUser) . $_SESSION[$this->idxUserSession] : isset($this->user) ? $this->user : null;
 
             if (strlen($this->logo) > 10) {
-                $this->Image($this->logo, 10, 8, 62);
+                $this->Image($this->logo, 10, 8);
             }
 
             $this->SetFont($this->fontFamily, 'B', $this->fontSize + 3);

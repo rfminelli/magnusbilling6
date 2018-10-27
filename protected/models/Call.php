@@ -29,6 +29,7 @@ class Call extends Model
     public $sessionbillMobile;
     public $sessiontimeRest = 0;
     public $sessionbillRest;
+    public $stoptime;
     /**
      * Retorna a classe estatica da model.
      * @return Prefix classe estatica da model.

@@ -839,43 +839,38 @@ class BaseController extends CController
         $this->applyFilterToLimitedAdmin();
         $this->showAdminLog();
 
-        if (preg_match('/call|rate|phonenumber/', $this->instanceModel->getModule())) {
-            $this->magnusFilesDirectory = '/var/www/tmpmagnus/';
-            $nameFileCsv                = $this->nameFileReport . time();
-            $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
+        $this->magnusFilesDirectory = '/var/www/tmpmagnus/';
+        $nameFileCsv                = $this->nameFileReport . time();
+        $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
 
-            $this->convertRelationFilter();
-
-            $sql = "SELECT " . $this->getColumnsFromReport($columns) . " INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
-                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
-
-            $command = Yii::app()->db->createCommand($sql);
-            if (count($this->paramsFilter)) {
-                foreach ($this->paramsFilter as $key => $value) {
-                    $command->bindValue($key, $value, PDO::PARAM_STR);
-                }
-
-            }
-
-            $command->execute();
-            header('Content-type: application/csv');
-            header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
-            header('Content-Transfer-Encoding: binary');
-            header('Accept-Ranges: bytes');
-            ob_clean();
-            flush();
-            if (readfile($pathCsv)) {
-                unlink($pathCsv);
-            }
-        } else {
-            CsvExport::export(
-                $this->abstractModel->findAll($this->readModel()),
-                $columns,
-                true, // boolPrintRows
-                $this->modelName . '_' . time() . '.csv'
-            );
+        $this->convertRelationFilter();
+        $header = '';
+        foreach ($columns as $key => $value) {
+            $header .= '"' . ($value['header']) . '",';
         }
 
+        $sql = "SELECT " . substr($header, 0, -1) . " UNION ALL SELECT " . $this->getColumnsFromReport($columns) . " INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\n'
+                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
+
+        $command = Yii::app()->db->createCommand($sql);
+        if (count($this->paramsFilter)) {
+            foreach ($this->paramsFilter as $key => $value) {
+                $command->bindValue($key, $value, PDO::PARAM_STR);
+            }
+
+        }
+
+        $command->execute();
+        header('Content-type: application/csv; charset=utf-8');
+        header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
+        header('Content-Transfer-Encoding: binary');
+
+        header('Accept-Ranges: bytes');
+        ob_clean();
+        flush();
+        if (readfile($pathCsv)) {
+            unlink($pathCsv);
+        }
     }
 
     public function convertRelationFilter()
@@ -1622,6 +1617,10 @@ class BaseController extends CController
             } else {
                 if ($fieldName === $fieldGroup) {
                     array_unshift($arrayColumns, $fieldName);
+                } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/sessionbill|buycost|lucro|buyrate|rateinitial/', $fieldName)) {
+                    array_push($arrayColumns, " REPLACE( $fieldName,  '.',  ',' ) AS $fieldName ");
+                } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/credit/', $fieldName)) {
+                    array_push($arrayColumns, " REPLACE( t.$fieldName,  '.',  ',' ) AS credit ");
                 } else {
                     array_push($arrayColumns, $fieldName);
                 }
@@ -1638,7 +1637,7 @@ class BaseController extends CController
     public function columnsReplace($arrayColumns)
     {
         $patterns = array(
-            '/credit/',
+            '/,credit/',
             '/description/',
             '/,id_user/',
             '/^id_user/',
