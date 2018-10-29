@@ -43,7 +43,7 @@ class BoletoController extends Controller
 
     public function beforeSave($values)
     {
-        if (!$this->isNewRecord() && isset($values['status']) && $values['status'] == 1) {
+        if (!$this->isNewRecord && isset($values['status']) && $values['status'] == 1) {
             $description = 'Boleto número' . $value['id'];
             UserCreditManager::releaseUserCredit($this->id_user, $this->payment, $description, $this->id);
         }
@@ -53,7 +53,7 @@ class BoletoController extends Controller
 
     public function afterSave($model, $values)
     {
-        if ($this->isNewRecord()) {
+        if ($this->isNewRecord) {
 
             //Envia boleto para o email do cliente
             $modelUser = User::model()->findByPk($model->id_user);
