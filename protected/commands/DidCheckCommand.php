@@ -175,7 +175,7 @@ class DidCheckCommand extends ConsoleCommand
 
                         $modelDid           = Did::model()->findByPk((int) $didUse->id_did);
                         $modelDid->reserved = 0;
-                        $modelDid->id_user  = 'NULL';
+                        $modelDid->id_user  = null;
                         $modelDid->save();
 
                         Diddestination::model()->deleteAll('id_did = :key', array(':key' => $didUse->id_did));
