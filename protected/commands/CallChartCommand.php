@@ -82,69 +82,80 @@ class CallChartCommand extends ConsoleCommand
                             echo '156 ' . $call[5];
                         }
 
-                        //is the caller leg
+                        if ($call[8] == 'MC') {
+                            //torpedo
+                            $cdr           = $call[13];
+                            $ndiscado      = $call[2];
+                            $modelCampaing = Campaign::model()->find('name = :key', array(':key' => $call[9]));
 
-                        //verifico quem iniciou a chamada user ou tronco
-
-                        //se é autenticado por techprefix
-                        $config = LoadConfig::getConfig();
-                        $tech   = substr($ndiscado, 0, $config['global']['ip_tech_length']);
-
-                        $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
-                        if (!count($modelSip)) {
-                            $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
-                        }
-
-                        if (count($modelSip)) {
-                            $userType = 'User';
+                            $id_user = isset($modelCampaing->id_user) ? $modelCampaing->id_user : 'NULL';
+                            $trunk   = "Campaign " . $call[9];
                         } else {
-                            $resultTrunk = Trunk::model()->find('trunkcode = :key', array(':key' => $originate));
-                            if (count($resultTrunk)) {
-                                $userType = 'Trunk';
+
+                            //is the caller leg
+
+                            //verifico quem iniciou a chamada user ou tronco
+
+                            //se é autenticado por techprefix
+                            $config = LoadConfig::getConfig();
+                            $tech   = substr($ndiscado, 0, $config['global']['ip_tech_length']);
+
+                            $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
+                            if (!count($modelSip)) {
+                                $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
                             }
-                        }
 
-                        if (!count($userType)) {
-                            //not fount the type call
-                            continue;
-                        } elseif ($userType == 'User') {
-                            $trunk = isset($call[6]) ? $call[6] : 0;
-                            if (preg_match("/\&/", $trunk)) {
-                                $trunk = preg_split("/\&/", $trunk);
-                                $trunk = explode("/", $trunk[0]);
-
-                            } else if (preg_match("/@/", $trunk)) {
-                                $trunk    = explode("@", $trunk);
-                                $trunk    = explode(",", $trunk[1]);
-                                $trunk[1] = $trunk[0];
+                            if (count($modelSip)) {
+                                $userType = 'User';
                             } else {
-                                $trunk = explode("/", $trunk);
-                            }
-
-                            $trunk   = isset($trunk[1]) ? $trunk[1] : 0;
-                            $id_user = $modelSip->id_user;
-
-                        } elseif ($userType == 'Trunk') {
-                            $trunk = $originate . ' DID Call';
-                            //a chamada nao foi atendida ainda
-                            if ($call[12] == '(None)' && $status == 'Ring') {
-                                $id_user = 'NULL';
-                            } elseif (strlen($call[12]) > 5 || $status == 'Up') {
-                                //chamada DID foi atendida
-                                $usernameReceive = explode("/", substr($call[12], 0, strrpos($call[12], "-")));
-                                $resultUser      = Sip::model()->findAll(array(
-                                    'select'    => 'pkg_user.id, username',
-                                    'join'      => 'LEFT JOIN pkg_user ON t.id_user = pkg_user.id',
-                                    'condition' => "t.name = '" . $usernameReceive[1] . "'",
-                                ));
-                                if (isset($resultUser[0]['id'])) {
-                                    $id_user = $resultUser[0]['id'];
-                                } else {
-                                    $modelDid = Did::model()->find('did = :key', array(':key' => $call[2]));
-                                    $id_user  = count($modelDid) ? $modelDid->id_user : null;
+                                $resultTrunk = Trunk::model()->find('trunkcode = :key', array(':key' => $originate));
+                                if (count($resultTrunk)) {
+                                    $userType = 'Trunk';
                                 }
                             }
 
+                            if (!count($userType)) {
+                                //not fount the type call
+                                continue;
+                            } elseif ($userType == 'User') {
+                                $trunk = isset($call[6]) ? $call[6] : 0;
+                                if (preg_match("/\&/", $trunk)) {
+                                    $trunk = preg_split("/\&/", $trunk);
+                                    $trunk = explode("/", $trunk[0]);
+
+                                } else if (preg_match("/@/", $trunk)) {
+                                    $trunk    = explode("@", $trunk);
+                                    $trunk    = explode(",", $trunk[1]);
+                                    $trunk[1] = $trunk[0];
+                                } else {
+                                    $trunk = explode("/", $trunk);
+                                }
+
+                                $trunk   = isset($trunk[1]) ? $trunk[1] : 0;
+                                $id_user = $modelSip->id_user;
+
+                            } elseif ($userType == 'Trunk') {
+                                $trunk = $originate . ' DID Call';
+                                //a chamada nao foi atendida ainda
+                                if ($call[12] == '(None)' && $status == 'Ring') {
+                                    $id_user = 'NULL';
+                                } elseif (strlen($call[12]) > 5 || $status == 'Up') {
+                                    //chamada DID foi atendida
+                                    $usernameReceive = explode("/", substr($call[12], 0, strrpos($call[12], "-")));
+                                    $resultUser      = Sip::model()->findAll(array(
+                                        'select'    => 'pkg_user.id, username',
+                                        'join'      => 'LEFT JOIN pkg_user ON t.id_user = pkg_user.id',
+                                        'condition' => "t.name = '" . $usernameReceive[1] . "'",
+                                    ));
+                                    if (isset($resultUser[0]['id'])) {
+                                        $id_user = $resultUser[0]['id'];
+                                    } else {
+                                        $modelDid = Did::model()->find('did = :key', array(':key' => $call[2]));
+                                        $id_user  = count($modelDid) ? $modelDid->id_user : null;
+                                    }
+                                }
+
+                            }
                         }
                     } elseif ($call[5] == 'AGI') {
 
