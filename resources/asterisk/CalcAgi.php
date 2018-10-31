@@ -860,6 +860,10 @@ class CalcAgi
 
         if ($this->terminatecauseid == 1) {
 
+            if ($this->sipiax == 3) {
+                $MAGNUS->sip_account = $MAGNUS->CallerID;
+            }
+
             $fields = "uniqueid,id_user,calledstation,id_plan,callerid,src,
                         starttime,sessiontime,real_sessiontime, terminatecauseid,sessionbill,
                         sipiax,buycost";

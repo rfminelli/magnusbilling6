@@ -285,11 +285,9 @@ class CallbackAgi
             $audio    = $MAGNUS->magnusFilesDirectory . '/sounds/' . $audioURA . $DidAgi->modelDestination[0]['id_did'];
             //early_media enable
             if ($DidAgi->modelDid->cbr_em == 1) {
-                $agi->verbose('earl ok');
-                $agi->execute('Ringing');
-                $agi->execute("Progress");
-                $agi->execute('Wait', '1');
-                $agi->execute('Playback', "$audio,noanswer");
+                $agi->set_variable("AUDIO", $audio);
+                $agi->execute('goto', 'earlymedia,0800,1');
+                exit;
             } else {
                 $agi->answer();
                 $agi->execute('Wait', '1');
