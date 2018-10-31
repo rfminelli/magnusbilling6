@@ -88,11 +88,13 @@ class BoletoController extends Controller
     public function actionRetorno()
     {
 
-        $values = $this->getAttributesRequest();
-        $banco  = $values['banco'];
-
-        $uploaddir  = $this->magnusFilesDirectory;
-        $uploadfile = $uploaddir . date('ymdhis') . $_FILES["file"]["name"];
+        $values         = $this->getAttributesRequest();
+        $banco          = $values['banco'];
+        $boletosNoTotal = 0;
+        $boletosOk      = "-->Boletos processados <-- </br>";
+        $boletosNo      = "Total de Boletos não processadors -->  ";
+        $uploaddir      = $this->magnusFilesDirectory;
+        $uploadfile     = $uploaddir . date('ymdhis') . $_FILES["file"]["name"];
         move_uploaded_file($_FILES["file"]["tmp_name"], $uploadfile);
 
         if ($banco == 'cef') {
@@ -106,10 +108,6 @@ class BoletoController extends Controller
             $retorno = new RetornoBanco($cnab240);
 
             $nossoNumero = $retorno->processar();
-
-            $boletosOk      = "-->Boletos processados <-- </br>";
-            $boletosNo      = "Total de Boletos não processadors -->  ";
-            $boletosNoTotal = 0;
 
             foreach ($nossoNumero as $key => $value) {
 
