@@ -110,4 +110,50 @@ class CallSummaryDayUserController extends Controller
 
         return $attributes;
     }
+
+    public function actionExportCsvCalls()
+    {
+
+        if (!Yii::app()->session['isAdmin']) {
+            exit;
+        }
+
+        $this->setfilter($_GET);
+
+        $username = explode(' - ', $_GET['id'])[0];
+        $this->filter .= ' AND username = :keyusername';
+
+        $this->paramsFilter[':keyusername'] = $username;
+
+        $this->magnusFilesDirectory = '/var/www/tmpmagnus/';
+        $nameFileCsv                = $this->nameFileReport . time();
+        $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
+
+        $this->convertRelationFilter();
+
+        $columns    = 'u.username,CONCAT(firstname, " ",lastname),starttime,calledstation,sessiontime,real_sessiontime,buycost,sessionbill,trunkcode ';
+        $this->join = 'JOIN pkg_user u ON t.id_user = u.id ';
+        $this->join .= 'JOIN pkg_trunk r ON t.id_trunk = r.id ';
+        $sql = "SELECT " . $columns . "  INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
+                FROM pkg_cdr t $this->join WHERE $this->filter";
+
+        $command = Yii::app()->db->createCommand($sql);
+        if (count($this->paramsFilter)) {
+            foreach ($this->paramsFilter as $key => $value) {
+                $command->bindValue($key, $value, PDO::PARAM_STR);
+            }
+        }
+
+        $command->execute();
+        header('Content-type: application/csv');
+        header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
+        header('Content-Transfer-Encoding: binary');
+        header('Accept-Ranges: bytes');
+        ob_clean();
+        flush();
+        if (readfile($pathCsv)) {
+            unlink($pathCsv);
+        }
+
+    }
 }
