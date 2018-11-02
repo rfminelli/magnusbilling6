@@ -414,6 +414,22 @@ class CampaignController extends Controller
                     $this->nameMsg     => 'The phonebook not have numbers or not have active numbers',
                 ));
                 exit;
+            } else {
+
+                $criteria = new CDbCriteria();
+                $criteria->addInCondition('id_phonebook', $ids_phone_books);
+                $criteria->addCondition('status = :key AND creationdate < :key1');
+                $criteria->params[':key']  = 1;
+                $criteria->params[':key1'] = date('Y-m-d H:i:s');
+                $modelPhoneNumber          = PhoneNumber::model()->find($criteria);
+
+                if (!count($modelPhoneNumber)) {
+                    echo json_encode(array(
+                        $this->nameSuccess => false,
+                        $this->nameMsg     => 'There are active numbers but the start time is in the future',
+                    ));
+                    exit;
+                }
             }
 
             //tem erro mais nao foi identificado
