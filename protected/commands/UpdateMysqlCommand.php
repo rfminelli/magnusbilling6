@@ -629,13 +629,20 @@ class UpdateMysqlCommand extends ConsoleCommand
             	ALTER TABLE `pkg_send_credit` ADD `amount` VARCHAR(10) NULL DEFAULT NULL AFTER `earned`;
             	ALTER TABLE `pkg_send_credit` ADD `count` INT(11) NULL DEFAULT NULL AFTER `amount`;
             	ALTER TABLE `pkg_send_credit` ADD `total_sale` INT(11) NULL DEFAULT NULL AFTER `amount`;
-            	ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke_profit` `transfer_dbbl_rocket_profit` INT(11) NOT NULL DEFAULT '0';
-            	ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke` `transfer_dbbl_rocket` TINYINT(1) NOT NULL DEFAULT '0';
 
             ";
             $this->executeDB($sql);
+            $sql = "ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke_profit` `transfer_dbbl_rocket_profit` INT(11)  NULL DEFAULT '0';
+            ";
+            $this->executeDB($sql);
+            $sql = "
+            	ALTER TABLE `pkg_user` CHANGE `transfer_dbbl_rocke` `transfer_dbbl_rocket` TINYINT(1) NOT NULL DEFAULT '0';
+            	ADD `transfer_show_selling_price` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`;
+            ";
+            $this->executeDB($sql);
 
-            $sql = "ALTER TABLE `pkg_user`
+            $sql = "
+            	ALTER TABLE `pkg_user`
             	ADD `transfer_show_selling_price` TINYINT(1) NULL DEFAULT '0' AFTER `mix_monitor_format`;
             ";
             $this->executeDB($sql);

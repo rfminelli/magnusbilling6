@@ -128,7 +128,7 @@ class ServicesProcess
         switch ($modelServicesUse->idServices->type) {
             case 'disk_space':
                 if ($modelServicesUse->idUser->disk_space < 0 && $method == 'activation') {
-                    $modelServicesUse->idServices->disk_space++;
+                    $modelServicesUse->idServices->disk_space = 0;
                 }
                 //desativa gravacoes se o usuario ficar com espaço em disco menor que 1
                 if ($method != 'activation' &&
@@ -149,7 +149,7 @@ class ServicesProcess
             case 'sipAccountLimit':
                 Yii::log('sipAccountLimit', 'error');
                 if ($modelServicesUse->idUser->sipaccountlimit < 0 && $method == 'activation') {
-                    $modelServicesUse->idServices->sipaccountlimit++;
+                    $modelServicesUse->idServices->sipaccountlimit = 0;
                 }
                 //deleta as contas voip que superam o limite do servico comprado.
                 if ($method != 'activation') {
@@ -180,6 +180,10 @@ class ServicesProcess
 
                 break;
             case 'calllimit':
+                if ($modelServicesUse->idUser->calllimit < 0 && $method == 'activation') {
+                    $modelServicesUse->idServices->calllimit = 0;
+                }
+
                 if ($method == 'activation') {
                     $modelUser->calllimit += $modelServicesUse->idServices->calllimit;
                 } else {

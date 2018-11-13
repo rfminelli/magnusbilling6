@@ -146,12 +146,12 @@ class SipCallAgi
         {
             $didAgi                                = new DidAgi();
             $didAgi->modelDestination[0]['id_ivr'] = $optionValue;
-            IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
+            IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $didAgi, $type);
         } else if ($optionType == 'queue') // QUEUE
         {
             $didAgi                                  = new DidAgi();
             $didAgi->modelDestination[0]['id_queue'] = $optionValue;
-            QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
+            QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $didAgi, $type);
             $dialstatus = $CalcAgi->sessiontime > 0 ? 'ANSWER' : 'DONTCALL';
         } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
         {
