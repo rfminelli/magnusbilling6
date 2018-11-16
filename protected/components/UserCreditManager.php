@@ -106,7 +106,7 @@ class UserCreditManager
             //add new refill
             $modelRefill              = new Refill;
             $modelRefill->id_user     = $id_user;
-            $modelRefill->credit      = $signal . $credit;
+            $modelRefill->credit      = $signal == '-' ? $credit * -1 : $credit;
             $modelRefill->description = $description;
             $modelRefill->payment     = 1;
             $modelRefill->save();

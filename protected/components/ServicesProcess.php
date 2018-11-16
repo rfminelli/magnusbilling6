@@ -200,12 +200,14 @@ class ServicesProcess
 
         $description = Yii::t('yii', $method) . ' ' . Yii::t('yii', 'Service') . ' ' . $modelServicesUse->idServices->name;
 
-        $modelRefill              = new Refill();
-        $modelRefill->id_user     = $modelServicesUse->id_user;
-        $modelRefill->credit      = $credit;
-        $modelRefill->description = $description;
-        $modelRefill->payment     = 1;
-        $modelRefill->save();
+        if ($method == 'activation') {
+            $modelRefill              = new Refill();
+            $modelRefill->id_user     = $modelServicesUse->id_user;
+            $modelRefill->credit      = $credit;
+            $modelRefill->description = $description;
+            $modelRefill->payment     = 1;
+            $modelRefill->save();
+        }
 
         if ($updateUserCredit == true) {
             //add or remove user credit
