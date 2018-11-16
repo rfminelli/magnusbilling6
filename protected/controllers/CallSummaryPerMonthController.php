@@ -98,4 +98,5 @@ class CallSummaryPerMonthController extends Controller
 
         return $attributes;
     }
+
 }
