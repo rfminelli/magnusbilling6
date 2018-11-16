@@ -39,6 +39,7 @@ if (Yii::app()->session['currency'] == 'U$S') {
     $currency = Yii::app()->session['currency'];
 }
 
+$protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
 ?>
 
 <form method="POST" action="<?php echo $modelMethodPay->url ?>" target="_parent" id="buyForm">
@@ -48,7 +49,7 @@ if (Yii::app()->session['currency'] == 'U$S') {
     <input type="hidden" name="item_number" value="<?php echo $reference ?>">
     <input type="hidden" name="amount" value="<?php echo $_GET['amount'] ?>">
     <input type="hidden" name="no_shipping" value="1">
-    <input type="hidden" name="return" value="http://<?php echo $_SERVER['HTTP_HOST'] ?>/index.php">
+    <input type="hidden" name="return" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/index.php">
     <input type="hidden" name="currency_code" value="<?php echo $currency ?>">
     <input type="hidden" name="lc" value="<?php echo $modelUser->language ?>">
     <input type="hidden" name="bn" value="PP-BuyNowBF">
@@ -60,5 +61,5 @@ if (Yii::app()->session['currency'] == 'U$S') {
     <input type="hidden" name="zip" value="<?php echo $modelUser->zipcode; ?>">
     <input type="hidden" name="night_phone_a" value="<?php echo $modelUser->phone; ?>">
     <input type="hidden" name="email" value="<?php echo $modelUser->email; ?>">
-    <input type="hidden" name="notify_url" value="http://<?php echo $_SERVER['HTTP_HOST'] ?>/mbilling/index.php/paypal" type="text">
+    <input type="hidden" name="notify_url" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/mbilling/index.php/paypal" type="text">
  </form>

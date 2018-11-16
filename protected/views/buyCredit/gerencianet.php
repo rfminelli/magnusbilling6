@@ -67,7 +67,9 @@ if (!isset($_GET['id'])) {
         $item_1,
     ];
 
-    $metadata = array('notification_url' => 'http://' . $_SERVER['HTTP_HOST'] . '/mbilling/index.php/gerencianet?id_user=' . $modelUser->id . '&id=' . time() . '&amount=' . $_GET['amount']);
+    $protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+
+    $metadata = array('notification_url' => $protocol . $_SERVER['HTTP_HOST'] . '/mbilling/index.php/gerencianet?id_user=' . $modelUser->id . '&id=' . time() . '&amount=' . $_GET['amount']);
 
     $body = [
         'items'    => $items,
