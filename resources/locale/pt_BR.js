@@ -529,6 +529,7 @@ Locale.load({
     'logpayment': 'Pagamentos',
     'logrefill': 'Recargas',
     'markup': 'Lucro',
+    'profit': 'Lucro',
     'maskMoney': 'R$ #9.999.990,000',
     'maskPercent': '% #9.999.990,000',
     'max': 'Maximo',

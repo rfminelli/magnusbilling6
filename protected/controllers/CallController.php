@@ -307,4 +307,33 @@ class CallController extends Controller
         return $columns;
     }
 
+    public function actionGetTotal()
+    {
+        $filter   = isset($_POST['filter']) ? json_decode($_POST['filter']) : null;
+        $filterIn = isset($_POST['filterIn']) ? json_decode($_POST['filterIn']) : null;
+
+        if ($filter && $filterIn) {
+            $filter = array_merge($filter, $filterIn);
+        } else if ($filterIn) {
+            $filter = $filterIn;
+        }
+
+        $filter       = $filter ? $this->createCondition($filter) : $this->defaultFilter;
+        $this->filter = $this->fixedWhere ? $filter . ' ' . $this->fixedWhere : $filter;
+        $this->filter = $this->extraFilter($filter);
+
+        $modelCall = $this->abstractModel->find(array(
+            'select'    => 'SUM(t.buycost) AS sumbuycost, SUM(t.sessionbill) AS sumsessionbill ',
+            'join'      => $this->join,
+            'condition' => $this->filter,
+            'params'    => $this->paramsFilter,
+            'with'      => $this->relationFilter,
+        ));
+
+        $modelCall->sumbuycost     = number_format($modelCall->sumbuycost, 4);
+        $modelCall->sumsessionbill = number_format($modelCall->sumsessionbill, 4);
+        $modelCall->totalCall      = number_format($modelCall->sumsessionbill - $modelCall->sumbuycost, 4);
+        echo json_encode($modelCall);
+    }
+
 }
