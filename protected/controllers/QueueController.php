@@ -117,14 +117,14 @@ class QueueController extends Controller
 
         $this->abstractModel->truncateQueueStatus();
 
-        $modelQueue = Queue::model()->find("id IN ($ids)");
+        $modelQueue = Queue::model()->findAll("id IN ($ids)");
         foreach ($modelQueue as $key => $queue) {
             try {
-                AsteriskAccess::queueReseteStats($queue->name);
+                AsteriskAccess::instance('localhost', 'magnus', 'magnussolution')->queueReseteStats(trim($queue->name));
                 $sussess = true;
             } catch (Exception $e) {
-                $sussess          = true;
-                $this->msgSuccess = "Error";
+                $sussess          = false;
+                $this->msgSuccess = $e->getMessage();
             }
         }
         echo json_encode(array(
