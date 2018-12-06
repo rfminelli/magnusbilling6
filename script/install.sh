@@ -651,6 +651,7 @@ allow=alaw
 allow=gsm
 rtcachefriends=yes
 srvlookup=yes
+useragent=MagnusBilling
 allowsubscribe = no
 alwaysauthreject=yes
 rtupdate=yes
