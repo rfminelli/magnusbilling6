@@ -777,7 +777,7 @@ class BaseController extends CController
 
         $this->sort = $this->replaceOrder();
 
-        $this->select = $this->getColumnsFromReport($columns, $fieldGroup);
+        $this->select = $this->getColumnsFromReport($columns, $fieldGroup, 'pdf');
 
         $columns = $this->beforeReport($columns);
 
@@ -1591,7 +1591,7 @@ class BaseController extends CController
         return $command->queryAll();
     }
 
-    public function getColumnsFromReport($columns, $fieldGroup = null)
+    public function getColumnsFromReport($columns, $fieldGroup = null, $type = 'csv')
     {
         $arrayColumns = array();
 
@@ -1602,11 +1602,11 @@ class BaseController extends CController
                 $table       = $fk['table'];
                 $pk          = $fk['pk'];
                 $fieldReport = $fk['fieldReport'];
-                if (($fieldName == 'id' && $fieldReport == 'destination') || ($fieldName == 'idPrefixprefix' && $fieldReport == 'destination')) {
+                if (($fieldName == 't.id' && $fieldReport == 'destination') || ($fieldName == 'idPrefixprefix' && $fieldReport == 'destination')) {
                     //altera as colunas para poder pegar o destino das tarifas
-                    $subSelect = "(SELECT $fieldReport FROM $table WHERE $table.$pk = t.id_prefix) $fieldName";
+                    $subSelect = "(SELECT $fieldReport FROM $table WHERE $table.$pk = t.id_prefix) AS connectcharge";
                 } else {
-                    $subSelect = "(SELECT $fieldReport FROM $table WHERE $table.$pk = t.$fieldName) $fieldName";
+                    $subSelect = "(SELECT $fieldReport FROM $table WHERE $table.$pk = t.$fieldName) AS $fieldName";
                 }
 
                 if ($fieldName === $fieldGroup) {
@@ -1615,14 +1615,23 @@ class BaseController extends CController
                     array_push($arrayColumns, $subSelect);
                 }
             } else {
-                if ($fieldName === $fieldGroup) {
-                    array_unshift($arrayColumns, $fieldName);
-                } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/sessionbill|buycost|lucro|buyrate|rateinitial/', $fieldName)) {
-                    array_push($arrayColumns, " REPLACE( $fieldName,  '.',  ',' ) AS $fieldName ");
-                } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/credit/', $fieldName)) {
-                    array_push($arrayColumns, " REPLACE( t.$fieldName,  '.',  ',' ) AS credit ");
+                if ($type == 'csv') {
+                    if ($fieldName === $fieldGroup) {
+                        array_unshift($arrayColumns, $fieldName);
+                    } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/sessionbill|buycost|lucro|buyrate|rateinitial/', $fieldName)) {
+                        array_push($arrayColumns, " REPLACE( $fieldName,  '.',  ',' ) AS $fieldName ");
+                    } elseif (strtoupper($this->config['global']['base_country']) == 'BRL' && preg_match('/credit/', $fieldName)) {
+                        array_push($arrayColumns, " REPLACE( t.$fieldName,  '.',  ',' ) AS credit ");
+                    } else {
+                        array_push($arrayColumns, $fieldName);
+                    }
                 } else {
-                    array_push($arrayColumns, $fieldName);
+                    if ($fieldName === $fieldGroup) {
+                        array_unshift($arrayColumns, $fieldName);
+                    } else {
+                        array_push($arrayColumns, $fieldName);
+                    }
+
                 }
             }
         }

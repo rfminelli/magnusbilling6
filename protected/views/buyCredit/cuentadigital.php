@@ -34,7 +34,7 @@ if ($handle) {
     $result = json_decode($result);
 }
 
-$cambio = trim($result->blue) * 1.1;
+$cambio = trim($result->libre) * 1.1;
 ?>
 
 <form method="GET" action="<?php echo $modelMethodPay->url ?>" target="_parent" id="buyForm">

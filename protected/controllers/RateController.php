@@ -45,7 +45,7 @@ class RateController extends Controller
             'pk'          => 'id',
             'fieldReport' => 'prefix',
         ),
-        'id'        => array(
+        't.id'      => array(
             'table'       => 'pkg_prefix',
             'pk'          => 'id',
             'fieldReport' => 'destination',

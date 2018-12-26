@@ -177,7 +177,6 @@ class Report extends FPDF
         $this->SetFont($this->fontFamily, '', $this->fontSize);
         $this->SetTextColor(0, 0, 0);
         $rowNumber = 0;
-
         $this->clearRecords();
 
         foreach ($this->records as $row) {
@@ -238,9 +237,10 @@ class Report extends FPDF
                         break;
                     }
                 }
-
-                if (!$columnExists && $columnRecord != 'status') {
-                    unset($this->records[$i][$columnRecord]);
+                if ($columnRecord != 'connectcharge') {
+                    if (!$columnExists && $columnRecord != 'status') {
+                        unset($this->records[$i][$columnRecord]);
+                    }
                 }
 
                 $columnExists = false;
