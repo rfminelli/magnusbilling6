@@ -42,7 +42,7 @@ class MassiveCall
         $MAGNUS->id_agent = $agi->get_variable("AGENT_ID", true);
         $destination      = $MAGNUS->dnid;
 
-        $sql = "SELECT *, pkg_campaign.id AS id, pkg_campaign.id_user AS id_user  FROM pkg_campaign
+        $sql = "SELECT *, pkg_campaign.id AS id, pkg_campaign.id_user AS id_user, pkg_campaign.description AS description FROM pkg_campaign
                             LEFT JOIN pkg_user ON pkg_campaign.id_user = pkg_user.id
                             WHERE pkg_campaign.id = $idCampaign LIMIT 1";
         $modelCampaign = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
