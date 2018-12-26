@@ -39,13 +39,13 @@ class StandardCallAgi
                         $MAGNUS->sayBalance($agi, $MAGNUS->credit);
                     }
                 } else {
-                    break;
+                    $MAGNUS->hangup($agi, 1);
+                    exit;
                 }
 
                 $MAGNUS->agiconfig['use_dnid'] = 0;
             } //END FOR
         }
-
         $MAGNUS->hangup();
     }
 }

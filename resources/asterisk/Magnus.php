@@ -151,10 +151,28 @@ class Magnus
 
     }
     //hangup($agi);
-    public function hangup(&$agi)
+    public function hangup(&$agi, $code = 34)
     {
+        /*
+        1 =  SIP/2.0 404 Not Found.
+        16 = SIP/2.0 603 Declined.
+        17 = SIP/2.0 486 Busy here.
+        18 = SIP/2.0 408 Request Timeout.
+        19 = SIP/2.0 480 Temporarily unavailable.
+        21 = SIP/2.0 403 Forbidden
+        22 = SIP/2.0 410 Gone.
+        27 = SIP/2.0 502 Bad Gateway.
+        28 = SIP/2.0 484 Address incomplete.
+        29 = SIP/2.0 501 Not Implemented.
+        34 = SIP/2.0 503 Service Unavailable.
+        38 = SIP/2.0 500 Server internal failure
+        41 = SIP/2.0 603 Declined.
+        58 = SIP/2.0 488 Not Acceptable Here.
+        127 = SIP/2.0 500 Network error.
+         */
         $agi->verbose('Hangup Call ' . $this->destination . ' Username ' . $this->username, 6);
-        $agi->hangup();
+        $agi->execute("HANGUP $code");
+
         exit;
     }
 
@@ -648,10 +666,7 @@ class Magnus
     public function executePlayAudio($prompt, $agi)
     {
         if (strlen($prompt) > 0) {
-            if ($this->play_audio == 0) {
-                $agi->verbose("Send Congestion $prompt", 3);
-                $agi->execute((congestion), Congestion);
-            } else {
+            if ($this->play_audio == 1) {
                 $agi->verbose($prompt, 3);
                 $agi->answer();
                 $agi->stream_file($prompt, '#');
