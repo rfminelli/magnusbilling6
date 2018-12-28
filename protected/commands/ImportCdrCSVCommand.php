@@ -38,6 +38,29 @@ class ImportCdrCSVCommand extends ConsoleCommand
         $con         = new CDbConnection($dsn, $user, $pass);
         $con->active = true;
         $time        = time();
+
+        if ($result = $this->scan_dir('/var/log/asterisk/cdr-csv/', 1)) {
+
+            foreach ($result as $file) {
+                if (preg_match('/^MBilling_/', $file) && file_exists('/var/log/asterisk/cdr-csv/' . $file)) {
+
+                    if (preg_match('/^MBilling_Success/', $file)) {
+                        $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/" . $file . "' IGNORE INTO TABLE pkg_cdr FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,callerid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,buycost,sessionbill,sessiontime,real_sessiontime,agent_bill)";
+
+                    } else if (preg_match('/^MBilling_Success/', $file)) {
+                        $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/" . $file . "' IGNORE INTO TABLE pkg_cdr_failed FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,terminatecauseid,hangupcause)";
+                    }
+
+                    try {
+                        Yii::app()->db->createCommand($sql)->execute();
+                        exec("rm -rf /var/log/asterisk/cdr-csv/" . $file);
+                    } catch (Exception $e) {
+                        print_r($e);
+                    }
+                }
+            }
+        }
+
         if (file_exists('/var/log/asterisk/cdr-csv/MBilling_Success.csv')) {
 
             exec('mv /var/log/asterisk/cdr-csv/MBilling_Success.csv /var/log/asterisk/cdr-csv/MBilling_Success_' . $time . '.csv');
@@ -65,6 +88,28 @@ class ImportCdrCSVCommand extends ConsoleCommand
         }
 
         $con = null;
+    }
+
+    public function scan_dir($dir)
+    {
+
+        $ignored = array('.', '..', '.svn', '.htaccess', 'MBilling_Failed.csv', 'MBilling_Success.csv');
+
+        $files = array();
+        foreach (scandir($dir) as $file) {
+            if (in_array($file, $ignored)) {
+                continue;
+            }
+            if (!preg_match('/^MBilling_/', $file)) {
+                continue;
+            }
+            $files[$file] = filemtime($dir . '/' . $file);
+        }
+
+        arsort($files);
+        $files = array_keys($files);
+
+        return ($files) ? $files : false;
     }
 
 }

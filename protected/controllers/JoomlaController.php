@@ -239,4 +239,14 @@ class JoomlaController extends Controller
         ));
     }
 
+    public function actionUpdatePassword()
+    {
+
+        $modelUser = User::model()->find('username = :key', array(':key' => $_POST['username']));
+        if (strtoupper($_POST['data']) == strtoupper(MD5($modelUser->username . ':' . $modelUser->password))) {
+            $modelUser->password = trim($_POST['new_password']);
+            $modelUser->save();
+        }
+    }
+
 }
