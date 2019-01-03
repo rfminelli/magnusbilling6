@@ -17,10 +17,18 @@
  * Magnusbilling.com <info@magnusbilling.com>
  *
  */
-class ImportCdrCSVCommand extends ConsoleCommand
+class ImportCdrCSVCommand extends CConsoleCommand
 {
     public function run($args)
     {
+
+        /*
+        ;execute it to configure CDR_CUSTOM in Asterisk, then load module cdr_custom
+        echo '[mappings]
+        Master.csv => ${CSV_QUOTE(${CDR(clid)})},${CSV_QUOTE(${CDR(src)})},${CSV_QUOTE(${CDR(dst)})},${CSV_QUOTE(${CDR(dcontext)})},${CSV_QUOTE(${CDR(channel)})},${CSV_QUOTE(${CDR(dstchannel)})},${CSV_QUOTE(${CDR(lastapp)})},${CSV_QUOTE(${CDR(lastdata)})},${CSV_QUOTE(${CDR(start)})},${CSV_QUOTE(${CDR(answer)})},${CSV_QUOTE(${CDR(end)})},${CSV_QUOTE(${CDR(duration)})},${CSV_QUOTE(${CDR(billsec)})},${CSV_QUOTE(${CDR(disposition)})},${CSV_QUOTE(${CDR(amaflags)})},${CSV_QUOTE(${CDR(accountcode)})},${CSV_QUOTE(${CDR(uniqueid)})},${CSV_QUOTE(${CDR(userfield)})},${CDR(sequence)}' > /etc/asterisk/cdr_custom.conf
+
+        touch /var/log/asterisk/cdr-csv/error.csv
+         */
 
         $configFile = '/etc/odbc.ini';
         $array      = parse_ini_file($configFile);
@@ -38,6 +46,35 @@ class ImportCdrCSVCommand extends ConsoleCommand
         $con         = new CDbConnection($dsn, $user, $pass);
         $con->active = true;
         $time        = time();
+
+        if (file_exists('/var/log/asterisk/cdr-custom/Master.csv')) {
+            exec('mv /var/log/asterisk/cdr-custom/Master.csv /var/log/asterisk/cdr-custom/Master' . $time . '.csv');
+
+            $fila = 1;
+            if (($gestor = fopen('/var/log/asterisk/cdr-custom/Master' . $time . '.csv', "r")) !== false) {
+                while (($datos = fgetcsv($gestor, 1000, ",")) !== false) {
+
+                    if ($datos[12] > 0) {
+
+                        $result = exec("egrep '" . $datos[16] . ',' . $datos[1] . "' /var/log/asterisk/cdr-csv/MBilling_Success.csv");
+                        if (strlen($result) < 10) {
+                            print_r($datos);
+                            echo "egrep '" . $datos[16] . ',' . $datos[1] . "' /var/log/asterisk/cdr-csv/MBilling_Success.csv";
+                        } else {
+
+                            $result = explode(',', $result);
+                            if ($result[12] != $datos[12]) {
+                                exec('echo "' . print_r($datos, true) . print_r($result, true) . '" >> /var/log/asterisk/cdr-csv/error.csv');
+                                print_r($result);
+                                print_r($datos);
+                            }
+                        }
+                    }
+                }
+                fclose($gestor);
+            }
+            exec('rm -rf /var/log/asterisk/cdr-custom/Master' . $time . '.csv');
+        }
 
         if ($result = $this->scan_dir('/var/log/asterisk/cdr-csv/', 1)) {
 
@@ -101,6 +138,9 @@ class ImportCdrCSVCommand extends ConsoleCommand
                 continue;
             }
             if (!preg_match('/^MBilling_/', $file)) {
+                if ($file != 'Master.csv' && $file != 'error.csv') {
+                    exec('rm -rf /var/log/asterisk/cdr-csv/' . $file);
+                }
                 continue;
             }
             $files[$file] = filemtime($dir . '/' . $file);

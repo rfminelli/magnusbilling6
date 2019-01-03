@@ -1602,7 +1602,10 @@ class BaseController extends CController
                 $table       = $fk['table'];
                 $pk          = $fk['pk'];
                 $fieldReport = $fk['fieldReport'];
-                if (($fieldName == 't.id' && $fieldReport == 'destination') || ($fieldName == 'idPrefixprefix' && $fieldReport == 'destination')) {
+
+                if (($fieldName == 't.id' && $fieldReport == 'destination') ||
+                    ($fieldName == 'id' && $fieldReport == 'destination') ||
+                    ($fieldName == 'idPrefixprefix' && $fieldReport == 'destination')) {
                     //altera as colunas para poder pegar o destino das tarifas
                     $subSelect = "(SELECT $fieldReport FROM $table WHERE $table.$pk = t.id_prefix) AS connectcharge";
                 } else {
