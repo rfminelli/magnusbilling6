@@ -65,6 +65,68 @@ class SmsController extends Controller
 
     }
 
+    public function actionSendPost()
+    {
+        /*
+        <?php
+        $url  = 'http://your_server_ip/mbilling/index.php/sms/sendPost';
+        $data = array(
+        'username'   => 'username', //username
+        'api'        => MD5('your_password'), //MD5 password
+        'number'     => '573112370000', //numbers to send sms, ',' separated
+        'text'       => 'SMS API test', //SMS text
+        );
+
+        $options = array(
+        'http' => array(
+        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+        'method'  => 'POST',
+        'content' => http_build_query($data),
+        ),
+        );
+        $context = stream_context_create($options);
+        $result  = json_decode(file_get_contents($url, false, $context));
+        if ($result->success == 1) {
+        print 'Sent ' . $result->totalSmsSent . ' SMS successfully';
+        } else {
+        print 'error!!';
+        print_r($result);
+        }
+
+         */
+        SqlInject::sanitize($_POST);
+        if (!isset($_POST['number']) || !isset($_POST['text']) || !isset($_POST['username']) || !isset($_POST['api'])) {
+            exit('invalid data');
+        } else if (strlen($_POST['text']) > 140) {
+            exit('invalid number');
+        } else if (strlen($_POST['username']) < 4) {
+            exit('invalid user');
+        } else if (strlen($_POST['api']) < 5) {
+            exit('invalid user');
+        }
+
+        $modelSip = $this->remoteLogin($_POST['username'], $_POST['api']);
+
+        if (!count($modelSip)) {
+            exit('invalid user');
+        }
+
+        $numbers = explode(',', $_POST['number']);
+        $i       = 0;
+        foreach ($numbers as $key => $number) {
+            $result = SmsSend::send($modelSip->idUser, $number, $_POST['text']);
+            if ($result['success'] != 'Sent') {
+                $result['errornumber'] = $number;
+                break;
+            } else {
+                $i++;
+            }
+        }
+
+        $result['totalSmsSent'] = $i;
+        echo json_encode($result);
+    }
+
     public function actionSave()
     {
         $values = $this->getAttributesRequest();
