@@ -39,6 +39,19 @@ class CallSummaryMonthTrunkController extends Controller
         parent::init();
     }
 
+    public function actionRead($asJson = true, $condition = null)
+    {
+        if (!Yii::app()->session['isAdmin']) {
+            echo json_encode(array(
+                $this->nameRoot  => [],
+                $this->nameCount => 0,
+                $this->nameSum   => [],
+            ));
+            exit;
+        }
+        parent::actionRead();
+    }
+
     public function recordsExtraSum($records = array())
     {
         foreach ($records as $key => $value) {

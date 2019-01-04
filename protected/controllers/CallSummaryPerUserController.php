@@ -32,6 +32,8 @@ class CallSummaryPerUserController extends Controller
     public function init()
     {
 
+        $this->defaultFilter = Yii::app()->session['isAdmin'] ? 'isAgent = 0' : Yii::app()->session['isAgent'] ? 'isAgent = 1' : '1';
+
         $this->instanceModel = new CallSummaryPerUser;
         $this->abstractModel = CallSummaryPerUser::model();
         $this->titleReport   = Yii::t('yii', 'Calls summary per User');
@@ -44,6 +46,7 @@ class CallSummaryPerUserController extends Controller
         foreach ($records as $key => $value) {
             $records[0]->sumsessiontime += $value['sessiontime'] / 60;
             $records[0]->sumsessionbill += $value['sessionbill'];
+            $records[0]->sumagent_bill += $value['agent_bill'];
             $records[0]->sumbuycost += $value['buycost'];
             $records[0]->sumaloc_all_calls += $value['sessiontime'] / $value['nbcall'];
             $records[0]->sumnbcall += $value['nbcall'];
@@ -59,12 +62,13 @@ class CallSummaryPerUserController extends Controller
     {
         $attributes = false;
         foreach ($models as $key => $item) {
-            $attributes[$key]                   = $item->attributes;
-            $attributes[$key]['nbcall']         = $item->nbcall;
-            $attributes[$key]['lucro']          = $item->sessionbill - $item->buycost;
+            $attributes[$key]           = $item->attributes;
+            $attributes[$key]['nbcall'] = $item->nbcall;
+
             $attributes[$key]['sessiontime']    = $item->sessiontime / 60;
             $attributes[$key]['aloc_all_calls'] = $item->aloc_all_calls;
             $attributes[$key]['sumsessionbill'] = $item->sumsessionbill;
+            $attributes[$key]['sumagent_bill']  = $item->sumagent_bill;
             $attributes[$key]['sumbuycost']     = $item->sumbuycost;
             $attributes[$key]['sumlucro']       = $item->sumsessionbill - $item->sumbuycost;
             $attributes[$key]['sumnbcall']      = $item->sumnbcall;

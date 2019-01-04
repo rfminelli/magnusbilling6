@@ -1193,6 +1193,22 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+
+        if ($version == '6.4.1') {
+
+            $sql = "ALTER TABLE  `pkg_cdr_summary_day_user` ADD  `isAgent` TINYINT( 1 ) NULL DEFAULT NULL ;
+				ALTER TABLE  `pkg_cdr_summary_day_user` ADD  `agent_bill` FLOAT NOT NULL DEFAULT  '0';
+				ALTER TABLE  `pkg_cdr_summary_month_user` ADD  `isAgent` TINYINT( 1 ) NULL DEFAULT NULL ;
+				ALTER TABLE  `pkg_cdr_summary_month_user` ADD  `agent_bill` FLOAT NOT NULL DEFAULT  '0';
+				ALTER TABLE  `pkg_cdr_summary_user` ADD  `isAgent` INT( 11 ) NULL DEFAULT NULL ;
+				ALTER TABLE  `pkg_cdr_summary_user` ADD  `agent_bill` FLOAT NOT NULL DEFAULT  '0';
+				";
+            $this->executeDB($sql);
+
+            $version = '6.4.2';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
     }
 
     public function executeDB($sql)

@@ -25,6 +25,7 @@ class CallSummaryDayUser extends Model
 
     public $sumsessiontime;
     public $sumsessionbill;
+    public $sumagent_bill;
     public $sumbuycost;
     public $sumlucro;
     public $sumaloc_all_calls;

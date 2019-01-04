@@ -148,11 +148,14 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
     public function perDayUser($filter = 1)
     {
-        $sql       = "SELECT id FROM pkg_user";
+        $sql       = "SELECT id, id_user FROM pkg_user";
         $modelUser = Yii::app()->db->createCommand($sql)->queryAll();
 
         foreach ($modelUser as $key => $user) {
-            $sql = "INSERT INTO pkg_cdr_summary_day_user (day, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill)
+
+            $isAgent = $user['id_user'] > 1 ? 1 : 0;
+
+            $sql = "INSERT INTO pkg_cdr_summary_day_user (day, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill, isAgent, agent_bill)
 
                 SELECT DATE(starttime) AS day,
                 id_user,
@@ -160,9 +163,10 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 SUM(sessiontime) / COUNT(*) AS aloc_all_calls,
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
-                sum(sessionbill) AS sessionbill
+                sum(sessionbill) AS sessionbill,
+                $isAgent,
+                sum(agent_bill) AS agent_bill
                 FROM pkg_cdr t WHERE $filter AND id_user = '" . $user['id'] . "' GROUP BY day ORDER BY day DESC";
-
             try {
                 Yii::app()->db->createCommand($sql)->execute();
             } catch (Exception $e) {
@@ -171,8 +175,12 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             }
         }
 
-        $sql = "UPDATE  pkg_cdr_summary_day_user SET lucro = sessionbill - buycost";
+        $sql = "UPDATE  pkg_cdr_summary_day_user SET lucro = sessionbill - buycost WHERE isAgent = 0";
         Yii::app()->db->createCommand($sql)->execute();
+
+        $sql = "UPDATE  pkg_cdr_summary_day_user SET lucro = agent_bill - sessionbill WHERE isAgent = 1";
+        Yii::app()->db->createCommand($sql)->execute();
+
     }
 
     public function perDayTrunk($filter = 1)
@@ -259,12 +267,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
     public function perMonthUser($filter = 1)
     {
 
-        $sql       = "SELECT id FROM pkg_user";
+        $sql       = "SELECT id, id_user FROM pkg_user";
         $modelUser = Yii::app()->db->createCommand($sql)->queryAll();
 
         foreach ($modelUser as $key => $user) {
+            $isAgent = $user['id_user'] > 1 ? 1 : 0;
 
-            $sql = "INSERT INTO pkg_cdr_summary_month_user (month, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill)
+            $sql = "INSERT INTO pkg_cdr_summary_month_user (month, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill, isAgent, agent_bill)
 
                 SELECT EXTRACT(YEAR_MONTH FROM starttime) AS month,
                 id_user,
@@ -272,7 +281,9 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 SUM(sessiontime) / COUNT(*) AS aloc_all_calls,
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
-                sum(sessionbill) AS sessionbill
+                sum(sessionbill) AS sessionbill,
+                $isAgent,
+                sum(agent_bill) AS agent_bill
                 FROM pkg_cdr t WHERE $filter AND  id_user = '" . $user['id'] . "' GROUP BY month ORDER BY month DESC";
 
             try {
@@ -282,7 +293,10 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             }
         }
 
-        $sql = "UPDATE  pkg_cdr_summary_month_user SET lucro = sessionbill - buycost";
+        $sql = "UPDATE  pkg_cdr_summary_month_user SET lucro = sessionbill - buycost  WHERE isAgent = 0";
+        Yii::app()->db->createCommand($sql)->execute();
+
+        $sql = "UPDATE  pkg_cdr_summary_month_user SET lucro = agent_bill - sessionbill  WHERE isAgent = 1";
         Yii::app()->db->createCommand($sql)->execute();
     }
 
@@ -317,27 +331,31 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
     public function perUser($filter = 1)
     {
-        $sql = "INSERT INTO pkg_cdr_summary_user (id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill)
+        $sql = "INSERT INTO pkg_cdr_summary_user (id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill, isAgent, agent_bill)
 
                 SELECT t.id_user,
                 sum(sessiontime) AS sessiontime,
                 SUM(sessiontime) / COUNT(*) AS aloc_all_calls,
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
-                sum(sessionbill) AS sessionbill
+                sum(sessionbill) AS sessionbill,
+                c.id_user,
+                sum(agent_bill) AS agent_bill
                 FROM pkg_cdr t
                 JOIN pkg_user c ON t.id_user = c.id
                 GROUP BY t.id_user";
+
         try {
             Yii::app()->db->createCommand($sql)->execute();
         } catch (Exception $e) {
             //
+            //print_r($e);
         }
 
         $sql = "SELECT t.id_user,
-                count(*) as nbcall_fail
-                FROM pkg_cdr_failed t JOIN pkg_user c ON t.id_user = c.id
-                GROUP BY t.id_user";
+        count(*) as nbcall_fail
+        FROM pkg_cdr_failed t JOIN pkg_user c ON t.id_user = c.id
+        GROUP BY t.id_user";
         $model = Yii::app()->db->createCommand($sql)->queryAll();
 
         foreach ($model as $key => $value) {
@@ -345,11 +363,21 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        $sql = "UPDATE  pkg_cdr_summary_user SET isAgent = 0 WHERE isAgent <= 1";
+        Yii::app()->db->createCommand($sql)->execute();
+
+        $sql = "UPDATE  pkg_cdr_summary_user SET isAgent =1 WHERE isAgent > 1";
+        Yii::app()->db->createCommand($sql)->execute();
+
         $sql = "UPDATE  pkg_cdr_summary_user SET asr = (nbcall / ( nbcall_fail + nbcall) ) * 100 ";
         Yii::app()->db->createCommand($sql)->execute();
 
-        $sql = "UPDATE  pkg_cdr_summary_user SET lucro = sessionbill - buycost";
+        $sql = "UPDATE  pkg_cdr_summary_user SET lucro = sessionbill - buycost  WHERE isAgent = 0";
         Yii::app()->db->createCommand($sql)->execute();
+
+        $sql = "UPDATE  pkg_cdr_summary_user SET lucro = agent_bill - sessionbill  WHERE isAgent = 1";
+        Yii::app()->db->createCommand($sql)->execute();
+
     }
 
     public function perTrunk($filter = 1)
@@ -443,6 +471,8 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                     buycost float  NULL DEFAULT '0',
                     sessionbill float NULL DEFAULT '0',
                     lucro float NULL DEFAULT '0',
+                    isAgent TINYINT( 1 ) NULL DEFAULT NULL,
+                    agent_bill FLOAT NOT NULL DEFAULT  '0',
                     PRIMARY KEY (id),
                     KEY day (day),
                     KEY id_user (id_user)
@@ -505,6 +535,8 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                     buycost float NOT NULL DEFAULT '0',
                     sessionbill float NOT NULL DEFAULT '0',
                     lucro float NULL DEFAULT '0',
+                    isAgent TINYINT( 1 ) NULL DEFAULT NULL ;
+                    agent_bill FLOAT NOT NULL DEFAULT  '0';
                     PRIMARY KEY (id),
                     KEY month (month),
                     KEY id_user (id_user)
@@ -538,6 +570,8 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                     sessionbill float NOT NULL DEFAULT '0',
                     lucro float DEFAULT NULL,
                     asr float DEFAULT NULL,
+                    isAgent INT( 11 ) NULL DEFAULT NULL ;
+                    agent_bill FLOAT NOT NULL DEFAULT  '0';
                     PRIMARY KEY (id),
                     KEY id_user (id_user)
                     ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
