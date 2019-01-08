@@ -172,7 +172,7 @@ chmod -R 777 /tmp
  
 if [ ${DIST} = "CENTOS" ]; then
     cd /usr/src
-    wget http://magnusbilling.com/mpg123-1.20.1.tar.bz2
+    wget http://magnussolution.com/download/mpg123-1.20.1.tar.bz2
     tar -xjvf mpg123-1.20.1.tar.bz2
     cd mpg123-1.20.1
     ./configure && make && make install
