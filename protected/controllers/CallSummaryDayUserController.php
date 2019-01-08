@@ -29,6 +29,16 @@ class CallSummaryDayUserController extends Controller
         ),
     );
 
+    public $fieldsInvisibleClient = array(
+        'buycost',
+        'sumbuycost',
+    );
+
+    public $fieldsInvisibleAgent = array(
+        'buycost',
+        'sumbuycost',
+    );
+
     public function init()
     {
 

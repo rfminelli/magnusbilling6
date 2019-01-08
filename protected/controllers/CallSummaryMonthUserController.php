@@ -29,6 +29,16 @@ class CallSummaryMonthUserController extends Controller
         ),
     );
 
+    public $fieldsInvisibleClient = array(
+        'buycost',
+        'sumbuycost',
+    );
+
+    public $fieldsInvisibleAgent = array(
+        'buycost',
+        'sumbuycost',
+    );
+
     public function init()
     {
         $this->defaultFilter = Yii::app()->session['isAdmin'] ? 'isAgent = 0' : Yii::app()->session['isAgent'] ? 'isAgent = 1' : '1';
