@@ -67,8 +67,6 @@ class SmsCommand extends ConsoleCommand
                 echo "SEARCH NUMBER IN CAMPAIGN " . $campaign->name . "\n";
             }
 
-            $nbpage = $campaign->frequency;
-
             //get all campaign phonebook
             $modelCampaignPhonebook = CampaignPhonebook::model()->findAll('id_campaign = :key', array(':key' => $campaign->id));
             $ids_phone_books        = array();
@@ -81,6 +79,7 @@ class SmsCommand extends ConsoleCommand
             $criteria->addCondition('status = :key AND creationdate < :key1');
             $criteria->params[':key']  = 1;
             $criteria->params[':key1'] = date('Y-m-d H:i:s');
+            $criteria->limit           = $campaign->frequency;
             $modelPhoneNumber          = PhoneNumber::model()->findAll($criteria);
 
             if ($this->debug >= 1) {
