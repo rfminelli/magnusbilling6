@@ -41,9 +41,13 @@ class CallSummaryPerUserController extends Controller
 
     public function init()
     {
-
-        $this->defaultFilter = Yii::app()->session['isAdmin'] ? 'isAgent = 0' : Yii::app()->session['isAgent'] ? 'isAgent = 1' : '1';
-
+        if (Yii::app()->session['isAdmin'] == true) {
+            $this->defaultFilter = 'isAgent = 0';
+        } elseif (Yii::app()->session['isAgent'] == true) {
+            $this->defaultFilter = 'isAgent = 1';
+        } else {
+            $this->defaultFilter = 'isAgent = 1';
+        }
         $this->instanceModel = new CallSummaryPerUser;
         $this->abstractModel = CallSummaryPerUser::model();
         $this->titleReport   = Yii::t('yii', 'Calls summary per User');
