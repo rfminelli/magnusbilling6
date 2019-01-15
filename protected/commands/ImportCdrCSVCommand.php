@@ -84,7 +84,7 @@ class ImportCdrCSVCommand extends CConsoleCommand
                     if (preg_match('/^MBilling_Success/', $file)) {
                         $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/" . $file . "' IGNORE INTO TABLE pkg_cdr FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,callerid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,buycost,sessionbill,sessiontime,real_sessiontime,agent_bill)";
 
-                    } else if (preg_match('/^MBilling_Success/', $file)) {
+                    } else if (preg_match('/^MBilling_Failed/', $file)) {
                         $sql = "LOAD DATA LOCAL INFILE '/var/log/asterisk/cdr-csv/" . $file . "' IGNORE INTO TABLE pkg_cdr_failed FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n'  (uniqueid,starttime,id_user,id_plan,src,id_prefix,id_trunk,calledstation,terminatecauseid,hangupcause)";
                     }
 

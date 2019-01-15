@@ -1209,6 +1209,29 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+
+        if ($version == '6.4.2') {
+
+            $sql = "UPDATE pkg_cdr_summary_day_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_day_user.id_user
+					SET isAgent = 1 WHERE pkg_user.id_user > 1 AND isAgent IS NULL;
+					UPDATE pkg_cdr_summary_day_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_day_user.id_user
+					SET isAgent = 0 WHERE pkg_user.id_user < 2 AND isAgent IS NULL;
+					UPDATE pkg_cdr_summary_month_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_month_user.id_user
+					SET isAgent = 1 WHERE pkg_user.id_user > 1 AND isAgent IS NULL;
+					UPDATE pkg_cdr_summary_month_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_month_user.id_user
+					SET isAgent = 0 WHERE pkg_user.id_user < 2 AND isAgent IS NULL;
+					UPDATE pkg_cdr_summary_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_user.id_user
+					SET isAgent = 1 WHERE pkg_user.id_user > 1 AND isAgent IS NULL;
+					UPDATE pkg_cdr_summary_user LEFT JOIN  pkg_user ON pkg_user.id = pkg_cdr_summary_user.id_user
+					SET isAgent = 0 WHERE pkg_user.id_user < 2 AND isAgent IS NULL;
+				";
+            $this->executeDB($sql);
+
+            $version = '6.4.3';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

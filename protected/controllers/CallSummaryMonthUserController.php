@@ -45,8 +45,6 @@ class CallSummaryMonthUserController extends Controller
             $this->defaultFilter = 'isAgent = 0';
         } elseif (Yii::app()->session['isAgent'] == true) {
             $this->defaultFilter = 'isAgent = 1';
-        } else {
-            $this->defaultFilter = 'isAgent = 1';
         }
         $this->instanceModel = new CallSummaryMonthUser;
         $this->abstractModel = CallSummaryMonthUser::model();
