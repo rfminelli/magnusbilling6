@@ -54,7 +54,11 @@ class VoucherController extends Controller
         if (Yii::app()->session['isClient']) {
             $values = $this->getAttributesRequest();
 
-            $modelVoucher = $this->abstractModel->find('voucher= :voucher', array(':voucher' => $values['voucher']));
+            $modelVoucher = $this->abstractModel->find('id_user IS NULL AND voucher= :voucher AND used = 0 AND usedate = :key1',
+                array(
+                    ':voucher' => $values['voucher'],
+                    ':key1'    => '0000-00-00 00:00:00',
+                ));
 
             if (count($modelVoucher)) {
                 $modelVoucher->id_user = Yii::app()->session['id_user'];
@@ -72,8 +76,9 @@ class VoucherController extends Controller
                 UserCreditManager::releaseUserCredit(Yii::app()->session['id_user'], $modelVoucher->credit, 'Voucher ' . $values['voucher']);
 
             } else {
-                $this->success = false;
-                $this->msg     = 'Voucher inexistente';
+                $this->success  = false;
+                $this->msg      = 'Voucher inexistente or already used';
+                $$this->nameMsg = 'errors';
             }
 
             # retorna o resultado da execucao

@@ -1232,6 +1232,16 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.4.3') {
+
+            $sql = "ALTER TABLE `pkg_voucher` CHANGE `prefix_local` `prefix_local` VARCHAR(50) NULL DEFAULT NULL;";
+            $this->executeDB($sql);
+
+            $version = '6.4.4';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
