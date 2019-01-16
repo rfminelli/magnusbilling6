@@ -54,25 +54,17 @@ class VoucherController extends Controller
         if (Yii::app()->session['isClient']) {
             $values = $this->getAttributesRequest();
 
-            if (isset(Yii::app()->session['idClient']) && Yii::app()->session['idClient']) {
-                foreach ($this->fieldsInvisibleClient as $field) {
-                    unset($values[$field]);
-                }
-            }
-
-            if (isset(Yii::app()->session['idAgent']) && Yii::app()->session['idAgent']) {
-                foreach ($this->fieldsInvisibleAgent as $field) {
-                    unset($values[$field]);
-                }
-            }
-
             $modelVoucher = $this->abstractModel->find('voucher= :voucher', array(':voucher' => $values['voucher']));
 
             if (count($modelVoucher)) {
-                $modelVoucher->username = Yii::app()->session['login'];
-                $modelVoucher->used     = 1;
-                $modelVoucher->used     = date('Y-m-d H:i:s');
-                $modelVoucher->save();
+                $modelVoucher->id_user = Yii::app()->session['id_user'];
+                $modelVoucher->used    = 1;
+                $modelVoucher->usedate = date('Y-m-d H:i:s');
+                try {
+                    $modelVoucher->save();
+                } catch (Exception $e) {
+                    print_r($e);
+                }
 
                 $this->success = true;
                 $this->msg     = 'Operacao realizada com successo.';
@@ -159,10 +151,10 @@ class VoucherController extends Controller
         }
 
         if (Yii::app()->session['user_type'] == 3) {
-            $filter .= ' AND t.username = :dfby';
+            $filter .= ' AND t.id_user = :dfby';
         }
 
-        $this->paramsFilter[':dfby'] = Yii::app()->session['login'];
+        $this->paramsFilter[':dfby'] = Yii::app()->session['id_user'];
 
         return $filter;
     }
