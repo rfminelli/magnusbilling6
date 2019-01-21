@@ -1241,6 +1241,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.4.4') {
+
+            $sql = "ALTER TABLE `pkg_trunk` ADD `sendrpid` VARCHAR(10) NOT NULL DEFAULT 'no' AFTER `port`;";
+            $this->executeDB($sql);
+
+            $version = '6.4.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 
