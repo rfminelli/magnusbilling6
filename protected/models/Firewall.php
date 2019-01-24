@@ -47,7 +47,7 @@ class Firewall extends Model
         return array(
             array('ip, action', 'required'),
             array('action', 'numerical', 'integerOnly' => true),
-            array('description', 'length', 'max' => 200),
+            array('description,jail', 'length', 'max' => 200),
 
         );
     }

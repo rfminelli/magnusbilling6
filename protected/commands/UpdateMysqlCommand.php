@@ -1250,6 +1250,15 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        if ($version == '6.4.5') {
+
+            $sql = "ALTER TABLE  `pkg_firewall` ADD  `jail` VARCHAR( 100 ) NULL DEFAULT NULL ;";
+            $this->executeDB($sql);
+
+            $version = '6.4.6';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 
