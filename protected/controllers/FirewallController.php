@@ -28,83 +28,44 @@ class FirewallController extends Controller
 
     public function readStatus()
     {
-        exec("sudo fail2ban-client status asterisk-iptables", $status);
-
         $sql = 'TRUNCATE TABLE pkg_firewall';
-        Yii::app()->db->createCommand($sql)->execute() !== false;
+        Yii::app()->db->createCommand($sql)->execute();
+
+        $this->getLinesCommand('asterisk-iptables', 0);
+        $this->getLinesCommand('ip-blacklist', 1);
+        $this->getLinesCommand('ssh-iptables', 0);
+        $this->getLinesCommand('mbilling_login', 0);
+
+    }
+
+    public function getLinesCommand($command, $action = 0)
+    {
+        exec("sudo fail2ban-client status $command", $status);
 
         foreach ($status as $value) {
 
             if (preg_match("/IP list/", $value)) {
-                $line = explode("	", $value);
-                if (isset($line[1])) {
+                $line = preg_split('/[\s]+/', $value);
 
-                    $ips = explode(" ", $line[1]);
-                    foreach ($ips as $ip) {
-                        $date = $this->readLog($ip);
-                        $obs  = $this->readLogAsterisk($ip);
+                foreach ($line as $ip) {
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        $obs = $command;
+                        if ($command == 'mbilling_login') {
+                            $obs = $this->readLogMBilling($ip);
+                        } elseif ($command == 'ip-blacklist') {
+                            $obs = 'Permanently IP BlackList';
+                        } elseif ($command == 'ssh-iptables') {
+                            $obs = 'Try connect via ssh';
+                        } elseif ($command == 'asterisk-iptables') {
+                            $obs = $this->readLogAsterisk($ip);
+                        }
 
-                        $sql = "INSERT INTO pkg_firewall (ip,action, date, description) VALUES ('$ip',0, '$date', '$obs')";
-                        Yii::app()->db->createCommand($sql)->execute() !== false;
-                    }
-                }
-            }
-        }
-        $status = array();
-        $value  = '';
-        exec("sudo fail2ban-client status ip-blacklist", $status);
-        foreach ($status as $value) {
+                        $sql = "INSERT INTO pkg_firewall (ip,action, date, description, jail) VALUES ('$ip',$action, NOW(), '$obs','$command')";
+                        try {
+                            Yii::app()->db->createCommand($sql)->execute();
+                        } catch (Exception $e) {
 
-            if (preg_match("/IP list/", $value)) {
-                $line = explode("	", $value);
-                if (isset($line[1])) {
-
-                    $ips = explode(" ", $line[1]);
-                    foreach ($ips as $ip) {
-                        $obs = 'Permanently IP BlackList';
-
-                        $sql = "INSERT INTO pkg_firewall (ip,action, date, description) VALUES ('$ip',1, NOW(), '$obs')";
-                        Yii::app()->db->createCommand($sql)->execute() !== false;
-                    }
-                }
-            }
-        }
-
-        $status = array();
-        $value  = '';
-        exec("sudo fail2ban-client status ssh-iptables", $status);
-        foreach ($status as $value) {
-
-            if (preg_match("/IP list/", $value)) {
-                $line = explode("	", $value);
-                if (isset($line[1])) {
-
-                    $ips = explode(" ", $line[1]);
-                    foreach ($ips as $ip) {
-                        $obs = 'Try connect via ssh';
-
-                        $sql = "INSERT INTO pkg_firewall (ip,action, date, description) VALUES ('$ip',0, NOW(), '$obs')";
-                        Yii::app()->db->createCommand($sql)->execute() !== false;
-                    }
-                }
-            }
-        }
-
-        $status = array();
-        $value  = '';
-        exec("sudo fail2ban-client status mbilling_login", $status);
-        foreach ($status as $value) {
-
-            if (preg_match("/IP list/", $value)) {
-                $line = explode("	", $value);
-                if (isset($line[1])) {
-
-                    $ips = explode(" ", $line[1]);
-                    foreach ($ips as $ip) {
-                        $obs = $this->readLogMBilling($ip);
-
-                        $sql = "INSERT INTO pkg_firewall (ip,action, date, description) VALUES ('$ip',0, NOW(), '$obs')";
-                        Yii::app()->db->createCommand($sql)->execute() !== false;
+                        }
                     }
                 }
             }
@@ -140,6 +101,7 @@ class FirewallController extends Controller
 
     public function readLogMBilling($ip)
     {
+
         exec("tac /var/www/html/mbilling/protected/runtime/application.log | egrep -m 10 '$ip' ", $line);
         $log = '';
         foreach ($line as $value) {
