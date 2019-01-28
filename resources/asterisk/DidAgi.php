@@ -32,7 +32,7 @@ class DidAgi
         //check if did call
         $mydnid = substr($MAGNUS->dnid, 0, 1) == '0' ? substr($MAGNUS->dnid, 1) : $MAGNUS->dnid;
         $agi->verbose('Check If Is Did ' . $mydnid, 10);
-        $sql            = "SELECT * FROM pkg_did WHERE did = '$mydnid' WHERE activated = 1 LIMIT 1";
+        $sql            = "SELECT * FROM pkg_did WHERE did = '$mydnid' AND activated = 1 LIMIT 1";
         $this->modelDid = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
         if (isset($this->modelDid->id)) {
             $agi->verbose("Is a DID call", 5);
