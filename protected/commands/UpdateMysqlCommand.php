@@ -1153,7 +1153,7 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
 
             exec("php /var/www/html/mbilling/cron.php SummaryTablesCdr");
-            exec("echo '\n0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days\n0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday\n' >> /var/spool/cron/root");
+            exec("echo '\n0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days\n0 8-22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday\n' >> /var/spool/cron/root");
         }
 
         if ($version == '6.3.8') {

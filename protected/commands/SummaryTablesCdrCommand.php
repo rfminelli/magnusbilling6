@@ -20,7 +20,7 @@
 
 /*
 0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days
-0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
+0 8-22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
  */
 
 class SummaryTablesCdrCommand extends CConsoleCommand
@@ -53,36 +53,46 @@ class SummaryTablesCdrCommand extends CConsoleCommand
     }
     public function processCdrToday()
     {
-        $today  = date("Y-m-d");
-        $filter = "starttime > '$today'";
 
-        //perday
-        $sql = "DELETE FROM pkg_cdr_summary_day WHERE day = '$today' ";
-        Yii::app()->db->createCommand($sql)->execute();
-        $this->perDay($filter);
+        $this->processSummary('day');
+
     }
+
     public function processCdrLast30Days()
     {
-        $lastMonth = date("Y-m-d", strtotime("- 30 day"));
-        $filter    = "starttime > '$lastMonth 23:59:59'";
+        $this->processSummary('month');
+    }
+
+    public function processSummary($type)
+    {
+
+        if ($type == 'day') {
+            $date   = date("Y-m-d");
+            $filter = "starttime > '$date'";
+            $signal = '=';
+        } elseif ($type == 'month') {
+            $date   = date("Y-m-d", strtotime("- 30 day"));
+            $filter = "starttime > '$date 23:59:59'";
+            $signal = '>';
+        }
 
         //perday
-        $sql = "DELETE FROM pkg_cdr_summary_day WHERE day > '$lastMonth' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day WHERE day $signal '$date' ";
         Yii::app()->db->createCommand($sql)->execute();
         $this->perDay($filter);
 
         //perdayuser
-        $sql = "DELETE FROM pkg_cdr_summary_day_user WHERE day > '$lastMonth' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_user WHERE day $signal '$date' ";
         Yii::app()->db->createCommand($sql)->execute();
         $this->perDayUser($filter);
 
         //perdaytrunk
-        $sql = "DELETE FROM pkg_cdr_summary_day_trunk WHERE day > '$lastMonth' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_trunk WHERE day $signal '$date' ";
         Yii::app()->db->createCommand($sql)->execute();
         $this->perDayTrunk($filter);
 
         //perDayAgent
-        $sql = "DELETE FROM pkg_cdr_summary_day_agent WHERE day > '$lastMonth' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_agent WHERE day $signal '$date' ";
         Yii::app()->db->createCommand($sql)->execute();
         $this->perDayAgent($filter);
 
@@ -100,6 +110,16 @@ class SummaryTablesCdrCommand extends CConsoleCommand
         $sql = "DELETE FROM pkg_cdr_summary_month_trunk WHERE month = '" . date("Ym") . "' ";
         Yii::app()->db->createCommand($sql)->execute();
         $this->perMonthTrunk($filter);
+
+        //perUser
+        $sql = "TRUNCATE pkg_cdr_summary_user";
+        Yii::app()->db->createCommand($sql)->execute();
+        $this->perUser();
+
+        //perTrunk
+        $sql = "TRUNCATE pkg_cdr_summary_trunk";
+        Yii::app()->db->createCommand($sql)->execute();
+        $this->perTrunk();
 
         //perUser
         $sql = "TRUNCATE pkg_cdr_summary_user";
@@ -214,7 +234,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
     public function perDayAgent($filter = 1)
     {
 
-        $sql        = "SELECT * FROM pkg_user WHERE id_user > 1";
+        $sql        = "SELECT * FROM pkg_user WHERE id_user > 1 GROUP BY id_user";
         $modelAgent = Yii::app()->db->createCommand($sql)->queryAll();
 
         foreach ($modelAgent as $key => $user) {
