@@ -139,10 +139,10 @@ class CallSummaryPerUserController extends Controller
         $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
 
         $this->convertRelationFilter();
-
-        $columns    = 'u.username,CONCAT(firstname, " ",lastname),starttime,calledstation,sessiontime,real_sessiontime,buycost,sessionbill,trunkcode ';
-        $this->join = 'JOIN pkg_user u ON t.id_user = u.id ';
-        $this->join .= 'JOIN pkg_trunk r ON t.id_trunk = r.id ';
+        $this->filter = preg_replace('/\isAgent \= 0 AND| isAgent \= 1 AND/', '', $this->filter);
+        $columns      = 'u.username,CONCAT(firstname, " ",lastname),starttime,calledstation,sessiontime,real_sessiontime,buycost,sessionbill,trunkcode ';
+        $this->join   = 'JOIN pkg_user u ON t.id_user = u.id ';
+        $this->join .= 'LEFT JOIN pkg_trunk r ON t.id_trunk = r.id ';
         $sql = "SELECT " . $columns . "  INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
                 FROM pkg_cdr t $this->join WHERE $this->filter";
 
