@@ -78,7 +78,7 @@ class Sip extends Model
             array('url_events', 'length', 'max' => 150),
             array('disallow, allow, setvar, useragent,block_call_reg', 'length', 'max' => 100),
             array('lastms', 'length', 'max' => 11),
-            array('directmedia', 'length', 'max' => 10),
+            array('directmedia,alias', 'length', 'max' => 10),
             array('defaultuser, cid_number, outboundproxy, sippasswd', 'length', 'max' => 40),
             array('defaultuser', 'checkusername'),
             array('secret', 'checksecret'),

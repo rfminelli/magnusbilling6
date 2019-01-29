@@ -142,12 +142,20 @@ if ($MAGNUS->mode == 'standard') {
         $standardCall = new StandardCallAgi();
         $standardCall->processCall($MAGNUS, $agi, $CalcAgi);
     } else {
-        $sql              = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->dnid' LIMIT 1";
+        $sql              = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->dnid' OR (alias = '$MAGNUS->dnid' AND accountcode = '$MAGNUS->accountcode') LIMIT 1";
         $MAGNUS->modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
         if (isset($MAGNUS->modelSip->id) && strlen($MAGNUS->modelSip->name) > 3) {
-            $MAGNUS->mode      = 'call-sip';
-            $MAGNUS->voicemail = $MAGNUS->modelSip->voicemail;
+
+            if ($MAGNUS->dnid == $MAGNUS->modelSip->alias) {
+                $agi->set_callerid($MAGNUS->modelSip->alias);
+                $agi->set_variable("CALLERID(num)", $MAGNUS->modelSip->alias);
+                $MAGNUS->CallerID = $MAGNUS->modelSip->alias;
+            }
+
+            $MAGNUS->destination = $MAGNUS->dnid = $MAGNUS->modelSip->name;
+            $MAGNUS->mode        = 'call-sip';
+            $MAGNUS->voicemail   = $MAGNUS->modelSip->voicemail;
             $agi->verbose("CALL TO SIP", 15);
             $sipCallAgi = new SipCallAgi();
             $sipCallAgi->processCall($MAGNUS, $agi, $CalcAgi);

@@ -114,7 +114,6 @@ elif  [ ${DIST} = "CENTOS" ]; then
     yum -y install kernel-devel.`uname -m` epel-release
     yum -y install gcc.`uname -m` gcc-c++.`uname -m` make.`uname -m` git.`uname -m` wget.`uname -m` bison.`uname -m` openssl-devel.`uname -m` ncurses-devel.`uname -m` doxygen.`uname -m` newt-devel.`uname -m` mlocate.`uname -m` lynx.`uname -m` tar.`uname -m` wget.`uname -m` nmap.`uname -m` bzip2.`uname -m` mod_ssl.`uname -m` speex.`uname -m` speex-devel.`uname -m` unixODBC.`uname -m` unixODBC-devel.`uname -m` libtool-ltdl.`uname -m` sox libtool-ltdl-devel.`uname -m` flex.`uname -m` screen.`uname -m` autoconf automake libxml2.`uname -m` libxml2-devel.`uname -m` sqlite* subversion
     yum -y install php.`uname -m` php-cli.`uname -m` php-devel.`uname -m` php-gd.`uname -m` php-mbstring.`uname -m` php-pdo.`uname -m` php-xml.`uname -m` php-xmlrpc.`uname -m` php-process.`uname -m` php-posix libuuid uuid uuid-devel libuuid-devel.`uname -m`
-    yum -y install jansson.`uname -m` jansson-devel.`uname -m` unzip.`uname -m`
     yum -y install jansson.`uname -m` jansson-devel.`uname -m` unzip.`uname -m` ntpd
     yum -y install mysql mariadb-server  mariadb-devel mariadb php-mysql mysql-connector-odbc
     yum -y install xmlstarlet libsrtp libsrtp-devel dmidecode gtk2-devel binutils-devel svn libtermcap-devel libtiff-devel audiofile-devel cronie cronie-anacron
@@ -293,10 +292,12 @@ if [ ${DIST} = "DEBIAN" ]; then
     systemctl start mysql
     systemctl enable apache2 
     systemctl enable mysql
+    chkconfig ntp on
 else [ -f /etc/redhat-release ]
     systemctl enable httpd
     systemctl enable mariadb
     systemctl start mariadb
+    chkconfig ntpd on
 fi
 
 

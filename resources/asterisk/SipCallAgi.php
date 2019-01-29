@@ -27,15 +27,7 @@ class SipCallAgi
         $MAGNUS->startRecordCall($agi);
 
         $dialstr = "SIP/" . $MAGNUS->destination;
-        //check if user are registered in a asterisk slave
-        $sql          = "SELECT id FROM pkg_servers WHERE status = 1 AND type = 'asterisk' LIMIT 1";
-        $modelServers = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-        if (isset($modelServers->id)) {
-            if (strlen($MAGNUS->modelSip->register_server_ip) > 1 && $MAGNUS->modelSip->regseconds < (time() - 7200)) {
-                $dialstr .= '@' . $MAGNUS->modelSip->register_server_ip;
-            }
 
-        }
         $startCall = time();
         $MAGNUS->run_dial($agi, $dialstr, $dialparams);
 
@@ -48,12 +40,16 @@ class SipCallAgi
 
         $agi->verbose("[" . $MAGNUS->username . " Friend]:[ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus . "]", 6);
 
-        $sql             = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->destination' LIMIT 1 ";
-        $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-        if (isset($modelSipForward->id) && strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
+        if (!preg_match('/^CANCEL|^ANSWER/', strtoupper($dialstatus))) {
 
-            $this->callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
-            $MAGNUS->hangup($agi);
+            $sql = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->destination' LIMIT 1 ";
+            $agi->verbose($sql);
+            $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            if (isset($modelSipForward->id) && strlen($modelSipForward->forward) > 3) {
+
+                $this->callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
+                $MAGNUS->hangup($agi);
+            }
         }
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);

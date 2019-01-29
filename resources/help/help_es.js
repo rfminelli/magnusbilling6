@@ -42,6 +42,7 @@ Help.load({
     'sip.ringfalse': 'If YES, generate a ringing tone for the calling party.',
     'sip.calllimit': 'Maximum simultaneous calls',
     'sip.dial_timeout': 'Timeout in seconds to wait the sip answer the call.',
+    'sip.alias': 'Alias to dial between sip accounts from same AccountCode (company).',
     //ATA LIKKSYS/SIPURA
     'sipuras.nserie': 'Linksys serial number',
     'sipuras.macadr': 'Linksys MAC address',
