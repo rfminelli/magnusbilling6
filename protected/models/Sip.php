@@ -120,8 +120,10 @@ class Sip extends Model
         if ($this->techprefix == 0) {
             $this->techprefix = null;
         }
-        if ($this->host != 'dynamic' && !preg_match('/invite/', $this->insecure)) {
-            $this->insecure = 'invite';
+        if ($this->host != 'dynamic') {
+            $this->insecure = 'port,invite';
+        } elseif ($this->host == 'dynamic') {
+            $this->insecure = 'no';
         }
         return parent::beforeSave();
     }
