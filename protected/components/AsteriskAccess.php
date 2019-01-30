@@ -601,6 +601,14 @@ class AsteriskAccess
                         $line .= 'mohsuggest=' . $sip->mohsuggest . "\n";
                     }
 
+                    if (strlen($sip->deny) > 1) {
+                        $line .= 'deny=' . $sip->deny . "\n";
+                    }
+
+                    if (strlen($sip->permit) > 1) {
+                        $line .= 'permit=' . $sip->permit . "\n";
+                    }
+
                     $line .= 'allowtransfer=' . $sip->allowtransfer . "\n";
 
                     if ($sip->context == 'encryption') {
