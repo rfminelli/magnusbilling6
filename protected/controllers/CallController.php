@@ -138,6 +138,14 @@ class CallController extends Controller
     public function actionDownloadRecord()
     {
 
+        $filter = isset($_GET['filter']) ? json_decode($_GET['filter']) : null;
+        $ids    = isset($_GET['ids']) ? json_decode($_GET['ids']) : null;
+
+        //if try download only one audio  via button Download RED.
+        if (count($filter) == 0 && count($ids) == 1) {
+            $_GET['id'] = $ids[0];
+        }
+
         if (isset($_GET['id'])) {
 
             $modelCall = Call::model()->findByPk((int) $_GET['id']);
@@ -168,16 +176,26 @@ class CallController extends Controller
                         </body>';
                 }
             } else {
-                echo yii::t('yii', 'Audio no found');
+
+                if (strlen($this->config['global']['external_record_link']) > 20) {
+                    $url = $this->config['global']['external_record_link'];
+
+                    $url = preg_replace("/\%user\%/", $modelCall->idUser->username, $url);
+                    $url = preg_replace("/\%number\%/", $modelCall->calledstation, $url);
+                    $url = preg_replace("/\%uniqueid\%/", $uniqueid, $url);
+                    $url = preg_replace("/\%audio_exten\%/", preg_replace('/49/', '', $this->config['global']['MixMonitor_format']), $url);
+
+                    header('Location: ' . $url);
+                } else {
+                    echo yii::t('yii', 'Audio no found');
+                }
             }
             exit;
         } else {
-            $filter = isset($_GET['filter']) ? $_GET['filter'] : null;
-            $filter = $this->createCondition(json_decode($filter));
+
+            $filter = $this->createCondition($filter);
 
             $this->filter = $this->extraFilter($filter);
-
-            $ids = json_decode($_GET['ids']);
 
             $criteria = new CDbCriteria(array(
                 'condition' => $this->filter,
@@ -238,7 +256,6 @@ class CallController extends Controller
                 exit;
             }
         }
-
     }
 
     public function beforeReport($columns)

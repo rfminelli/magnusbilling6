@@ -1269,6 +1269,17 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.4.7') {
+
+            $sql = "INSERT INTO pkg_configuration VALUES
+				(NULL, 'External URL to download records', 'external_record_link', '', 'External URL to download records. Only used to download only one audio. Leave blank to no find audio in external link. URL EX: http://IP/record.php?username=%user%&audio=%number%.%uniqueid%.%audio_exten%', 'global', '1')";
+            $this->executeDB($sql);
+
+            $version = '6.4.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
