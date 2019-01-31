@@ -67,7 +67,7 @@ if (!isset($_GET['id'])) {
         $item_1,
     ];
 
-    $protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
 
     $metadata = array('notification_url' => $protocol . $_SERVER['HTTP_HOST'] . '/mbilling/index.php/gerencianet?id_user=' . $modelUser->id . '&id=' . time() . '&amount=' . $_GET['amount']);
 

@@ -27,7 +27,7 @@ function httpPost($url, $params)
 
 $agent = $modelUser->id_user > 0 ? '?id_agent=' . $modelUser->id_user : '';
 
-$protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
 
 $params = array(
     "email_loja"          => $modelMethodPay->username,

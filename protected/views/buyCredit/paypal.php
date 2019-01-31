@@ -39,7 +39,7 @@ if (Yii::app()->session['currency'] == 'U$S') {
     $currency = Yii::app()->session['currency'];
 }
 
-$protocol = $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
 ?>
 
 <form method="POST" action="<?php echo $modelMethodPay->url ?>" target="_parent" id="buyForm">
