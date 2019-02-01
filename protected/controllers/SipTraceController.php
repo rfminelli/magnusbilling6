@@ -57,7 +57,7 @@ class SipTraceController extends Controller
             $callid = '';
             $lines  = preg_split('/\r\n|\r|\n/', $value);
 
-            if (count($lines) < 7) {
+            if (count($lines) < 10) {
                 continue;
             }
             if (preg_match('/Trying/', $lines[1])) {
@@ -179,7 +179,7 @@ class SipTraceController extends Controller
             $callid = '';
             $lines  = preg_split('/\r\n|\r|\n/', $value);
 
-            if (count($lines) < 7) {
+            if (count($lines) < 10) {
                 continue;
             }
             if (preg_match('/Trying/', $lines[1])) {
