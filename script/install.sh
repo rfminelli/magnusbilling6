@@ -633,7 +633,7 @@ echo "
 0 2 * * * php /var/www/html/mbilling/cron.php Backup
 0 4 * * * /var/www/html/mbilling/protected/commands/verificamemoria
 0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days
-0 8,10,12,14,16,18,20,22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
+0 8-22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
 " > $CRONPATH
 chmod 600 $CRONPATH
 crontab $CRONPATH
