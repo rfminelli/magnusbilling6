@@ -64,7 +64,7 @@ class SearchTariff
                 LEFT JOIN pkg_prefix ON pkg_rate.id_prefix = pkg_prefix.id
                 LEFT JOIN pkg_provider ON pkg_trunk.id_provider = pkg_provider.id
                 WHERE pkg_plan.id=$MAGNUS->id_plan AND pkg_rate.status = 1 AND $prefixclause
-                ORDER BY LENGTH( prefix ) DESC LIMIT 3";
+                ORDER BY LENGTH( prefix ) DESC LIMIT $MAGNUS->tariff_limit";
         $result = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         // $agi->verbose($result, 25);
 

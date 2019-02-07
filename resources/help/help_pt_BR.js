@@ -216,6 +216,7 @@ Help.load({
     'prefix.destination': 'Destination name to above prefix',
     //PLAN
     'plan.name': '',
+    'plan.tariff_limit': 'Limit to find tariff. Only set to more than 1 if you use on this plan more tha 1 tariff to the same prefix.',
     'plan.lcrtype': 'How will order the tariffs if found more than one tariff to the same prefix? Load balancer will use RAND function to balancer call between all found tariffs.',
     'plan.signup': 'Show this plan on signup form?',
     'plan.ini_credit': 'How much initial credit you want add to new users that select this plan on signup form?',

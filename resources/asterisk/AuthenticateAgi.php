@@ -398,12 +398,13 @@ class AuthenticateAgi
     {
 
         if (!isset($model->removeinterprefix)) {
-            $sql                        = "SELECT removeinterprefix, play_audio, portabilidadeMobile, portabilidadeFixed  FROM pkg_plan WHERE id = " . $model->id_plan . " LIMIT 1";
+            $sql                        = "SELECT removeinterprefix, play_audio, portabilidadeMobile, portabilidadeFixed, tariff_limit  FROM pkg_plan WHERE id = " . $model->id_plan . " LIMIT 1";
             $modelPlan                  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
             $model->removeinterprefix   = $modelPlan->removeinterprefix;
             $model->portabilidadeMobile = $modelPlan->portabilidadeMobile;
             $model->portabilidadeFixed  = $modelPlan->portabilidadeFixed;
             $model->play_audio          = $modelPlan->play_audio;
+            $model->tariff_limit        = $modelPlan->tariff_limit;
         }
 
         $MAGNUS->modelUser           = $model;
@@ -418,6 +419,7 @@ class AuthenticateAgi
         $MAGNUS->removeinterprefix   = $model->removeinterprefix;
         $MAGNUS->portabilidadeMobile = $model->portabilidadeMobile;
         $MAGNUS->portabilidadeFixed  = $model->portabilidadeFixed;
+        $MAGNUS->tariff_limit        = $model->tariff_limit;
         $MAGNUS->play_audio          = $model->play_audio;
         $MAGNUS->redial              = $model->redial;
         $MAGNUS->enableexpire        = $model->enableexpire;

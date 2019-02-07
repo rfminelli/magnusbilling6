@@ -72,6 +72,7 @@ class Magnus
     public $demo           = false;
     public $voicemail;
     public $magnusFilesDirectory = '/usr/local/src/magnus/';
+    public $tariff_limit         = 1;
 
     public function __construct()
     {

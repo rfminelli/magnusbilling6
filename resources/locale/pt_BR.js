@@ -1,4 +1,5 @@
 Locale.load({
+    'Tariff Find Limit': 'Tarifa limite',
     'Call Failed': 'Ligações incompletas',
     'Summary per Day': 'CDR por dia',
     'Summary per Month': 'CDR por mês',
