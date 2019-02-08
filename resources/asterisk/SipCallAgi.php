@@ -5,7 +5,7 @@
 class SipCallAgi
 {
 
-    public function processCall(&$MAGNUS, &$agi, &$CalcAgi)
+    public function processCall(&$MAGNUS, &$agi, &$CalcAgi, $type = 'normal')
     {
         if (($MAGNUS->agiconfig['use_dnid'] == 1) && (strlen($MAGNUS->dnid) > 2)) {
             $MAGNUS->destination = $MAGNUS->dnid;
@@ -42,49 +42,52 @@ class SipCallAgi
 
         if (!preg_match('/^CANCEL|^ANSWER/', strtoupper($dialstatus))) {
 
-            $sql = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->destination' LIMIT 1 ";
-            $agi->verbose($sql);
+            $sql             = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->destination' LIMIT 1 ";
             $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
             if (isset($modelSipForward->id) && strlen($modelSipForward->forward) > 3) {
-
-                $this->callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
+                SipCallAgi::callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
                 $MAGNUS->hangup($agi);
             }
         }
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);
 
-        if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {
-            $terminatecauseid = $MAGNUS->dialstatus_rev_list[$dialstatus];
-        } else {
-            $terminatecauseid = 0;
-        }
+        if ($type == 'normal') {
 
-        $siptransfer = $agi->get_variable("SIPTRANSFER");
-        if ($answeredtime > 0 && $siptransfer['data'] != 'yes' && $terminatecauseid == 1) {
-            if ($MAGNUS->config['global']['charge_sip_call'] > 0) {
-
-                $cost = ($MAGNUS->config['global']['charge_sip_call'] / 60) * $answeredtime;
-                $sql  = "UPDATE pkg_user SET credit = credit - " . $MAGNUS->round_precision(abs($cost)) . "
-                            WHERE id = $MAGNUS->modelUser->id LIMIT 1  ";
-                $agi->exec($sql);
-                $agi->verbose("Update credit username after transfer $MAGNUS->username, " . $cost, 15);
+            if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {
+                $terminatecauseid = $MAGNUS->dialstatus_rev_list[$dialstatus];
             } else {
-                $cost = 0;
+                $terminatecauseid = 0;
             }
+
+            $siptransfer = $agi->get_variable("SIPTRANSFER");
+            if ($answeredtime > 0 && $siptransfer['data'] != 'yes' && $terminatecauseid == 1) {
+                if ($MAGNUS->config['global']['charge_sip_call'] > 0) {
+
+                    $cost = ($MAGNUS->config['global']['charge_sip_call'] / 60) * $answeredtime;
+                    $sql  = "UPDATE pkg_user SET credit = credit - " . $MAGNUS->round_precision(abs($cost)) . "
+                            WHERE id = $MAGNUS->modelUser->id LIMIT 1  ";
+                    $agi->exec($sql);
+                    $agi->verbose("Update credit username after transfer $MAGNUS->username, " . $cost, 15);
+                } else {
+                    $cost = 0;
+                }
+            }
+
+            $MAGNUS->id_trunk          = null;
+            $CalcAgi->starttime        = date("Y-m-d H:i:s", $startCall);
+            $CalcAgi->sessiontime      = $answeredtime;
+            $CalcAgi->terminatecauseid = $terminatecauseid;
+            $CalcAgi->sessionbill      = $cost;
+            $CalcAgi->sipiax           = 1;
+            $CalcAgi->buycost          = 0;
+            $CalcAgi->id_prefix        = null;
+            $CalcAgi->saveCDR($agi, $MAGNUS);
+
+            $MAGNUS->hangup($agi);
+        } else {
+            return $dialstatus;
         }
-
-        $MAGNUS->id_trunk          = null;
-        $CalcAgi->starttime        = date("Y-m-d H:i:s", $startCall);
-        $CalcAgi->sessiontime      = $answeredtime;
-        $CalcAgi->terminatecauseid = $terminatecauseid;
-        $CalcAgi->sessionbill      = $cost;
-        $CalcAgi->sipiax           = 1;
-        $CalcAgi->buycost          = 0;
-        $CalcAgi->id_prefix        = null;
-        $CalcAgi->saveCDR($agi, $MAGNUS);
-
-        $MAGNUS->hangup($agi);
     }
 
     public function callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward)

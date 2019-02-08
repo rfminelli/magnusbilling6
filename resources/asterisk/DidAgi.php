@@ -205,34 +205,25 @@ class DidAgi
 
                 /* IF SIP CALL*/
                 if ($inst_listdestination['voip_call'] == 1) {
-                    $agi->verbose("DID call friend: IS LOCAL !!!", 10);
-                    $sql      = "SELECT * FROM pkg_sip WHERE id = " . $inst_listdestination['id_sip'] . " LIMIT 1";
-                    $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                    $agi->verbose("DID call friend: IS LOCAL !!!", 1);
+                    $sql              = "SELECT * FROM pkg_sip WHERE id = " . $inst_listdestination['id_sip'] . " LIMIT 1";
+                    $MAGNUS->modelSip = $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
                     if (isset($modelSip->id)) {
-                        $MAGNUS->voicemail                   = isset($modelSip->voicemail) ? $modelSip->voicemail : false;
-                        $MAGNUS->destination                 = $modelSip->name;
-                        $inst_listdestination['destination'] = "SIP/" . $modelSip->name;
+                        $MAGNUS->voicemail   = isset($modelSip->voicemail) ? $modelSip->voicemail : false;
+                        $MAGNUS->destination = $modelSip->name;
                     } else {
                         $agi->stream_file('prepaid-dest-unreachable', '#');
                         continue;
                     }
 
-                    $MAGNUS->startRecordCall($agi, $this->did);
+                    $agi->verbose('Call to user ' . $modelSip->name, 1);
 
-                    $dialstr = $inst_listdestination['destination'] . $dialparams;
+                    $MAGNUS->extension = $MAGNUS->destination = $MAGNUS->dnid = $modelSip->name;
 
-                    $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
-                    $agi->verbose("DIAL $dialstr", 6);
+                    $dialstatus = SipCallAgi::processCall($MAGNUS, $agi, $CalcAgi, 'fromDID');
 
-                    $answeredtime = $agi->get_variable("ANSWEREDTIME");
-                    $answeredtime = $answeredtime['data'];
-                    $dialstatus   = $agi->get_variable("DIALSTATUS");
-                    $dialstatus   = $dialstatus['data'];
-
-                    $MAGNUS->stopRecordCall($agi);
-
-                    $agi->verbose($inst_listdestination['destination'] . " Friend -> followme=$callcount : ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus, 6);
+                    $agi->verbose($inst_listdestination['destination'] . " Friend -> followme=$callcount : ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus, 1);
 
                     if ($this->parseDialStatus($agi, $dialstatus, $answeredtime) != true) {
                         $answeredtime = 0;
