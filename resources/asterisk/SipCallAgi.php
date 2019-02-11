@@ -154,8 +154,12 @@ class SipCallAgi
             $dialstatus = $CalcAgi->sessiontime > 0 ? 'ANSWER' : 'DONTCALL';
         } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
         {
-            $sql                 = "SELECT * FROM pkg_user WHERE id = $modelSipForward->id_user  LIMIT 1";
-            $modelUserForward    = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            $sql              = "SELECT * FROM pkg_user WHERE id = $modelSipForward->id_user  LIMIT 1";
+            $modelUserForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+            $MAGNUS->CallerID = $modelSipForward->callerid;
+            $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+
             $MAGNUS->accountcode = $modelUserForward->accountcode;
             $agi->verbose("CALL number $optionValue");
             $didAgi = new DidAgi();
