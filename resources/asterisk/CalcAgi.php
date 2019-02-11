@@ -901,11 +901,11 @@ class CalcAgi
             if (file_exists(dirname(__FILE__) . '/CallCache.php')) {
                 include 'CallCache.php';
             } else {
-                $fields = "uniqueid,id_user,calledstation,id_plan,id_trunk,src,
+                $fields = "uniqueid,id_user,calledstation,id_plan,id_trunk,callerid,src,
                         starttime, terminatecauseid,sipiax,id_prefix";
 
                 $values = "'$MAGNUS->uniqueid', '$MAGNUS->id_user','$MAGNUS->destination','$MAGNUS->id_plan',
-                        '$MAGNUS->id_trunk', '$MAGNUS->sip_account',
+                        '$MAGNUS->id_trunk','$MAGNUS->CallerID', '$MAGNUS->sip_account',
                         '$this->starttime', '$this->terminatecauseid','$this->sipiax','$this->id_prefix'";
 
                 $sql = "INSERT INTO pkg_cdr_failed ($fields) VALUES ($values) ";

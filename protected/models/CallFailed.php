@@ -55,7 +55,7 @@ class CallFailed extends Model
         return array(
             array('id_user, calledstation', 'required'),
             array('id_user, id_plan, id_trunk, sipiax, terminatecauseid,hangupcause', 'numerical', 'integerOnly' => true),
-            array('uniqueid, starttime, src, calledstation', 'length', 'max' => 50),
+            array('uniqueid, starttime, callerid, src, calledstation', 'length', 'max' => 50),
         );
     }
 
