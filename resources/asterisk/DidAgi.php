@@ -447,7 +447,7 @@ class DidAgi
                 strlen($expression_2) > 1 && !preg_match('/' . $expression_2 . '/', $MAGNUS->CallerID)
             ) {
 
-                if ($block_expression_1 == 3) {
+                if ($block_expression_3 == 1) {
                     $agi->verbose("Call blocked becouse this number match with expression 3, " . $MAGNUS->CallerID . ' FROM did ' . $this->did, 10);
                     $MAGNUS->hangup($agi);
                 } elseif ($send_to_callback_3 == 1) {
