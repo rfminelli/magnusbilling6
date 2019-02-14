@@ -223,7 +223,7 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
-                    if (!is_numeric($id_user)) {
+                    if (!is_numeric($id_user) || !is_numeric($cdr)) {
                         continue;
                     }
 
