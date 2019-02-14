@@ -22,7 +22,7 @@
 
 class PlanController extends Controller
 {
-    public $attributeOrder = 't.id';
+    public $attributeOrder = 't.name';
     public $extraValues    = array('idUser' => 'username');
 
     public $nameModelRelated   = 'ServicesPlan';
