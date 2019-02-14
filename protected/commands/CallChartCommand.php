@@ -263,8 +263,12 @@ class CallChartCommand extends ConsoleCommand
                         print_r($result);
                     }
                 }
+
+                sleep(4);
+            } else {
+                sleep(1);
             }
-            sleep(4);
+
         }
 
         if (date('H:i') > '23:52') {
