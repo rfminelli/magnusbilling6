@@ -102,9 +102,27 @@ if ($agi->get_variable("CIDCALLBACK", true)) {
 }
 
 if ($agi->get_variable("MEMBERNAME", true) || $agi->get_variable("QUEUEPOSITION", true)) {
-    $agi->answer();
-    $CalcAgi->init();
-    QueueAgi::recIvrQueue($agi, $MAGNUS, $CalcAgi);
+
+    $sql              = "SELECT * FROM pkg_sip WHERE name = '$MAGNUS->dnid' OR (alias = '$MAGNUS->dnid' AND accountcode = '$MAGNUS->accountcode') LIMIT 1";
+    $MAGNUS->modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+    if (isset($MAGNUS->modelSip->id) && strlen($MAGNUS->modelSip->name) > 3) {
+
+        if ($MAGNUS->dnid == $MAGNUS->modelSip->alias) {
+            $agi->set_callerid($MAGNUS->modelSip->alias);
+            $agi->set_variable("CALLERID(num)", $MAGNUS->modelSip->alias);
+            $MAGNUS->CallerID = $MAGNUS->modelSip->alias;
+        }
+        $MAGNUS->destination = $MAGNUS->dnid = $MAGNUS->modelSip->name;
+        $MAGNUS->mode        = 'call-sip';
+        $MAGNUS->voicemail   = $MAGNUS->modelSip->voicemail;
+        $agi->verbose("CALL TO SIP", 15);
+        $sipCallAgi = new SipCallAgi();
+        $sipCallAgi->processCall($MAGNUS, $agi, $CalcAgi);
+    } else {
+        $agi->answer();
+        $CalcAgi->init();
+        QueueAgi::recIvrQueue($agi, $MAGNUS, $CalcAgi);
+    }
 }
 
 if ($agi->get_variable("PHONENUMBER_ID", true) > 0 && $agi->get_variable("CAMPAIGN_ID", true) > 0) {

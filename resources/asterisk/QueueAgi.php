@@ -20,7 +20,7 @@
 
 class QueueAgi
 {
-    public function callQueue(&$agi, &$MAGNUS, &$CalcAgi, $DidAgi = null, $type = 'queue')
+    public function callQueue(&$agi, &$MAGNUS, &$CalcAgi, $DidAgi = null, $type = 'queue', $startTime = 0)
     {
         $agi->verbose("Queue module", 5);
 
@@ -29,7 +29,7 @@ class QueueAgi
         }
 
         $agi->answer();
-        $startTime           = time();
+        $startTime           = $startTime > 0 ? $startTime : time();
         $MAGNUS->destination = $DidAgi->modelDid->did;
 
         $sql = "SELECT  *, pkg_queue.id AS id, pkg_queue.id_user AS id_user  FROM pkg_queue
@@ -81,12 +81,14 @@ class QueueAgi
         } else {
             $CalcAgi->terminatecauseid = 1;
         }
-        if (!is_null($DidAgi)) {
-            $DidAgi->billDidCall($agi, $MAGNUS, $CalcAgi->sessiontime);
-        }
 
         $agi->verbose('$siptransfer => ' . $siptransfer['data'], 5);
         if ($siptransfer['data'] != 'yes' && $type == 'queue') {
+
+            if (!is_null($DidAgi)) {
+                $DidAgi->billDidCall($agi, $MAGNUS, $CalcAgi->sessiontime);
+            }
+
             $sql = "SELECT id FROM pkg_prefix WHERE prefix = SUBSTRING('$MAGNUS->destination',1,length(prefix))
                                 ORDER BY LENGTH(prefix) DESC  ";
             $modelPrefix = $agi->query($sql)->fetch(PDO::FETCH_OBJ);

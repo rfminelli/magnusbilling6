@@ -177,101 +177,105 @@ class IvrAgi
             $optionValue = $dtmf[1];
             $agi->verbose("CUSTOMER PRESS $optionType -> $optionValue", 10);
 
-            if ($optionType == 'sip') // QUEUE
-            {
-                $agi->verbose('Sip call, active insertCDR', 25);
-                $insertCDR           = true;
-                $sql                 = "SELECT name, dial_timeout, record_call FROM pkg_sip WHERE id = $optionValue LIMIT 1";
-                $modelSip            = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-                $MAGNUS->record_call = $modelSip->record_call;
+            $chanStatus = $agi->channel_status($MAGNUS->channel);
 
-                $dialparams = $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
-                $dialparams = str_replace("%timeout%", 3600, $dialparams);
-                $dialparams = str_replace("%timeoutsec%", 3600, $dialparams);
+            if ($chanStatus['result'] == 6) {
+                if ($optionType == 'sip') // QUEUE
+                {
+                    $agi->verbose('Sip call, active insertCDR', 25);
+                    $insertCDR           = true;
+                    $sql                 = "SELECT name, dial_timeout, record_call FROM pkg_sip WHERE id = $optionValue LIMIT 1";
+                    $modelSip            = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                    $MAGNUS->record_call = $modelSip->record_call;
 
-                $dialparams = explode(',', $dialparams);
-                if (isset($dialparams[1])) {
-                    $dialparams[1] = $modelSip->dial_timeout;
-                }
-                $dialparams = implode(',', $dialparams);
+                    $dialparams = $dialparams = $MAGNUS->agiconfig['dialcommand_param_sipiax_friend'];
+                    $dialparams = str_replace("%timeout%", 3600, $dialparams);
+                    $dialparams = str_replace("%timeoutsec%", 3600, $dialparams);
 
-                $dialstr = 'SIP/' . $modelSip->name . $dialparams;
-                $agi->verbose($dialstr, 25);
-                $MAGNUS->sip_account = $modelSip->name;
-                $MAGNUS->startRecordCall($agi);
-                $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
-                $MAGNUS->run_dial($agi, $dialstr);
+                    $dialparams = explode(',', $dialparams);
+                    if (isset($dialparams[1])) {
+                        $dialparams[1] = $modelSip->dial_timeout;
+                    }
+                    $dialparams = implode(',', $dialparams);
 
-                $dialstatus      = $agi->get_variable("DIALSTATUS");
-                $dialstatus      = $dialstatus['data'];
-                $sql             = "SELECT * FROM pkg_sip WHERE name = '$modelSip->name' LIMIT 1";
-                $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-                if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
-                    $agi->verbose(" SIP HAVE callForward " . $modelSip->name);
-                    SipCallAgi::callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
-                    $MAGNUS->hangup($agi);
-                }
+                    $dialstr = 'SIP/' . $modelSip->name . $dialparams;
+                    $agi->verbose($dialstr, 25);
+                    $MAGNUS->sip_account = $modelSip->name;
+                    $MAGNUS->startRecordCall($agi);
+                    $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+                    $MAGNUS->run_dial($agi, $dialstr);
 
-                break;
+                    $dialstatus      = $agi->get_variable("DIALSTATUS");
+                    $dialstatus      = $dialstatus['data'];
+                    $sql             = "SELECT * FROM pkg_sip WHERE name = '$modelSip->name' LIMIT 1";
+                    $modelSipForward = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                    if (strlen($modelSipForward->forward) > 3 && $dialstatus != 'CANCEL' && $dialstatus != 'ANSWER') {
+                        $agi->verbose(" SIP HAVE callForward " . $modelSip->name);
+                        SipCallAgi::callForward($MAGNUS, $agi, $CalcAgi, $modelSipForward);
+                        $MAGNUS->hangup($agi);
+                    }
 
-            } else if ($optionType == 'repeat') // CUSTOM
-            {
-                $agi->verbose("repetir IVR");
-                continue;
-            } else if (preg_match("/hangup/", $optionType)) // hangup
-            {
-                $agi->verbose("Hangup IVR");
-                $insertCDR = true;
-                break;
-            } else if ($optionType == 'group') // CUSTOM
-            {
-                $agi->verbose("Call to group " . $optionValue, 1);
-                $sql      = "SELECT * FROM pkg_sip WHERE `group` = '$optionValue'";
-                $modelSip = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
+                    break;
 
-                if (!isset($modelSip[0]->id)) {
-                    $agi->verbose('GROUP NOT FOUND');
-                    $agi->stream_file('prepaid-invalid-digits', '#');
+                } else if ($optionType == 'repeat') // CUSTOM
+                {
+                    $agi->verbose("repetir IVR");
                     continue;
+                } else if (preg_match("/hangup/", $optionType)) // hangup
+                {
+                    $agi->verbose("Hangup IVR");
+                    $insertCDR = true;
+                    break;
+                } else if ($optionType == 'group') // CUSTOM
+                {
+                    $agi->verbose("Call to group " . $optionValue, 1);
+                    $sql      = "SELECT * FROM pkg_sip WHERE `group` = '$optionValue'";
+                    $modelSip = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
+
+                    if (!isset($modelSip[0]->id)) {
+                        $agi->verbose('GROUP NOT FOUND');
+                        $agi->stream_file('prepaid-invalid-digits', '#');
+                        continue;
+                    }
+                    $MAGNUS->sip_account = $modelSip[0]->name;
+                    $group               = '';
+
+                    foreach ($modelSip as $key => $value) {
+                        $group .= "SIP/" . $value->name . "&";
+                    }
+
+                    $dialstr = substr($group, 0, -1) . $dialparams;
+
+                    $MAGNUS->startRecordCall($agi);
+                    $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+                    $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
+                    $dialstatus = $agi->get_variable("DIALSTATUS");
+                    $dialstatus = $dialstatus['data'];
+                    $insertCDR  = true;
+                } else if (preg_match("/custom/", $optionType)) // CUSTOM
+                {
+                    $insertCDR = true;
+                    $MAGNUS->startRecordCall($agi);
+                    $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
+                    $myres      = $MAGNUS->run_dial($agi, $optionValue);
+                    $dialstatus = $agi->get_variable("DIALSTATUS");
+                    $dialstatus = $dialstatus['data'];
+                } else if ($optionType == 'ivr') // QUEUE
+                {
+                    $DidAgi->modelDestination[0]['id_ivr'] = $optionValue;
+                    IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
+                } else if ($optionType == 'queue') // QUEUE
+                {
+                    $insertCDR                               = false;
+                    $DidAgi->modelDestination[0]['id_queue'] = $optionValue;
+                    QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $DidAgi, $type, $startTime);
+                    $dialstatus = $CalcAgi->sessiontime > 0 ? 'ANSWER' : 'DONTCALL';
+                } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
+                {
+                    $insertCDR = false;
+                    $agi->verbose("CALL number $optionValue");
+                    $DidAgi->call_did($agi, $MAGNUS, $CalcAgi, $optionValue);
                 }
-                $MAGNUS->sip_account = $modelSip[0]->name;
-                $group               = '';
-
-                foreach ($modelSip as $key => $value) {
-                    $group .= "SIP/" . $value->name . "&";
-                }
-
-                $dialstr = substr($group, 0, -1) . $dialparams;
-
-                $MAGNUS->startRecordCall($agi);
-                $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
-                $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
-                $dialstatus = $agi->get_variable("DIALSTATUS");
-                $dialstatus = $dialstatus['data'];
-                $insertCDR  = true;
-            } else if (preg_match("/custom/", $optionType)) // CUSTOM
-            {
-                $insertCDR = true;
-                $MAGNUS->startRecordCall($agi);
-                $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
-                $myres      = $MAGNUS->run_dial($agi, $optionValue);
-                $dialstatus = $agi->get_variable("DIALSTATUS");
-                $dialstatus = $dialstatus['data'];
-            } else if ($optionType == 'ivr') // QUEUE
-            {
-                $DidAgi->modelDestination[0]['id_ivr'] = $optionValue;
-                IvrAgi::callIvr($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
-            } else if ($optionType == 'queue') // QUEUE
-            {
-                $insertCDR                               = false;
-                $DidAgi->modelDestination[0]['id_queue'] = $optionValue;
-                QueueAgi::callQueue($agi, $MAGNUS, $CalcAgi, $DidAgi, $type);
-                $dialstatus = $CalcAgi->sessiontime > 0 ? 'ANSWER' : 'DONTCALL';
-            } else if (preg_match("/^number/", $optionType)) //envia para um fixo ou celular
-            {
-                $insertCDR = false;
-                $agi->verbose("CALL number $optionValue");
-                $DidAgi->call_did($agi, $MAGNUS, $CalcAgi, $optionValue);
             }
 
             $agi->verbose("FIM do loop", 25);
