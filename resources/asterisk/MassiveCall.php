@@ -258,6 +258,41 @@ class MassiveCall
                     if (preg_match('/AGI/', $forwardOption[1])) {
                         $agi = explode("|", $forwardOption[1]);
                         $agi->exec_agi($agi[1] . ",$destination,$idCampaign,$idPhonenumber");
+                    } else if (strtoupper($forwardOption[1]) == 'SMS') {
+
+                        $text = $modelCampaign->description;
+
+                        $text = addslashes((string) $text);
+                        //CODIFICA O TESTO DO SMS
+                        $text = urlencode($text);
+
+                        $sql = "SELECT pkg_rate.id AS idRate, rateinitial, buyrate, pkg_prefix.id AS id_prefix, pkg_rate.id_trunk,
+                            rt_trunk.trunkcode, rt_trunk.trunkprefix, rt_trunk.removeprefix, rt_trunk.providertech, rt_trunk.inuse,
+                            rt_trunk.maxuse, rt_trunk.status, rt_trunk.failover_trunk, rt_trunk.link_sms, rt_trunk.sms_res
+                            FROM pkg_rate
+                            LEFT JOIN pkg_plan ON pkg_rate.id_plan=pkg_plan.id
+                            LEFT JOIN pkg_trunk AS rt_trunk ON pkg_rate.id_trunk=rt_trunk.id
+                            LEFT JOIN pkg_prefix ON pkg_rate.id_prefix=pkg_prefix.id
+                            WHERE prefix = SUBSTRING(999$destination,1,length(prefix)) and pkg_plan.id= " . $modelCampaign->id_plan . "
+                            ORDER BY LENGTH(prefix) DESC";
+                        $modelTrunk = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+
+                        //retiro e adiciono os prefixos do tronco
+                        if (strncmp($destination, $modelTrunk->removeprefix, strlen($modelTrunk->removeprefix)) == 0) {
+                            $destination = substr($destination, strlen($modelTrunk->removeprefix));
+                        }
+                        $destination = $modelTrunk->trunkprefix . $destination;
+
+                        $url = $modelTrunk->link_sms;
+                        $url = preg_replace("/\%number\%/", $destination, $url);
+                        $url = preg_replace("/\%text\%/", $text, $url);
+
+                        $agi->verbose($url);
+
+                        if (!$res = @file_get_contents($url, false)) {
+                            $agi->verbose("ERRO SMS -> " . $url);
+                        }
+
                     } else {
                         $MAGNUS->run_dial($agi, $forwardOption[1]);
                     }
