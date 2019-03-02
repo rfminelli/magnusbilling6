@@ -221,7 +221,10 @@ class DidAgi
 
                     $MAGNUS->extension = $MAGNUS->destination = $MAGNUS->dnid = $modelSip->name;
 
-                    $dialstatus = SipCallAgi::processCall($MAGNUS, $agi, $CalcAgi, 'fromDID');
+                    $dialResult = SipCallAgi::processCall($MAGNUS, $agi, $CalcAgi, 'fromDID');
+
+                    $dialstatus   = $dialResult['dialstatus'];
+                    $answeredtime = $dialResult['answeredtime'];
 
                     $agi->verbose($inst_listdestination['destination'] . " Friend -> followme=$callcount : ANSWEREDTIME=" . $answeredtime . "-DIALSTATUS=" . $dialstatus, 1);
 

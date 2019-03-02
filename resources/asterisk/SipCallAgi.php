@@ -86,7 +86,10 @@ class SipCallAgi
 
             $MAGNUS->hangup($agi);
         } else {
-            return $dialstatus;
+            return array(
+                'dialstatus'   => $dialstatus,
+                'answeredtime' => $answeredtime,
+            );
         }
     }
 
