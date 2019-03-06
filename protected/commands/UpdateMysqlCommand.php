@@ -1313,6 +1313,24 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.5.1') {
+
+            $sql = "INSERT INTO pkg_module VALUES (NULL, 't(''Call Archive'')', 'callarchive', 'prefixs', 9,15)";
+            $this->executeDB($sql);
+            $idServiceModule = Yii::app()->db->lastInsertID;
+
+            $sql = "INSERT INTO pkg_group_module VALUES ((SELECT id FROM pkg_group_user WHERE id_user_type = 1 LIMIT 1), '" . $idServiceModule . "', 'crud', '1', '1', '1');
+            		ALTER TABLE `pkg_cdr_archive` DROP `sessionid`;
+            ";
+            $this->executeDB($sql);
+
+            exec("echo '\n40 5 * * * php /var/www/html/mbilling/cron.php callarchive' >> /var/spool/cron/root");
+
+            $version = '6.5.2';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

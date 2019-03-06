@@ -1,4 +1,5 @@
 Locale.load({
+    'Call Archive': 'Ligações Arquivadas',
     'Tariff Find Limit': 'Tarifa limite',
     'Call Failed': 'Ligações incompletas',
     'Summary per Day': 'CDR por dia',
