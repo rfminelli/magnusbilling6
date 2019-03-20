@@ -40,6 +40,8 @@ class AuthenticationController extends Controller
         $user     = $_REQUEST['user'];
         $password = $_REQUEST['password'];
 
+        $this->verifyLogin();
+
         $modelUser = User::model()->find("username = :user", array(':user' => $user));
         if (isset($modelUser->idGroup->idUserType->id) && $modelUser->idGroup->idUserType->id == 1) {
             $password = sha1($password);
@@ -573,6 +575,53 @@ class AuthenticationController extends Controller
                     echo '<br><center><font color=green>Success</font></center>';
                 }
             }
+        }
+    }
+
+    public function verifyLogin()
+    {
+        $modelLogUsers = LogUsers::model()->findAll(array(
+            'condition' => 'ip = :key AND date > date_sub(now(), interval 5 minute)',
+            'params'    => array(
+                ':key' => $_SERVER['REMOTE_ADDR'],
+            ),
+            'order'     => 'id DESC',
+            'limit'     => 3,
+        ));
+
+        if (count($modelLogUsers) < 3) {
+            return;
+        }
+
+        if (preg_match('/IP Blocked because tried login 3 times with invalid data. IP - /', $modelLogUsers[0]->description)) {
+            Yii::app()->session['logged'] = false;
+            echo json_encode(array(
+                'success' => false,
+                'msg'     => Yii::t('yii', "IP Blocked because tried login 3 times with invalid data") . "<br><b>" . Yii::t('yii', "WAIT 5 MINUTES THEN TRY AGAIN") . "</b>" . "<br> IP - " . $_SERVER['REMOTE_ADDR'],
+            ));
+            exit;
+        }
+
+        $invalid = 0;
+        for ($i = 0; $i < 3; $i++) {
+            if (preg_match('/Username or password is wrong/', $modelLogUsers[$i]->description)) {
+                $invalid++;
+            }
+        }
+
+        if ($invalid >= 3) {
+            Yii::app()->session['logged'] = false;
+            echo json_encode(array(
+                'success' => false,
+                'msg'     => Yii::t('yii', "IP Blocked because tried login 3 times with invalid data.") . "<br><b>" . Yii::t('yii', "WAIT 5 MINUTES THEN TRY AGAIN.") . "</b>" . "<br> IP - " . $_SERVER['REMOTE_ADDR'],
+            ));
+            $nameMsg = $this->nameMsg;
+
+            $info = 'IP Blocked because tried login 3 times with invalid data. IP - ' . $_SERVER['REMOTE_ADDR'];
+            Yii::log($info, 'error');
+            MagnusLog::insertLOG(1, $info);
+
+            exit;
         }
     }
 }

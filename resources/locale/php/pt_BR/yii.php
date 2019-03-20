@@ -1,6 +1,8 @@
 <?php
 return array(
     /*new '' => '', */
+    'WAIT 5 MINUTES THEN TRY AGAIN.'                                                                                                                                                   => 'AGUARDE 5 MINUTOS E TENTE NOVAMENTE',
+    'IP Blocked because tried login 3 times with invalid data.'                                                                                                                        => 'IP bloqueado porque foi tentado acessar o sistema 3 vezes com dados errados',
     'Select a user'                                                                                                                                                                    => 'Selecione um usuário',
     'Filter call to username'                                                                                                                                                          => 'Filtro para',
     'StopTime'                                                                                                                                                                         => 'Data final',
