@@ -1331,6 +1331,19 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.5.2') {
+
+            $sql = "ALTER TABLE `pkg_did` ADD `cbr_total_try` INT(11) NOT NULL DEFAULT '3' AFTER `cbr_em`, ADD `cbr_time_try` INT(11) NOT NULL DEFAULT '30' AFTER `cbr_total_try`;";
+            $this->executeDB($sql);
+
+            $sql = "ALTER TABLE `pkg_callback` ADD `sessiontime` INT(11) NOT NULL DEFAULT '0' ;";
+            $this->executeDB($sql);
+
+            $version = '6.5.3';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

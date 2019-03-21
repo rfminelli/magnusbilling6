@@ -24,10 +24,6 @@ class QueueAgi
     {
         $agi->verbose("Queue module", 5);
 
-        if ($DidAgi->modelDid->cbr == 1) {
-            CallbackAgi::advanced0800CallBack($agi, $MAGNUS, $DidAgi, $CalcAgi);
-        }
-
         $agi->answer();
         $startTime           = $startTime > 0 ? $startTime : time();
         $MAGNUS->destination = $DidAgi->modelDid->did;
@@ -80,6 +76,10 @@ class QueueAgi
             $CalcAgi->terminatecauseid = 7;
         } else {
             $CalcAgi->terminatecauseid = 1;
+        }
+
+        if ($agi->get_variable("ISFROMCALLBACKPRO", true)) {
+            return;
         }
 
         $agi->verbose('$siptransfer => ' . $siptransfer['data'], 5);

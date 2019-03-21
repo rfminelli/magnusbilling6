@@ -160,7 +160,7 @@ class CallbackAgi
         $call = "Channel: " . $dialstr . "\n";
         $call .= "Callerid: " . $destination . "\n";
         $call .= "Context: billing\n";
-        $call .= "Extension: " . $user . "\n";
+        $call .= "Extension: " . $destination . "\n";
         $call .= "Priority: 1\n";
         $call .= "Set:IDUSER=" . $id_user . "\n";
         $call .= "Set:SECCALL=" . $destination . "\n";
@@ -270,8 +270,8 @@ class CallbackAgi
             $sql = "UPDATE pkg_callback SET status = '$status' WHERE id = $modelCallBack->id LIMIT 1";
             $agi->exec($sql);
         } else {
-            $sql = "INSERT INTO pkg_callback (id_did,exten, id_user, status) VALUES ('" . $DidAgi->modelDestination[0]['id_did'] . "',
-                    '$callerID','" . $DidAgi->modelDestination[0]['id_user'] . "', $status)";
+            $sql = "INSERT INTO pkg_callback (id_did,exten, id_user, status, entry_time) VALUES ('" . $DidAgi->modelDestination[0]['id_did'] . "',
+                    '$callerID','" . $DidAgi->modelDestination[0]['id_user'] . "', $status, '" . date('Y-m-d H:i:s') . "')";
             $agi->exec($sql);
         }
 

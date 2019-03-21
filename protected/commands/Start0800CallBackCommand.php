@@ -31,71 +31,158 @@ class Start0800CallBackCommand extends ConsoleCommand
             }
             sleep(1);
 
-            $voltarChamar = time() - 1800;
-            $voltarChamar = date('Y-m-d H:i:s', $voltarChamar);
-            CallBack::model()->updateAll(array('status' => '1'), 'status = 2 AND num_attempt < 4 AND last_attempt_time < :key', array(':key' => $voltarChamar));
-
-            //esperar 60 segundos antes de tentar ligar para o cliente.
-            $timeToNewCallback = date('Y-m-d H:i:s', time() - 60);
-            $modelCallBack     = CallBack::model()->findAll('status = 1 AND entry_time < :key', array(':key' => $timeToNewCallback));
-
-            if ($this->debug >= 1) {
-                echo "\nFound " . count($modelCallBack) . " callback\n\n";
-            }
+            $modelCallBack = CallBack::model()->findAll('status IN(1,2,4)');
 
             foreach ($modelCallBack as $callback) {
 
+                echo "Callback to number " . $callback->exten . "\n";
+                //
+
+                $status = $callback->status;
+                echo $status . "\n";
+
+                //print_r($callback->getAttributes());
+
                 $modelDiddestination = Diddestination::model()->find('id_did = :key', array(':key' => $callback->id_did));
 
-                $modelQueue = Queue::model()->findByPk((int) $modelDiddestination->id_queue);
+                $modelDid = $modelDiddestination->idDid;
 
-                if (!count($modelQueue)) {
-                    echo "User not have QUEUE";
+                //esperar 60 segundos antes de tentar ligar para o cliente.
+                if ($status == 1 && $callback->entry_time > date('Y-m-d H:i:s', strtotime('-1 minutes'))) {
+                    echo "esperar 60 segundos antes de tentar ligar para o cliente. " . $callback->entry_time . ' ' . date('Y-m-d H:i:s', strtotime('-1 minutes')) . "\n";
                     continue;
                 }
-                $server = AsteriskAccess::instance()->queueShow($modelQueue->name);
 
-                $agent = '';
-                foreach (explode("\n", $server["data"]) as $key => $value) {
-                    //Quantos operadores estao com status not in use
-                    if (!preg_match("/paused/", $value) && preg_match("/Not in use/", $value)) {
-                        $agent = explode(" ", substr(trim($value), 4));
-                        $agent = $agent[0];
-                        break;
+                //
+
+                $voltarChamar = time() - ($modelDid->cbr_time_try * 60);
+                $voltarChamar = date('Y-m-d H:i:s', $voltarChamar);
+
+                if ($callback->status == 2 && $callback->num_attempt < $modelDid->cbr_total_try && $callback->last_attempt_time < $voltarChamar) {
+                    echo " reative number because status = 2 and last_attempt_time > than " . $modelDid->cbr_time_try . "\n";
+                    $status = 1;
+                }
+
+                if ($callback->status == 4) {
+                    $work = $this->checkIVRSchedule($modelDid);
+                    if ($work == 'open') {
+                        $status = 1;
                     }
                 }
 
-                if (strlen($agent) < 2) {
-                    echo "Nao tem agent livre para receber chamada\n";
+                if ($status != 1) {
                     continue;
                 }
 
-                echo "Agent $agent esta livre para receber chamadas\n";
+                $destination = $callback->exten;
 
-                $dialstr = "SIP/$agent";
+                $searchTariff = new SearchTariff();
+                $resfindrate  = $searchTariff->find($destination, $modelDiddestination->idUser->id_plan, $modelDiddestination->id_user);
 
-                // gerar os arquivos .call
-                $call = "Channel: " . $dialstr . "\n";
-                $call .= "Callerid: " . $callback['exten'] . "\n";
-                $call .= "Context: billing\n";
-                $call .= "Extension: " . $callback['exten'] . "\n";
-                $call .= "Priority: 1\n";
-                $call .= "Set:IDUSER=" . $callback['id_user'] . "\n";
-                $call .= "Set:SECCALL=" . $callback['exten'] . "\n";
-                $call .= "Set:IDCALLBACK=" . $callback['id'] . "\n";
+                if (substr("$destination", 0, 4) == 1111) {
+                    $destination = str_replace(substr($destination, 0, 7), "", $destination);
+                }
 
-                AsteriskAccess::generateCallFile($call, 1);
+                $credit = $modelDiddestination->idUser->typepaid == 1
+                ? $modelDiddestination->idUser->credit + $modelDiddestination->idUser->creditlimit
+                : $modelDiddestination->idUser->credit;
 
-                $callback->num_attempt++;
-                $callback->last_attempt_time = date('Y-m-d H:i:s');
-                $callback->status            = 2;
-                $callback->save();
-                $modelError = $callback->getErrors();
-                if (count($modelError)) {
-                    print_r($modelError);
+                if ($resfindrate != 0 && $credit > 0) {
+                    $providertech = $resfindrate[0]['rc_providertech'];
+                    $ipaddress    = $resfindrate[0]['rc_providerip'];
+                    $removeprefix = $resfindrate[0]['rc_removeprefix'];
+                    $prefix       = $resfindrate[0]['rc_trunkprefix'];
+
+                    if (strncmp($destination, $removeprefix, strlen($removeprefix)) == 0) {
+                        $destination = substr($destination, strlen($removeprefix));
+                    }
+
+                    $dialstr = "$providertech/$ipaddress/$prefix$destination";
+
+                    // gerar os arquivos .call
+                    $call = "Channel: " . $dialstr . "\n";
+                    $call .= "Callerid: " . $callback['exten'] . "\n";
+                    $call .= "Context: billing\n";
+                    $call .= "Extension: " . $modelDiddestination->idDid->did . "\n";
+                    $call .= "Priority: 1\n";
+                    $call .= "Priority: 1\n";
+                    $call .= "Set:CALLED=" . $destination . "\n";
+                    $call .= "Set:TARRIFID=" . $resfindrate[0]['id_rate'] . "\n";
+
+                    $call .= "Set:SELLCOST=" . $resfindrate[0]['rateinitial'] . "\n";
+                    $call .= "Set:SELLINITBLOCK=" . $resfindrate[0]['initblock'] . "\n";
+                    $call .= "Set:SELLINCREMENT=" . $resfindrate[0]['billingblock'] . "\n";
+
+                    $call .= "Set:BUYCOST=" . $resfindrate[0]['buyrate'] . "\n";
+                    $call .= "Set:BUYRATEINIT=" . $resfindrate[0]['buyrateinitblock'] . "\n";
+                    $call .= "Set:BUYINCREMENT=" . $resfindrate[0]['buyrateincrement'] . "\n";
+
+                    $call .= "Set:IDUSER=" . $modelDiddestination->id_user . "\n";
+                    $call .= "Set:IDPREFIX=" . $resfindrate[0]['id_prefix'] . "\n";
+                    $call .= "Set:IDTRUNK=" . $resfindrate[0]['id_trunk'] . "\n";
+                    $call .= "Set:IDPLAN=" . $modelDiddestination->idUser->id_plan . "\n";
+                    $call .= "Set:IDCALLBACK=" . $callback->id . "\n";
+                    $call .= "Set:ISFROMCALLBACKPRO=1\n";
+                    AsteriskAccess::generateCallFile($call, 1);
+
+                    echo $call;
+                    $callback->num_attempt++;
+                    $callback->last_attempt_time = date('Y-m-d H:i:s');
+                    $callback->status            = 2;
+                    $callback->save();
+                    $modelError = $callback->getErrors();
+                    if (count($modelError)) {
+                        print_r($modelError);
+                    }
+
                 }
 
             }
         }
+    }
+
+    public function checkIVRSchedule($model)
+    {
+        $weekDay = date('D');
+
+        switch ($weekDay) {
+            case 'Sun':
+                $weekDay = $model->{'TimeOfDay_sun'};
+                break;
+            case 'Sat':
+                $weekDay = $model->{'TimeOfDay_sat'};
+                break;
+            default:
+                $weekDay = $model->{'TimeOfDay_monFri'};
+                break;
+        }
+
+        $hours   = date('H');
+        $minutes = date('i');
+        $now     = ($hours * 60) + $minutes;
+
+        $intervals = preg_split("/\|/", $weekDay);
+
+        foreach ($intervals as $key => $interval) {
+            $hours = explode('-', $interval);
+
+            $start = $hours[0];
+            $end   = $hours[1];
+
+            #convert start hour to minutes
+            $hourInterval = explode(':', $start);
+            $starthour    = $hourInterval[0] * 60;
+            $start        = $starthour + $hourInterval[1];
+
+            #convert end hour to minutes
+            $hourInterval = explode(':', $end);
+            $starthour    = $hourInterval[0] * 60;
+            $end          = $starthour + $hourInterval[1];
+
+            if ($now >= $start && $now <= $end) {
+                return "open";
+            }
+        }
+        return "closed";
     }
 }

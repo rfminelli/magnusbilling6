@@ -53,7 +53,7 @@ class CallBack extends Model
     public function rules()
     {
         return array(
-            array('id_user,num_attempt, id_server_group,id_did', 'numerical', 'integerOnly' => true),
+            array('id_user,num_attempt, id_server_group,id_did,sessiontime', 'numerical', 'integerOnly' => true),
             array('uniqueid, server_ip', 'length', 'max' => 40),
             array('status, callerid', 'length', 'max' => 10),
             array('channel, exten, account, context, timeout, priority', 'length', 'max' => 60),

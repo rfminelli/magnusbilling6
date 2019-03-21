@@ -25,9 +25,11 @@ class DidAgi
     public $sell_price;
     public $modelDestination;
     public $modelDid;
+    public $startCall;
 
     public function checkIfIsDidCall(&$agi, &$MAGNUS, &$CalcAgi)
     {
+        $this->startCall = time();
 
         //check if did call
         $mydnid = substr($MAGNUS->dnid, 0, 1) == '0' ? substr($MAGNUS->dnid, 1) : $MAGNUS->dnid;
@@ -109,6 +111,15 @@ class DidAgi
             $this->checkBlockCallerID($agi, $MAGNUS);
 
             $agi->verbose('voip_call ' . $this->voip_call, 5);
+
+            if ($this->modelDid->cbr == 1 && !$agi->get_variable("ISFROMCALLBACKPRO", true)) {
+                if (!$agi->get_variable("SECCALL", true)) {
+                    $agi->verbose('RECEIVED 0800 CALLBACPRO', 5);
+                    CallbackAgi::advanced0800CallBack($agi, $MAGNUS, $this, $CalcAgi);
+                    return;
+                }
+            }
+
             switch ($this->voip_call) {
                 case 2:
                     $MAGNUS->mode = 'ivr';
@@ -155,6 +166,42 @@ class DidAgi
                     $MAGNUS->mode = 'did';
                     $this->call_did($agi, $MAGNUS, $CalcAgi);
                     break;
+            }
+
+            if ($agi->get_variable("ISFROMCALLBACKPRO", true)) {
+
+                $sessiontime         = time() - $this->startCall;
+                $sell                = $agi->get_variable("SELLCOST", true);
+                $sellinitblock       = $agi->get_variable("SELLINITBLOCK", true);
+                $sellincrement       = $agi->get_variable("SELLINCREMENT", true);
+                $buy                 = $agi->get_variable("BUYCOST", true);
+                $buyinitblock        = $agi->get_variable("BUYRATEINIT", true);
+                $buyincrement        = $agi->get_variable("BUYINCREMENT", true);
+                $MAGNUS->id_user     = $agi->get_variable("IDUSER", true);
+                $MAGNUS->id_plan     = $agi->get_variable("IDPLAN", true);
+                $MAGNUS->sip_account = $MAGNUS->destination;
+                $MAGNUS->destination = $MAGNUS->CallerID;
+
+                $sell_price                = $MAGNUS->roudRatePrice($sessiontime, $sell, $sellinitblock, $sellincrement);
+                $buy_price                 = $MAGNUS->roudRatePrice($sessiontime, $buy, $buyinitblock, $buyincrement);
+                $MAGNUS->id_trunk          = $agi->get_variable("IDTRUNK", true);
+                $CalcAgi->starttime        = date("Y-m-d H:i:s", $this->startCall);
+                $CalcAgi->sessiontime      = $sessiontime;
+                $CalcAgi->terminatecauseid = 1;
+                $CalcAgi->sessionbill      = $sell_price;
+                $CalcAgi->sipiax           = 4;
+                $CalcAgi->buycost          = $buy_price;
+                $CalcAgi->id_prefix        = $agi->get_variable("IDPREFIX", true);
+                $CalcAgi->saveCDR($agi, $MAGNUS);
+
+                $sql = "UPDATE pkg_callback SET status = 3, last_attempt_time = '" . date('Y-m-d H:i:s') . "', sessiontime = $sessiontime
+                        WHERE id = " . $agi->get_variable("IDCALLBACK", true);
+                $agi->exec($sql);
+
+                $sql = "UPDATE pkg_user SET credit = credit - $sell_price WHERE id = " . $MAGNUS->id_user;
+                $agi->exec($sql);
+
+                $MAGNUS->hangup($agi);
             }
 
         }

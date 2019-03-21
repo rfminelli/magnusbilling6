@@ -35,4 +35,20 @@ class CallBackController extends Controller
         $this->titleReport   = Yii::t('yii', 'CallBack');
         parent::init();
     }
+
+    public function actionReprocesar($value = '')
+    {
+        # recebe os parametros para o filtro
+        $filter = $_POST['filter'];
+
+        $filter = $filter ? $this->createCondition(json_decode($filter)) : '';
+
+        $filter = preg_replace('/t.status/', 'status', $filter);
+
+        CallBack::model()->updateAll(array('status' => '1', 'num_attempt' => 0, 'sessiontime' => 0), $filter, $this->paramsFilter);
+        echo json_encode(array(
+            'success' => true,
+            'msg'     => $this->msgSuccess,
+        ));
+    }
 }

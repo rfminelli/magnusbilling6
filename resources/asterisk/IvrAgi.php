@@ -296,6 +296,10 @@ class IvrAgi
         $tipo = 9;
         $MAGNUS->stopRecordCall($agi);
 
+        if ($agi->get_variable("ISFROMCALLBACKPRO", true)) {
+            return;
+        }
+
         if ($siptransfer['data'] != 'yes' && $insertCDR == true && $type == 'ivr') {
             $agi->verbose('Hangup IVR call, send to call_did_billing', 25);
             $DidAgi->call_did_billing($agi, $MAGNUS, $CalcAgi, $answeredtime, $dialstatus);

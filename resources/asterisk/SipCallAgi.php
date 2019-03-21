@@ -52,6 +52,10 @@ class SipCallAgi
 
         $answeredtime = $MAGNUS->executeVoiceMail($agi, $dialstatus, $answeredtime);
 
+        if ($agi->get_variable("ISFROMCALLBACKPRO", true)) {
+            return;
+        }
+
         if ($type == 'normal') {
 
             if (strlen($MAGNUS->dialstatus_rev_list[$dialstatus]) > 0) {

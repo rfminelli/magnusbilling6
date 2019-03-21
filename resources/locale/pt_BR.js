@@ -1,4 +1,9 @@
 Locale.load({
+    'Reprocess': 'Reprocessar',
+    'Complete': 'Completo',
+    'Not working': 'Fora do horário',
+    'Maximum trying': 'Maximo de tentativas',
+    'Interval beteween trying': 'Tempo entre tentativas',
     'Call Archive': 'Ligações Arquivadas',
     'Tariff Find Limit': 'Tarifa limite',
     'Call Failed': 'Ligações incompletas',
