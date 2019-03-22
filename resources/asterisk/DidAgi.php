@@ -26,6 +26,7 @@ class DidAgi
     public $modelDestination;
     public $modelDid;
     public $startCall;
+    public $id_prefix = 0;
 
     public function checkIfIsDidCall(&$agi, &$MAGNUS, &$CalcAgi)
     {
@@ -533,6 +534,10 @@ class DidAgi
     public function didCallCost(&$agi, &$MAGNUS)
     {
         $agi->verbose('didCallCost', 10);
+        if (file_exists(dirname(__FILE__) . '/didCallCost.php')) {
+            include dirname(__FILE__) . '/didCallCost.php';
+            return;
+        }
 
         //brazil mobile - ^[4,5,6][1-9][7-9].{7}$|^[1,2,3,7,8,9][1-9]9.{8}$
         //brazil fixed - ^[1-9][0-9][1-5].
@@ -614,11 +619,15 @@ class DidAgi
 
         }
 
-        $sql = "SELECT id FROM pkg_prefix WHERE prefix = SUBSTRING('" . $this->did . "',1,length(prefix))
+        if ($this->id_prefix == 0) {
+
+            $sql = "SELECT id FROM pkg_prefix WHERE prefix = SUBSTRING('" . $this->did . "',1,length(prefix))
                             ORDER BY LENGTH(prefix) DESC";
-        $modelPrefix = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-        if (!isset($modelPrefix->id)) {
-            $agi->verbose('Not found prefix to DID ' . $this->did);
+            $modelPrefix = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            if (!isset($modelPrefix->id)) {
+                $agi->verbose('Not found prefix to DID ' . $this->did);
+            }
+            $this->id_prefix = $modelPrefix->id;
         }
 
         $this->billDidCall($agi, $MAGNUS, $answeredtime);
@@ -638,7 +647,7 @@ class DidAgi
         $MAGNUS->id_trunk          = null;
         $CalcAgi->sipiax           = 3;
         $CalcAgi->buycost          = 0;
-        $CalcAgi->id_prefix        = $modelPrefix->id;
+        $CalcAgi->id_prefix        = $this->id_prefix;
         $CalcAgi->saveCDR($agi, $MAGNUS);
 
         $sql = "UPDATE pkg_did_destination SET secondusedreal = secondusedreal + $answeredtime
