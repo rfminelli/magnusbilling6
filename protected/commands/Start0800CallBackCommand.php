@@ -66,7 +66,10 @@ class Start0800CallBackCommand extends ConsoleCommand
                 if ($callback->status == 4) {
                     $work = $this->checkIVRSchedule($modelDid);
                     if ($work == 'open') {
-                        $status = 1;
+                        $status                = 1;
+                        $callback->status      = 1;
+                        $callback->sessiontime = 0;
+                        $callback->save();
                     }
                 }
 

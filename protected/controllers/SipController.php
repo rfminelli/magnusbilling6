@@ -66,6 +66,18 @@ class SipController extends Controller
     public function beforeSave($values)
     {
 
+        if (isset($values['alias'])) {
+            $modelSip = Sip::model()->find('alias = :key AND id_user = (SELECT id_user FROM pkg_sip WHERE id = :key1)', array(':key' => $values['alias'], ':key1' => $values['id']));
+            if (isset($modelSip->id)) {
+                echo json_encode(array(
+                    'success' => false,
+                    'rows'    => array(),
+                    'errors'  => 'Alias alread in use',
+                ));
+                exit;
+            }
+        }
+
         if (isset($values['type_forward'])) {
             if ($values['type_forward'] == 'undefined' || $values['type_forward'] == '') {
                 $values['forward'] = '';
