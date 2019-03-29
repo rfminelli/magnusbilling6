@@ -111,6 +111,15 @@ class SipController extends Controller
 
             $modelSipCount = Sip::model()->count("id_user = :id_user", array(':id_user' => (int) $values['id_user']));
 
+            if ($modelUser->idGroup->id_user_type != 3) {
+                echo json_encode(array(
+                    'success' => false,
+                    'rows'    => array(),
+                    'errors'  => 'You only can create SipAccount to clients',
+                ));
+                exit;
+            }
+
             if (!Yii::app()->session['isAdmin'] && $modelUser->sipaccountlimit > 0
                 && $modelSipCount >= $modelUser->sipaccountlimit) {
                 echo json_encode(array(
