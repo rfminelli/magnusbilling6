@@ -605,6 +605,10 @@ class AsteriskAccess
                         $line .= 'deny=' . $sip->deny . "\n";
                     }
 
+                    if ($sip->videosupport != 'no') {
+                        $line .= 'videosupport=' . $sip->videosupport . "\n";
+                    }
+
                     if (strlen($sip->permit) > 1) {
                         $line .= 'permit=' . $sip->permit . "\n";
                     }
