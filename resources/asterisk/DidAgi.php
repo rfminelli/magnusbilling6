@@ -566,7 +566,10 @@ class DidAgi
         ? $MAGNUS->modelUser->credit + $MAGNUS->modelUser->creditlimit
         : $MAGNUS->modelUser->credit;
 
-        if ($this->sell_price > 0 && $credit <= 0) {
+        if ($MAGNUS->modelUser->active != 1) {
+            $agi->verbose("HANGUP BECAUSE USER IS NOT ACTIVE " . $username, 10);
+            $MAGNUS->hangup($agi);
+        } else if ($this->sell_price > 0 && $credit <= 0) {
             $agi->verbose(" USER NO CREDIT FOR CALL " . $username, 10);
             $MAGNUS->hangup($agi);
         }
