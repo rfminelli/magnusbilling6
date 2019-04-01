@@ -72,6 +72,78 @@ if [[ -e /var/www/html/mbilling/index.php ]]; then
 fi
 
 
+set_timezone ()
+{ 
+  #yum -y install ntp
+  directory=/usr/share/zoneinfo
+  for (( l = 0; l < 5; l++ )); do
+
+    echo "entrar no diretorio $directory"
+    cd $directory
+    files=("")  
+
+    i=0
+    s=65    # decimal ASCII "A" 
+    for f in *
+    do
+
+      if [[ "$i" = "0" && "$l" = "0" ]]; then
+        files[i]="BRASIL Brasilia"
+        files[i+1]=""
+      else
+        files[i]="$f"
+          files[i+1]=""
+      fi      
+        ((i+=2))
+        ((s++))
+    done
+
+    files[i+1]="MAIN MENU"
+    files[i+2]="Back to main menu"
+
+    zone=$(whiptail --title "Restore Files" --menu "Please select your timezone" 20 60 12 "${files[@]}" 3>&1 1>&2 2>&3)
+
+
+    if [ "$zone" = "BRASIL Brasilia" ]; then
+      echo "é um arquivo, setar timezone BRASIL"
+      directory=$directory/America/Sao_Paulo  
+      break
+    fi
+
+    directory=$directory/$zone
+
+
+    if [ -f "$directory" ]; then
+      #echo "é um arquivo, setar timezone"
+      break
+    fi
+
+    if [ "$zone" = "MAIN MENU" ]; then
+      directory=/usr/share/zoneinfo
+      l=0
+    fi
+
+    if test -z "$zone"; then
+      break
+    fi  
+
+    echo fim do loop
+
+  done
+
+  if [ -f "$directory" ]; then    
+    rm -f /etc/localtime
+    ln -s $directory /etc/localtime
+    phptimezone="${directory//\/usr\/share\/zoneinfo\//}"
+    phptimezone="${phptimezone////\/}"
+    sed -i '/date.timezone/s/= .*/= '$phptimezone'/' /etc/php.ini
+    systemctl reload httpd
+  fi
+
+}
+
+set_timezone
+
 genpasswd() 
 {
     length=$1
@@ -980,20 +1052,7 @@ echo
 echo
 echo ===============================================================
 echo 
-echo Congratulations! You have installed MagnusBilling in your Server.
-echo
-echo Access your MagnusBilling in http://your_ip/
-echo Username = root
-echo Passwor = magnus
-echo
-echo Your mysql root password is $password
-echo 
-echo ===============================================================
-echo 
-echo           YOUR SERVER ESTART IN 5 SECONDS
-echo
-echo
-echo ===============================================================
-echo
-sleep 5
+
+whiptail --title "MagnusBilling Instalation Result" --msgbox "Congratulations! You have installed MagnusBilling in your Server.\n\nAccess your MagnusBilling in http://your_ip/ \n  Username = root \n  Password = magnus \n\nYour mysql root password is $password\n\n\nPRESS ANY KEY TO REBOOT YOUR SERVER" --fb 20 70
+
 reboot
