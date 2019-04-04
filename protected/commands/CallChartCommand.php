@@ -70,6 +70,11 @@ class CallChartCommand extends ConsoleCommand
                         AsteriskAccess::instance()->hangupRequest($channel);
                         continue;
                     }
+
+                    $account     = explode("-", $channel);
+                    $account     = explode("/", $account[0]);
+                    $sip_account = $account[1];
+
                     $trunk         = null;
                     $uniqueid      = $call[13];
                     $bridgeChannel = $channel[12];
@@ -227,7 +232,7 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
-                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$sip_account', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelUserCallShop > 0) {
                         if (in_array($modelSip->id_user, $callShopIds)) {
