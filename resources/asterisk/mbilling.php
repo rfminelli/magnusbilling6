@@ -108,9 +108,13 @@ if ($agi->get_variable("MEMBERNAME", true) || $agi->get_variable("QUEUEPOSITION"
     if (isset($MAGNUS->modelSip->id) && strlen($MAGNUS->modelSip->name) > 3) {
 
         if ($MAGNUS->dnid == $MAGNUS->modelSip->alias) {
-            $agi->set_callerid($MAGNUS->modelSip->alias);
-            $agi->set_variable("CALLERID(num)", $MAGNUS->modelSip->alias);
-            $MAGNUS->CallerID = $MAGNUS->modelSip->alias;
+            $sql              = "SELECT alias FROM pkg_sip WHERE name = '" . $MAGNUS->sip_account . "' LIMIT 1";
+            $modelSipCallerID = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            if (strlen($modelSipCallerID->alias)) {
+                $agi->set_callerid($modelSipCallerID->alias);
+                $agi->set_variable("CALLERID(num)", $modelSipCallerID->alias);
+                $MAGNUS->CallerID = $modelSipCallerID->alias;
+            }
         }
         $MAGNUS->destination = $MAGNUS->dnid = $MAGNUS->modelSip->name;
         $MAGNUS->mode        = 'call-sip';
@@ -166,9 +170,14 @@ if ($MAGNUS->mode == 'standard') {
         if (isset($MAGNUS->modelSip->id) && strlen($MAGNUS->modelSip->name) > 3) {
 
             if ($MAGNUS->dnid == $MAGNUS->modelSip->alias) {
-                $agi->set_callerid($MAGNUS->modelSip->alias);
-                $agi->set_variable("CALLERID(num)", $MAGNUS->modelSip->alias);
-                $MAGNUS->CallerID = $MAGNUS->modelSip->alias;
+                //find the caller alias set callerid
+                $sql              = "SELECT alias FROM pkg_sip WHERE name = '" . $MAGNUS->sip_account . "' LIMIT 1";
+                $modelSipCallerID = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                if (strlen($modelSipCallerID->alias)) {
+                    $agi->set_callerid($modelSipCallerID->alias);
+                    $agi->set_variable("CALLERID(num)", $modelSipCallerID->alias);
+                    $MAGNUS->CallerID = $modelSipCallerID->alias;
+                }
             }
 
             $MAGNUS->destination = $MAGNUS->dnid = $MAGNUS->modelSip->name;
