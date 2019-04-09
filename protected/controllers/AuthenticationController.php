@@ -155,7 +155,6 @@ class AuthenticationController extends Controller
                 Yii::app()->session['checkGoogleAuthenticator'] = true;
             }
 
-            Yii::app()->session['checkGoogleAuthenticator'] = true;
         } else {
             Yii::app()->session['showGoogleCode']           = false;
             Yii::app()->session['newGoogleAuthenticator']   = false;
