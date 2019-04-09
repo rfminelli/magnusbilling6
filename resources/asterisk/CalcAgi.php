@@ -858,11 +858,16 @@ class CalcAgi
         $CalcAgi->saveCDR($agi, $MAGNUS);
          */
 
-        if ($this->terminatecauseid == 1) {
-
-            if ($this->sipiax == 3) {
+        if ($this->sipiax == 3) {
+            //if call is a DID, check is sipaccount is valid, else, set the callerid
+            $sql             = "SELECT name FROM pkg_sip WHERE name  = '" . $MAGNUS->sip_account . "' LIMIT 1";
+            $modelSipaccount = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+            if (!isset($modelSipaccount->name)) {
                 $MAGNUS->sip_account = $MAGNUS->CallerID;
             }
+        }
+
+        if ($this->terminatecauseid == 1) {
 
             $fields = "uniqueid,id_user,calledstation,id_plan,callerid,src,
                         starttime,sessiontime,real_sessiontime, terminatecauseid,sessionbill,

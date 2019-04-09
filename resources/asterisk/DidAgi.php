@@ -264,7 +264,7 @@ class DidAgi
                         $agi->stream_file('prepaid-dest-unreachable', '#');
                         continue;
                     }
-
+                    $MAGNUS->sip_account = $MAGNUS->modelSip->name;
                     $agi->verbose('Call to user ' . $modelSip->name, 1);
 
                     $MAGNUS->extension = $MAGNUS->destination = $MAGNUS->dnid = $modelSip->name;

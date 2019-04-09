@@ -198,12 +198,12 @@ class IvrAgi
                     }
                     $dialparams = implode(',', $dialparams);
 
-                    $dialstr = 'SIP/' . $modelSip->name . $dialparams;
+                    $dialstr = 'SIP/' . $modelSip->name;
                     $agi->verbose($dialstr, 25);
                     $MAGNUS->sip_account = $modelSip->name;
                     $MAGNUS->startRecordCall($agi);
                     $agi->set_variable("CALLERID(all)", $MAGNUS->CallerID);
-                    $MAGNUS->run_dial($agi, $dialstr);
+                    $MAGNUS->run_dial($agi, $dialstr, $dialparams);
 
                     $dialstatus      = $agi->get_variable("DIALSTATUS");
                     $dialstatus      = $dialstatus['data'];

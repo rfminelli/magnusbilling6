@@ -583,7 +583,7 @@ class Magnus
         return $prompt;
     }
 
-    public function run_dial($agi, $dialstr, $dialparams, $trunk_directmedia = 'no', $timeout = 3600, $max_long = 2147483647)
+    public function run_dial($agi, $dialstr, $dialparams = "", $trunk_directmedia = 'no', $timeout = 3600, $max_long = 2147483647)
     {
         $dialparams = str_replace("%timeout%", min($timeout * 1000, $max_long), $dialparams);
         $dialparams = str_replace("%timeoutsec%", min($timeout, $max_long), $dialparams);
