@@ -232,6 +232,16 @@ class CallChartCommand extends ConsoleCommand
                         continue;
                     }
 
+                    $modelDid = Did::model()->find('did =:key', array(':key' => $ndiscado));
+                    if (isset($modelDid->id)) {
+                        $didChannel = AsteriskAccess::getCoreShowChannel($channel);
+                        // is a DID
+                        if (isset($didChannel['DIALEDPEERNUMBER'])) {
+                            $sip_account = $didChannel['DIALEDPEERNUMBER'];
+                        }
+
+                    }
+
                     $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$sip_account', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelUserCallShop > 0) {
