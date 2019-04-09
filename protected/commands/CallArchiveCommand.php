@@ -34,7 +34,7 @@ class CallArchiveCommand extends ConsoleCommand
             $sql    = "SELECT count(*) AS count FROM $table WHERE $condition ";
             $result = Yii::app()->db->createCommand($sql)->queryAll();
 
-            $loop = number_format($result[0]['count'] / 10000, 0);
+            $loop = intval($result[0]['count'] / 10000);
 
             if ($table == 'pkg_cdr') {
                 $func_fields = "id_user, id_plan, id_prefix, id_trunk, uniqueid, starttime, sessiontime, calledstation, sessionbill, sipiax, src, buycost, real_sessiontime, terminatecauseid, agent_bill";
