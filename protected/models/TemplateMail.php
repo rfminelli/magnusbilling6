@@ -53,10 +53,20 @@ class TemplateMail extends Model
     public function rules()
     {
         return array(
+            array('id_user', 'numerical', 'integerOnly' => true),
             array('mailtype', 'length', 'max' => 50),
             array('fromname, fromemail, language', 'length', 'max' => 70),
             array('subject', 'length', 'max' => 130),
             array('messagehtml', 'length', 'max' => 3000),
+        );
+    }
+    /**
+     * @return array regras de relacionamento.
+     */
+    public function relations()
+    {
+        return array(
+            'idUser' => array(self::BELONGS_TO, 'User', 'id_user'),
         );
     }
 }

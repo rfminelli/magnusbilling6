@@ -60,6 +60,19 @@ class SmtpsController extends Controller
         parent::actionRead($asJson = true, $condition = null);
     }
 
+    public function extraFilterCustomAgent($filter)
+    {
+        //se é agente filtrar pelo user.id_user
+
+        $this->relationFilter['idUser'] = array(
+            'condition' => "idUser.id LIKE :agfby",
+        );
+
+        $this->paramsFilter[':agfby'] = Yii::app()->session['id_user'];
+
+        return $filter;
+    }
+
     public function beforeSave($values)
     {
         if ($this->isNewRecord) {
