@@ -54,7 +54,7 @@ class CallOnLine extends Model
     {
         return array(
             array('id_user', 'numerical', 'integerOnly' => true),
-            array('canal, tronco, from_ip', 'length', 'max' => 50),
+            array('canal, tronco, from_ip, sip_account', 'length', 'max' => 50),
             array('ndiscado, status, duration', 'length', 'max' => 16),
             array('codec, reinvite', 'length', 'max' => 5),
         );
