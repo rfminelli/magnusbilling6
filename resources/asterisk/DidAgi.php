@@ -307,10 +307,12 @@ class DidAgi
                     $agi->verbose("DIAL $dialstr", 6);
                     $myres = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);
 
-                    $answeredtime = $agi->get_variable("ANSWEREDTIME");
-                    $answeredtime = $answeredtime['data'];
-                    $dialstatus   = $agi->get_variable("DIALSTATUS");
-                    $dialstatus   = $dialstatus['data'];
+                    $sipaccount          = $agi->get_variable("DIALEDPEERNUMBER");
+                    $MAGNUS->sip_account = $sipaccount['data'];
+                    $answeredtime        = $agi->get_variable("ANSWEREDTIME");
+                    $answeredtime        = $answeredtime['data'];
+                    $dialstatus          = $agi->get_variable("DIALSTATUS");
+                    $dialstatus          = $dialstatus['data'];
 
                     $MAGNUS->stopRecordCall($agi);
 
