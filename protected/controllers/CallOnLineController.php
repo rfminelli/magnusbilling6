@@ -56,8 +56,9 @@ class CallOnLineController extends Controller
 
     public function actionGetChannelDetails()
     {
-        $model   = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
-        $channel = AsteriskAccess::getCoreShowChannel($model->canal);
+        $model = $this->abstractModel->find('uniqueid = :key', array('key' => $_POST['id']));
+
+        $channel = AsteriskAccess::getCoreShowChannel($model->canal, null, $model->server);
 
         $sipcallid = explode("\n", $channel['SIPCALLID']['data']);
 

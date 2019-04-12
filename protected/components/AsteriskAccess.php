@@ -451,24 +451,34 @@ class AsteriskAccess
         return $channels;
     }
 
-    public static function getCoreShowChannel($channel, $agi = null)
+    public static function getCoreShowChannel($channel, $agi = null, $server = null)
     {
 
-        $sql = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
-        if (isset($agi->engine)) {
-            $modelServers = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        if ($server == null) {
+            $sql = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+            if (isset($agi->engine)) {
+                $modelServers = $agi->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+            }
+
+            array_push($modelServers, array(
+                'host'     => 'localhost',
+                'username' => 'magnus',
+                'password' => 'magnussolution',
+            ));
         } else {
-            $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+            $modelServers = array();
+            array_push($modelServers, array(
+                'host'     => $server,
+                'username' => 'magnus',
+                'password' => 'magnussolution',
+            ));
+
         }
 
-        array_push($modelServers, array(
-            'host'     => 'localhost',
-            'username' => 'magnus',
-            'password' => 'magnussolution',
-        ));
         $channels = array();
         foreach ($modelServers as $key => $server) {
-
             $data = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->coreShowChannel($channel);
             if (!isset($data['data']) || strlen($data['data']) < 10 || preg_match("/is not a known channe/", $data['data'])) {
                 continue;

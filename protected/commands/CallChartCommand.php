@@ -108,6 +108,11 @@ class CallChartCommand extends ConsoleCommand
                             $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
                             if (!count($modelSip)) {
                                 $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
+                                if (!count($modelSip)) {
+                                    //check if is via IP from proxy
+                                    $callProxy = AsteriskAccess::getCoreShowChannel($channel, null, $call['server']);
+                                    $modelSip  = Sip::model()->find('host = :key', array(':key' => $callProxy['X-AUTH-IP']));
+                                }
                             }
 
                             if (count($modelSip)) {
@@ -237,12 +242,12 @@ class CallChartCommand extends ConsoleCommand
                         $didChannel = AsteriskAccess::getCoreShowChannel($channel);
                         // is a DID
                         if (isset($didChannel['DIALEDPEERNUMBER'])) {
-                            $sip_account = $didChannel['DIALEDPEERNUMBER'];
+                            $originate = $didChannel['DIALEDPEERNUMBER'];
                         }
 
                     }
 
-                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$sip_account', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelUserCallShop > 0) {
                         if (in_array($modelSip->id_user, $callShopIds)) {
