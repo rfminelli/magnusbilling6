@@ -66,7 +66,7 @@ class SipController extends Controller
     public function beforeSave($values)
     {
 
-        if (isset($values['alias'])) {
+        if (isset($values['alias']) && strlen($values['alias'])) {
             $modelSip = Sip::model()->find('alias = :key AND id_user = (SELECT id_user FROM pkg_sip WHERE id = :key1)', array(':key' => $values['alias'], ':key1' => $values['id']));
             if (isset($modelSip->id)) {
                 echo json_encode(array(
@@ -219,12 +219,12 @@ class SipController extends Controller
                 }
             } elseif ($type == 'save') {
                 if ($this->isNewRecord) {
-                    $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode) VALUES
-                            ('$values->defaultuser','$remoteProxyIP','" . md5($values->defaultuser . ':' . $remoteProxyIP . ':' . $values->secret) . "','$values->accountcode')";
+                    $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode,trace) VALUES
+                            ('$values->defaultuser','$remoteProxyIP','" . md5($values->defaultuser . ':' . $remoteProxyIP . ':' . $values->secret) . "','$values->accountcode',$values->trace)";
                     $con->createCommand($sql)->execute();
                 } else {
                     $sql = "UPDATE $dbname.$table SET ha1 = '" . md5($values->defaultuser . ':' . $remoteProxyIP . ':' . $values->secret) . "',
-                            username = '$values->defaultuser' WHERE username = '$values->defaultuser'";
+                            username = '$values->defaultuser', trace = $values->trace WHERE username = '$values->defaultuser'";
                     $con->createCommand($sql)->execute();
                 }
             }

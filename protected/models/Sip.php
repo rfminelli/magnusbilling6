@@ -62,7 +62,7 @@ class Sip extends Model
     {
         return array(
             array('id_user', 'required'),
-            array('id_user, calllimit, ringfalse, record_call, voicemail,dial_timeout', 'numerical', 'integerOnly' => true),
+            array('id_user, calllimit, ringfalse, record_call, voicemail,dial_timeout,trace', 'numerical', 'integerOnly' => true),
             array('name, callerid, context, fromuser, fromdomain, md5secret, secret, fullcontact', 'length', 'max' => 80),
             array('regexten, insecure, regserver, vmexten, callingpres, mohsuggest, allowtransfer', 'length', 'max' => 20),
             array('amaflags, dtmfmode, qualify', 'length', 'max' => 7),
