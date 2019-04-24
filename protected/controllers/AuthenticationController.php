@@ -404,6 +404,7 @@ class AuthenticationController extends Controller
             'showGoogleCode'           => $showGoogleCode,
             'logo'                     => file_exists('resources/images/logo_custom.png') ? 'resources/images/logo_custom.png' : 'resources/images/logo.png',
             'show_filed_help'          => $this->config['global']['show_filed_help'],
+            'campaign_user_limit'      => $this->config['global']['campaign_user_limit'],
         ));
     }
 
