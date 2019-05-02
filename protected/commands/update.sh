@@ -28,6 +28,15 @@ rm -rf master.tar.gz
 wget https://github.com/magnussolution/magnusbilling6/archive/master.tar.gz
 tar xzf master.tar.gz --strip-components=1
 
+if [[ $1 == 'php' ]]; then
+	yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm yum-utils
+	yum-config-manager --enable remi-php71
+	yum -y update php
+	chown -R asterisk:asterisk /var/lib/php/session/
+	systemctl restart httpd
+fi
+	
+
 ##update database
 php /var/www/html/mbilling/cron.php UpdateMysql
 
