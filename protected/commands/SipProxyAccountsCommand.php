@@ -42,8 +42,12 @@ class SipProxyAccountsCommand extends ConsoleCommand
             $sql = "TRUNCATE $table";
             $con->createCommand($sql)->execute();
 
+            $sql = "TRUNCATE address";
+            $con->createCommand($sql)->execute();
+
             if (preg_match("/\|/", $server->description)) {
-                $remoteProxyIP = trim(end(explode("|", $server->description)));
+                $remoteProxyIP = explode("|", $server->description);
+                $remoteProxyIP = end($remoteProxyIP);
                 if (!filter_var($remoteProxyIP, FILTER_VALIDATE_IP)) {
                     $remoteProxyIP = $hostname;
                 }
@@ -53,12 +57,30 @@ class SipProxyAccountsCommand extends ConsoleCommand
 
             foreach ($modelSip as $key => $sip) {
 
-                $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode,trace) VALUES ('" . $sip->defaultuser . "', '$remoteProxyIP','" . md5($sip->defaultuser . ':' . $remoteProxyIP . ':' . $sip->secret) . "', '" . $sip->accountcode . "', '" . $sip->trace . "')";
+                if ($sip->host == 'dynamic') {
+
+                    $sql = "INSERT INTO $dbname.$table (username,domain,ha1,accountcode,trace) VALUES ('" . $sip->defaultuser . "', '$remoteProxyIP','" . md5($sip->defaultuser . ':' . $remoteProxyIP . ':' . $sip->secret) . "', '" . $sip->accountcode . "', '" . $sip->trace . "')";
+                    try {
+                        $con->createCommand($sql)->execute();
+                    } catch (Exception $e) {
+                        //
+                    }
+                } else {
+                    $sql = "INSERT INTO $dbname.address (grp,ip,port,context_info) VALUES ('0', '$sip->host','0', '" . $sip->accountcode . '|' . $sip->name . "')";
+                    try {
+                        $con->createCommand($sql)->execute();
+                    } catch (Exception $e) {
+                        //
+                    }
+                }
+
+                $sql = "INSERT INTO $dbname.domain (domain) VALUES ('" . $remoteProxyIP . "')";
                 try {
                     $con->createCommand($sql)->execute();
                 } catch (Exception $e) {
                     //
                 }
+
             }
 
         }

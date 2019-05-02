@@ -32,7 +32,6 @@ class CallChartCommand extends ConsoleCommand
         }
 
         for ($i = 0; $i < 12; $i++) {
-            $success = CallOnLine::model()->deleteAll();
 
             try {
                 $calls = AsteriskAccess::getCoreShowChannels();
@@ -80,12 +79,16 @@ class CallChartCommand extends ConsoleCommand
                     $bridgeChannel = $channel[12];
                     $ndiscado      = $call[2];
                     $cdr           = $call[11];
+                    $peername      = $call[9];
                     $originate     = explode("/", substr($channel, 0, strrpos($channel, "-")));
                     $originate     = $originate[1];
+
                     if ($call[5] == 'Dial' || $call[5] == 'Mbilling') {
                         if (isset($_GET['log'])) {
                             echo '156 ' . $call[5];
                         }
+
+                        print_r($call);
 
                         if ($call[8] == 'MC') {
                             //torpedo
@@ -107,7 +110,7 @@ class CallChartCommand extends ConsoleCommand
 
                             $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
                             if (!count($modelSip)) {
-                                $modelSip = Sip::model()->find('name = :key', array(':key' => $originate));
+                                $modelSip = Sip::model()->find('name = :key', array(':key' => $peername));
                                 if (!count($modelSip)) {
                                     //check if is via IP from proxy
                                     $callProxy = AsteriskAccess::getCoreShowChannel($channel, null, $call['server']);
@@ -129,6 +132,8 @@ class CallChartCommand extends ConsoleCommand
                                 continue;
                             } elseif ($userType == 'User') {
                                 $trunk = isset($call[6]) ? $call[6] : 0;
+
+                                print_r($trunk);
                                 if (preg_match("/\&/", $trunk)) {
                                     $trunk = preg_split("/\&/", $trunk);
                                     $trunk = explode("/", $trunk[0]);
@@ -242,12 +247,12 @@ class CallChartCommand extends ConsoleCommand
                         $didChannel = AsteriskAccess::getCoreShowChannel($channel);
                         // is a DID
                         if (isset($didChannel['DIALEDPEERNUMBER'])) {
-                            $originate = $didChannel['DIALEDPEERNUMBER'];
+                            $peername = $didChannel['DIALEDPEERNUMBER'];
                         }
 
                     }
 
-                    $sql[] = "(NULL, '$uniqueid', '$originate', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$uniqueid', '$peername', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelUserCallShop > 0) {
                         if (in_array($modelSip->id_user, $callShopIds)) {
@@ -276,8 +281,9 @@ class CallChartCommand extends ConsoleCommand
                     }
                 }
 
-                if (count($sql) > 0) {
+                $success = CallOnLine::model()->deleteAll();
 
+                if (count($sql) > 0) {
                     $result = CallOnLine::model()->insertCalls($sql);
                     if ($this->debug > 1) {
                         print_r($result);

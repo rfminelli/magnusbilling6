@@ -131,7 +131,7 @@ class BaseController extends CController
             }
         }
 
-        $this->modelName  = get_class($this->abstractModel);
+        $this->modelName  = isset($this->abstractModel) ? get_class($this->abstractModel) : '';
         $this->homeUrl    = Yii::app()->getHomeUrl();
         $this->actionName = $this->getCurrentAction();
 
@@ -839,18 +839,14 @@ class BaseController extends CController
         $this->applyFilterToLimitedAdmin();
         $this->showAdminLog();
 
-        $this->magnusFilesDirectory = '/var/www/tmpmagnus/';
-        $nameFileCsv                = $this->nameFileReport . time();
-        $pathCsv                    = $this->magnusFilesDirectory . $nameFileCsv . '.csv';
-
+        $nameFileCsv = $this->nameFileReport . time();
         $this->convertRelationFilter();
         $header = '';
         foreach ($columns as $key => $value) {
             $header .= '"' . ($value['header']) . '",';
         }
 
-        $sql = "SELECT " . substr($header, 0, -1) . " UNION ALL SELECT " . $this->getColumnsFromReport($columns) . " INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\n'
-                FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
+        $sql = "SELECT " . substr($header, 0, -1) . " UNION ALL SELECT " . $this->getColumnsFromReport($columns) . " FROM " . $this->abstractModel->tableName() . " t $this->join WHERE $this->filter";
 
         $command = Yii::app()->db->createCommand($sql);
         if (count($this->paramsFilter)) {
@@ -860,17 +856,23 @@ class BaseController extends CController
 
         }
 
-        $command->execute();
-        header('Content-type: application/csv; charset=utf-8');
-        header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
-        header('Content-Transfer-Encoding: binary');
+        //create a file pointer
+        $f = fopen('php://memory', 'w');
 
-        header('Accept-Ranges: bytes');
-        ob_clean();
-        flush();
-        if (readfile($pathCsv)) {
-            unlink($pathCsv);
+        foreach ($command->queryAll() as $key => $fields) {
+            $fieldsCsv = array();
+            foreach ($fields as $key => $value) {
+                array_push($fieldsCsv, $value);
+            }
+            fputcsv($f, $fieldsCsv, ';');
         }
+
+        fseek($f, 0);
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $this->modelName . '_' . date('Y-m-d') . '.csv"');
+
+        fpassthru($f);
     }
 
     public function convertRelationFilter()
