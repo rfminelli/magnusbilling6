@@ -1365,6 +1365,56 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.5.4') {
+
+            $sql = "
+           ALTER TABLE `pkg_user`
+           	CHANGE `firstusedate` `firstusedate` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
+            CHANGE `expirationdate` `expirationdate` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
+            CHANGE `lastuse` `lastuse` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
+            CHANGE `last_login` `last_login` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01'
+
+            ;";
+            $this->executeDB($sql);
+
+            $version = '6.5.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
+        if ($version == '6.5.5') {
+
+            $sql = " DELETE FROM pkg_configuration WHERE config_key = 'summary_per_agent_day';
+            	DELETE FROM pkg_configuration WHERE config_key = 'summary_per_user_days';
+            	DELETE FROM pkg_configuration WHERE config_key = 'cache';
+            	DELETE FROM pkg_configuration WHERE config_key = 'play_audio';
+            	DELETE FROM pkg_configuration WHERE config_key = 'purchase_amount';
+            	UPDATE pkg_configuration SET status = 0 WHERE config_key LIKE 'intra-inter%';
+            	UPDATE pkg_configuration SET status = 0 WHERE config_key LIKE 'log';
+            	UPDATE pkg_configuration SET status = 0 WHERE config_key LIKE 'asterisk_version';
+
+            	;";
+            $this->executeDB($sql);
+
+            $sql    = "SELECT * FROM pkg_configuration WHERE config_key = 'BDService_username'";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+            if ($result[0]['config_value'] == '') {
+                $sql = "UPDATE pkg_configuration SET status = 0 WHERE config_key LIKE 'BDService%';";
+                $this->executeDB($sql);
+            }
+
+            $sql    = "SELECT * FROM pkg_configuration WHERE config_key = 'fm_transfer_to_username'";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+            if ($result[0]['config_value'] == '') {
+                $sql = "UPDATE pkg_configuration SET status = 0 WHERE config_key LIKE 'fm_transfer_%';";
+                $this->executeDB($sql);
+            }
+
+            $version = '6.5.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
