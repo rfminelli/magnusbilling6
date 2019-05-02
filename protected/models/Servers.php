@@ -60,7 +60,7 @@ class Servers extends Model
             array('host', 'length', 'max' => 100),
             array('description', 'length', 'max' => 500),
             array('password, username', 'length', 'max' => 50),
-            array('type, port', 'length', 'max' => 20),
+            array('type, port, sip_port', 'length', 'max' => 20),
             array('password', 'checkpassword'),
         );
     }

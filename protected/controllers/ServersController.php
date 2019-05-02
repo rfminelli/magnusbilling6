@@ -62,7 +62,7 @@ class ServersController extends Controller
                         AND status = 1 AND weight > 0");
 
             foreach ($modelServerAS as $key => $server) {
-                $sql = "INSERT INTO $dbname.$table (setid,destination,weight,description) VALUES ('1','sip:" . $server->host . ":5060','" . $server->weight . "','" . $server->description . "')";
+                $sql = "INSERT INTO $dbname.$table (setid,destination,weight,description) VALUES ('1','sip:" . $server->host . ":" . $server->sip_port . "','" . $server->weight . "','" . $server->description . "')";
                 $con->createCommand($sql)->execute();
 
             }

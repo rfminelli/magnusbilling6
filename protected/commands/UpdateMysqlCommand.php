@@ -1365,23 +1365,6 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
-        if ($version == '6.5.4') {
-
-            $sql = "
-           ALTER TABLE `pkg_user`
-           	CHANGE `firstusedate` `firstusedate` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
-            CHANGE `expirationdate` `expirationdate` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
-            CHANGE `lastuse` `lastuse` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
-            CHANGE `last_login` `last_login` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01'
-
-            ;";
-            $this->executeDB($sql);
-
-            $version = '6.5.5';
-            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
-            Yii::app()->db->createCommand($sql)->execute();
-        }
-
         if ($version == '6.5.5') {
 
             $sql = " DELETE FROM pkg_configuration WHERE config_key = 'summary_per_agent_day';
@@ -1410,7 +1393,10 @@ class UpdateMysqlCommand extends ConsoleCommand
                 $this->executeDB($sql);
             }
 
-            $version = '6.5.5';
+            $sql = " ALTER TABLE  `pkg_servers` ADD  `sip_port` INT( 7 ) NOT NULL DEFAULT  '5060' AFTER  `port` ;";
+            $this->executeDB($sql);
+
+            $version = '6.5.6';
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
