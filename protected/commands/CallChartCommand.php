@@ -281,7 +281,7 @@ class CallChartCommand extends ConsoleCommand
                     }
                 }
 
-                $success = CallOnLine::model()->deleteAll();
+                CallOnLine::model()->deleteAll();
 
                 if (count($sql) > 0) {
                     $result = CallOnLine::model()->insertCalls($sql);
@@ -289,11 +289,10 @@ class CallChartCommand extends ConsoleCommand
                         print_r($result);
                     }
                 }
-
-                sleep(4);
             } else {
-                sleep(1);
+                CallOnLine::model()->deleteAll();
             }
+            sleep(4);
 
         }
 

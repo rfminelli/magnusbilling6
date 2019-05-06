@@ -76,16 +76,26 @@ class AsteriskAccess
         return $this->asmanager->Command("moh reload");
     }
 
-    public function hangupRequest($channel)
+    public function hangupRequest($channel, $server = null)
     {
-        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
-        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+        if ($server == null) {
+            $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+            $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
 
-        array_push($modelServers, array(
-            'host'     => 'localhost',
-            'username' => 'magnus',
-            'password' => 'magnussolution',
-        ));
+            array_push($modelServers, array(
+                'host'     => 'localhost',
+                'username' => 'magnus',
+                'password' => 'magnussolution',
+            ));
+        } else {
+            $modelServers = array();
+            array_push($modelServers, array(
+                'host'     => $server,
+                'username' => 'magnus',
+                'password' => 'magnussolution',
+            ));
+        }
+
         $channels = array();
         foreach ($modelServers as $key => $server) {
             AsteriskAccess::instance($server['host'], $server['username'], $server['password']);
