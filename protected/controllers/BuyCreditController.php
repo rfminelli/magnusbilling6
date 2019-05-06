@@ -17,7 +17,7 @@ class BuyCreditController extends Controller
 
             $modelSip = $this->remoteLogin($user, $pass);
 
-            if (!count($modelSip)) {
+            if (!is_array($modelSip) || !count($modelSip)) {
                 echo 'User or password is invalid';
                 exit;
             }
@@ -150,7 +150,7 @@ class BuyCreditController extends Controller
 
         }
 
-        if (!count($modelServicesUse)) {
+        if (!is_array($modelServicesUse) || !count($modelServicesUse)) {
             $this->render('payservicelink', array(
                 'model'   => $model,
                 'message' => 'Your selection not have any service pending.',

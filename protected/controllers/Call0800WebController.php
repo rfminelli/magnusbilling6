@@ -102,7 +102,7 @@ class Call0800WebController extends Controller
 
                 $modelSip = $this->remoteLogin($user, $pass);
 
-                if (!count($modelSip)) {
+                if (!is_array($modelSip) || !count($modelSip)) {
                     echo 'User or password is invalid';
                     exit;
                 }
@@ -143,9 +143,8 @@ class Call0800WebController extends Controller
                 $SearchTariff = new SearchTariff();
                 $callTrunk    = $SearchTariff->find($yournumber, $modelSip->idUser->id_plan, $modelSip->idUser->id);
 
-                if (!count($callTrunk)) {
+                if (!is_array($callTrunk) || !count($callTrunk)) {
                     echo Yii::t('yii', 'Prefix not found to you number');
-
                     exit;
                 }
 
@@ -153,7 +152,7 @@ class Call0800WebController extends Controller
 
                 $callTrunkDestination = $SearchTariff->find($destination, $modelSip->idUser->id_plan, $modelSip->idUser->id);
 
-                if (count($callTrunkDestination) == 0) {
+                if (!is_array($callTrunkDestination) || count($callTrunkDestination) == 0) {
                     echo $sql;
                     echo Yii::t('yii', 'Prefix not found to destination');
 

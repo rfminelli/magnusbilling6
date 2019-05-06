@@ -73,15 +73,14 @@ class AuthenticationController extends Controller
             $mail->send();
         }
 
-        if (!count($modelUser)) {
+        if (!isset($modelUser->id)) {
             Yii::app()->session['logged'] = false;
             echo json_encode(array(
                 'success' => false,
                 'msg'     => 'Username or password is wrong',
             ));
             $nameMsg = $this->nameMsg;
-
-            $info = 'Username or password is wrong - User ' . $user . ' from IP - ' . $_SERVER['REMOTE_ADDR'];
+            $info    = 'Username or password is wrong - User ' . $user . ' from IP - ' . $_SERVER['REMOTE_ADDR'];
             Yii::log($info, 'error');
             MagnusLog::insertLOG(1, $info);
 
@@ -293,7 +292,7 @@ class AuthenticationController extends Controller
             $this->mountMenu();
             $modelGroupUserGroup = GroupUserGroup::model()->find('id_group_user = :key',
                 array(':key' => Yii::app()->session['id_group']));
-            Yii::app()->session['adminLimitUsers']      = count($modelGroupUserGroup);
+            Yii::app()->session['adminLimitUsers']      = is_array($modelGroupUserGroup) ? count($modelGroupUserGroup) : [];
             Yii::app()->session['licence']              = $this->config['global']['licence'];
             Yii::app()->session['email']                = $this->config['global']['admin_email'];
             Yii::app()->session['currency']             = $this->config['global']['base_currency'];
@@ -454,7 +453,7 @@ class AuthenticationController extends Controller
                 ":currentPassword" => $currentPassword,
             ));
 
-        if (count($moduleUser)) {
+        if (is_array($modelUser) && count($moduleUser)) {
             try
             {
                 $moduleUser->password = $newPassword;
@@ -526,10 +525,10 @@ class AuthenticationController extends Controller
         if (filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
 
             $modelUser = User::model()->findAll('email =:key', array(':key' => $_POST['email']));
-            if (count($modelUser) > 1) {
+            if (is_array($modelUser) && count($modelUser) > 1) {
                 $success = false;
                 $msg     = "Email in use more than 1 account, contact administrator";
-            } else if (count($modelUser)) {
+            } else if (is_array($modelUser) && count($modelUser)) {
 
                 if ($modelUser[0]->idGroup->idUserType->id == 1) {
 
@@ -567,7 +566,7 @@ class AuthenticationController extends Controller
         if (isset($_GET['key']) && isset($_GET['id'])) {
 
             $modelUser = User::model()->findByPk((int) $_GET['id']);
-            if (count($modelUser)) {
+            if (is_array($modelUser) && count($modelUser)) {
                 $key = sha1($modelUser->id . $modelUser->username . $modelUser->password);
                 if ($key == $_GET['key']) {
                     $modelUser->credit_notification = '-1';
@@ -589,7 +588,7 @@ class AuthenticationController extends Controller
             'limit'     => 3,
         ));
 
-        if (count($modelLogUsers) < 3) {
+        if (is_array($modelUser) && count($modelLogUsers) < 3) {
             return;
         }
 

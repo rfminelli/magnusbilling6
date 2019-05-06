@@ -29,7 +29,11 @@ class SummaryTablesCdrCommand extends CConsoleCommand
     {
         if (isset($args[0])) {
             try {
-                $this->$args[0]();
+                if ($args[0] == 'processCdrToday') {
+                    $this->processCdrToday();
+                } elseif ($args[0] == 'processCdrLast30Days') {
+                    $this->processCdrLast30Days();
+                }
             } catch (Exception $e) {
                 $class_methods = get_class_methods('SummaryTablesCdrCommand');
                 echo "Availables comands";

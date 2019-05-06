@@ -69,7 +69,7 @@ class Servers extends Model
     {
 
         $modelUser = User::model()->find("password = :password", array(':password' => $this->password));
-        if (count($modelUser)) {
+        if (is_array($modelUser) && count($modelUser)) {
             $this->addError($attribute, Yii::t('yii', 'This password in in use'));
         }
     }

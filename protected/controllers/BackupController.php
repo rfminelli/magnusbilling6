@@ -35,6 +35,10 @@ class BackupController extends Controller
         $start  = $_GET['start'];
         $limit  = $_GET['limit'];
 
+        if (!is_array($result)) {
+            return;
+        }
+
         for ($i = 0; $i < count($result); $i++) {
 
             if ($i < $start) {

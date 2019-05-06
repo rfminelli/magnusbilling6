@@ -117,7 +117,7 @@ class CallAppController extends Controller
     {
         $modelUser = User::model()->find("username = :username", array(':username' => $this->user));
 
-        if (!count($modelUser)) {
+        if (!is_array($modelUser) || !count($modelUser)) {
             $error_msg = Yii::t('yii', 'Error : User no Found!');
             echo $error_msg;
             exit;
@@ -129,7 +129,7 @@ class CallAppController extends Controller
             array(':id_user' => $id_user)
         );
 
-        if (count($modelCampaign)) {
+        if (is_array($modelUser) && count($modelCampaign)) {
 
             $modelCampaignPhonebook = CampaignPhonebook::model()->find("id_campaign = :id_campaign",
                 array(':id_campaign' => $modelCampaign->id)
