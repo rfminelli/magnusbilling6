@@ -28,6 +28,8 @@ class Report extends FPDF
     public $subTitle;
     public $subTitle2;
     public $subTitle3;
+    public $details;
+    public $detailstitle;
     public $logo           = '';
     public $strDate        = 'Data: ';
     public $strUser        = 'Usuário: ';
@@ -118,6 +120,11 @@ class Report extends FPDF
                 $this->SetFont($this->fontFamily, 'B', $this->fontSize);
                 $this->Cell(0, 6, utf8_decode($this->subTitle3), 0, 0, 'C');
             }
+            if (isset($this->detailstitle)) {
+                $this->Ln(15);
+                $this->SetFont($this->fontFamily, 'B', $this->fontSize);
+                $this->Cell(0, 5, utf8_decode($this->detailstitle), 0, 0, 'C');
+            }
 
             $this->SetFont($this->fontFamily, '', $this->fontSize - 1);
             $this->SetY(11);
@@ -144,7 +151,15 @@ class Report extends FPDF
                 $this->Ln(3);
                 $this->Cell(0, 3, $this->zipcode, 0, 0, 'R');
             }
-            $this->Ln(20);
+
+            if (isset($this->details)) {
+                $this->Ln(35);
+                $this->MultiCell(0, 5, utf8_decode($this->details), 1);
+                $this->Ln(15);
+            } else {
+                $this->Ln(20);
+            }
+
         }
     }
 

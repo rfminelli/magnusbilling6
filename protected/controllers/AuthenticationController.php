@@ -588,7 +588,7 @@ class AuthenticationController extends Controller
             'limit'     => 3,
         ));
 
-        if (is_array($modelUser) && count($modelLogUsers) < 3) {
+        if (is_array($modelLogUsers) && count($modelLogUsers) < 3) {
             return;
         }
 

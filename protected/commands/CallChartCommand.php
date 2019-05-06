@@ -68,6 +68,8 @@ class CallChartCommand extends ConsoleCommand
                     ) {
                         AsteriskAccess::instance()->hangupRequest($channel);
                         continue;
+                    } elseif ($status == 'Ringing') {
+                        continue;
                     }
 
                     $account     = explode("-", $channel);
@@ -87,8 +89,6 @@ class CallChartCommand extends ConsoleCommand
                         if (isset($_GET['log'])) {
                             echo '156 ' . $call[5];
                         }
-
-                        print_r($call);
 
                         if ($call[8] == 'MC') {
                             //torpedo
@@ -110,7 +110,10 @@ class CallChartCommand extends ConsoleCommand
 
                             $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
                             if (!count($modelSip)) {
-                                $modelSip = Sip::model()->find('name = :key', array(':key' => $peername));
+                                $modelSip = Sip::model()->find('name = :key',
+                                    array(
+                                        ':key' => $originate,
+                                    ));
                                 if (!count($modelSip)) {
                                     //check if is via IP from proxy
                                     $callProxy = AsteriskAccess::getCoreShowChannel($channel, null, $call['server']);
@@ -133,7 +136,6 @@ class CallChartCommand extends ConsoleCommand
                             } elseif ($userType == 'User') {
                                 $trunk = isset($call[6]) ? $call[6] : 0;
 
-                                print_r($trunk);
                                 if (preg_match("/\&/", $trunk)) {
                                     $trunk = preg_split("/\&/", $trunk);
                                     $trunk = explode("/", $trunk[0]);
@@ -234,7 +236,6 @@ class CallChartCommand extends ConsoleCommand
                         if (isset($_GET['log'])) {
                             echo '295 ' . $call[5];
                         }
-
                         continue;
                     }
 
