@@ -604,8 +604,8 @@ class DidAgi
 
         /*recondeo call*/
         if ($MAGNUS->config["global"]['bloc_time_call'] == 1 && $this->sell_price > 0) {
-            $initblock    = $this->modelDid->initblock;
-            $billingblock = $this->modelDid->increment;
+            $initblock    = $this->modelDid->initblock > 0 ? $this->modelDid->initblock : 1;
+            $billingblock = $this->modelDid->increment > 0 ? $this->modelDid->increment : 1;
 
             if ($answeredtime > $initblock) {
                 $restominutos   = $answeredtime % $billingblock;

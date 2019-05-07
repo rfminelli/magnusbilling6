@@ -776,6 +776,7 @@ class Magnus
         if ($sessiontime < $initblock) {
             $sessiontime = $initblock;
         }
+        $billingblock = $billingblock > 0 ? $billingblock : 1;
 
         if ($sessiontime > $initblock) {
             $mod_sec = $sessiontime % $billingblock;

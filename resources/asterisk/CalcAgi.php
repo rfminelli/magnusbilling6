@@ -216,8 +216,8 @@ class CalcAgi
         $this->usedratecard    = $this->usedratecard < 0 ? 0 : $this->usedratecard;
         $K                     = $this->usedratecard;
         $buyrate               = $MAGNUS->round_precision(abs($this->tariffObj[$K]['buyrate']));
-        $buyrateinitblock      = $this->tariffObj[$K]['buyrateinitblock'];
-        $buyrateincrement      = $this->tariffObj[$K]['buyrateincrement'];
+        $buyrateinitblock      = $this->tariffObj[$K]['buyrateinitblock'] > 0 ? $this->tariffObj[$K]['buyrateinitblock'] : 1;
+        $buyrateincrement      = $this->tariffObj[$K]['buyrateincrement'] > 0 ? $this->tariffObj[$K]['buyrateincrement'] : 1;
         $rateinitial           = $MAGNUS->round_precision(abs($this->tariffObj[$K]['rateinitial']));
         $initblock             = $this->tariffObj[$K]['initblock'];
         $billingblock          = $this->tariffObj[$K]['billingblock'];
