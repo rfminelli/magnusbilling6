@@ -10,8 +10,10 @@
 
 <br/>
 <?php
-$modelUser = User::model()->findAll();
-$users     = CHtml::listData($modelUser, 'id', 'username');?>
+$modelUser = User::model()->findAll([
+    'order' => 'username ASC',
+]);
+$users = CHtml::listData($modelUser, 'id', 'username');?>
 <div class="field">
 	<?php echo $form->labelEx($model, Yii::t('yii', 'Select a user')) ?>
 	<div class="styled-select">
