@@ -239,7 +239,13 @@ class SipController extends Controller
             foreach ($this->sipShowPeers as $value) {
 
                 if (strtok($value['Name/username'], '/') == $attributes[$i]['name']) {
+
                     $attributes[$i]['lineStatus'] = $value['Status'];
+
+                    if (preg_match('/OK/', $value['Status'])) {
+                        $attributes[$i]['lineStatus'] .= ' ' . $value['server'];
+                        break;
+                    }
                 }
             }
 

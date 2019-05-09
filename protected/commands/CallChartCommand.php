@@ -110,10 +110,17 @@ class CallChartCommand extends ConsoleCommand
 
                             $modelSip = Sip::model()->find('techprefix = :key AND host != "dynamic" ', array(':key' => $tech));
                             if (!count($modelSip)) {
-                                $modelSip = Sip::model()->find('name = :key',
-                                    array(
-                                        ':key' => $originate,
-                                    ));
+                                if (preg_match('/^SIP\/sipproxy\-/', $channel)) {
+                                    $modelSip = Sip::model()->find('name = :key',
+                                        array(
+                                            ':key' => $peername,
+                                        ));
+                                } else {
+                                    $modelSip = Sip::model()->find('name = :key',
+                                        array(
+                                            ':key' => $originate,
+                                        ));
+                                }
                                 if (!count($modelSip)) {
                                     //check if is via IP from proxy
                                     $callProxy = AsteriskAccess::getCoreShowChannel($channel, null, $call['server']);

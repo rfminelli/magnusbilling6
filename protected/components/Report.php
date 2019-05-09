@@ -286,6 +286,10 @@ class Report extends FPDF
             'tinyint'          => 'boolean',
         );
 
+        if ($value == 'blank') {
+            return;
+        }
+
         $type = strpos($typeValue, '(') ? substr($typeValue, 0, strpos($typeValue, '(')) : $typeValue;
         $type = array_key_exists($type, $mapTypes) ? $mapTypes[$type] : $type;
 

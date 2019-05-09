@@ -367,8 +367,8 @@ class AsteriskAccess
                     $lenght                   = @$index[$key + 1] - $value;
                     @$element[$columns[$key]] = trim(isset($index[$key + 1]) ? substr($line, $startIndex, $lenght) : substr($line, $startIndex));
                 }
-                $result[] = $element;
-
+                $element['server'] = $server['host'];
+                $result[]          = $element;
             }
         }
         return $result;
