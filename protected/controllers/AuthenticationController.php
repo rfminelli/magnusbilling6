@@ -447,17 +447,17 @@ class AuthenticationController extends Controller
         $isClient        = Yii::app()->session['isClient'];
         $errors          = '';
 
-        $moduleUser = User::model()->find("id LIKE :id_user AND password LIKE :currentPassword",
+        $modelUser = User::model()->find("id LIKE :id_user AND password LIKE :currentPassword",
             array(
                 ":id_user"         => $id_user,
                 ":currentPassword" => $currentPassword,
             ));
 
-        if (is_array($modelUser) && count($moduleUser)) {
+        if (is_object($modelUser) && count($modelUser)) {
             try
             {
-                $moduleUser->password = $newPassword;
-                $passwordChanged      = $moduleUser->save();
+                $modelUser->password = $newPassword;
+                $passwordChanged     = $modelUser->save();
 
             } catch (Exception $e) {
                 $errors = $this->getErrorMySql($e);
