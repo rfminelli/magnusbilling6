@@ -58,14 +58,17 @@ class ServicesProcess
     {
         $modelServicesUse = ServicesUse::model()->findByPk((int) $id_services);
         if ($modelServicesUse->status == 1) {
-            $priceToreturn = ServicesProcess::checkStatus($modelServicesUse);
 
-            if ($priceToreturn > 0) {
-                //expired
-                //have days yet.
-                $modelUser                           = User::model()->findByPk((int) $modelServicesUse->id_user);
-                $modelServicesUse->idServices->price = $priceToreturn;
-                ServicesProcess::updateUser('release', $modelServicesUse);
+            if ($modelServices->idServices->return_credit == 1) {
+                $priceToreturn = ServicesProcess::checkStatus($modelServicesUse);
+
+                if ($priceToreturn > 0) {
+                    //expired
+                    //have days yet.
+                    $modelUser                           = User::model()->findByPk((int) $modelServicesUse->id_user);
+                    $modelServicesUse->idServices->price = $priceToreturn;
+                    ServicesProcess::updateUser('release', $modelServicesUse);
+                }
             }
 
             $modelServicesUse->releasedate = date('Y-m-d H:i:s');

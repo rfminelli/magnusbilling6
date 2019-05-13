@@ -1,4 +1,5 @@
 Locale.load({
+    'Return Credit': 'Retornar Credito',
     'Reprocess': 'Reprocessar',
     'Complete': 'Completo',
     'Not working': 'Fora do horário',

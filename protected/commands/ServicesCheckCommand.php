@@ -117,7 +117,9 @@ class ServicesCheckCommand extends ConsoleCommand
 
     public function checkIfUserHaveCredit($service)
     {
-        if (($service->idUser->credit + ($service->idUser->typepaid * $service->idUser->creditlimit)) >= $service->idServices->price) {
+        $userCredit = $service->idUser->typepaid == 0 ? $service->idUser->credit : $service->idUser->credit + $service->idUser->creditlimit;
+
+        if ($userCredit >= $service->idServices->price) {
             //venceu e tem credito
             echo " USER " . $service->idUser->username . " HAVE ENOUGH CREDIT TO PAY FOR THE SERVICE \n";
             ServicesProcess::payService($service);

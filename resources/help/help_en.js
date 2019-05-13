@@ -89,6 +89,7 @@ Help.load({
     'userrate.billingblock': 'increment block',
     //TRUNK
     'services.disk_space': 'Insert the space available to record in GB.',
+    'services.return_credit': 'Return credit to user if cancel before the expiry date.',
     'trunk.trunkcode': '',
     'trunk.user': 'Only use if authentication is via user and pass.',
     'trunk.secret': 'Only use if authentication is via user and pass.',
