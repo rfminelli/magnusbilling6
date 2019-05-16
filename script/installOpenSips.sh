@@ -122,7 +122,10 @@ systemctl restart opensips
 mysql -u root -p$(awk '{print $1}' /root/passwordMysql) opensips -e "ALTER TABLE subscriber ADD accountcode VARCHAR( 50 ) NOT NULL"
 mysql -u root -p$(awk '{print $1}' /root/passwordMysql) opensips -e "ALTER TABLE subscriber ADD trace TINYINT(1) NOT NULL DEFAULT '0'"
 
-echo "* * * * * /usr/sbin/opensipsctl fifo ds_reload" >> /var/spool/cron/root
+echo "
+* * * * * /usr/sbin/opensipsctl fifo ds_reload
+* * * * * /usr/sbin/opensipsctl address reload
+" >> /var/spool/cron/root
 
 
 cd /etc/opensips/
@@ -217,6 +220,15 @@ yum install -y fail2ban fail2ban-systemd
 systemctl enable fail2ban
 
 echo "
+[DEFAULT]
+ignoreip = 127.0.0.1
+bantime  = 600
+findtime  = 600
+maxretry = 3
+backend = auto
+usedns = warn
+
+
 [ssh-iptables]
 enabled  = true
 filter   = sshd
