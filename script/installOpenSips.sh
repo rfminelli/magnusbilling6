@@ -207,7 +207,6 @@ firewall-cmd --zone=public --add-port=22/tcp --permanent
 firewall-cmd --zone=public --add-port=5060/udp --permanent
 firewall-cmd --zone=public --add-port=35000-65535/udp --permanent
 firewall-cmd --zone=public --add-port=80/tcp --permanent
-firewall-cmd --zone=public --add-port=443/tcp --permanent
 firewall-cmd --zone=public --add-rich-rule="
   rule family=\"ipv4\"
   source address=\"$ipMbilling/32\"
@@ -394,6 +393,26 @@ chmod -R 7777 /tmp
 
 echo 500000 > /proc/sys/fs/file-max
 echo "fs.file-max=500000">>/etc/sysctl.conf
+
+echo '
+* soft nofile 500000
+* hard nofile 500000
+* soft core unlimited
+* hard core unlimited
+* soft data unlimited
+* hard data unlimited
+* soft fsize unlimited
+* hard fsize unlimited
+* soft memlock unlimited
+* hard memlock unlimited
+* soft cpu unlimited
+* hard cpu unlimited
+* soft nproc unlimited
+* hard nproc unlimited
+* soft locks unlimited
+* hard locks unlimited
+* soft sigpending unlimited
+* hard sigpending unlimited' >> /etc/security/limits.conf
 
 
 ulimit -c unlimited # The maximum size of core files created.
