@@ -17,7 +17,7 @@ class BuyCreditController extends Controller
 
             $modelSip = $this->remoteLogin($user, $pass);
 
-            if (!is_array($modelSip) || !count($modelSip)) {
+            if (!is_object($modelSip) || !count($modelSip)) {
                 echo 'User or password is invalid';
                 exit;
             }

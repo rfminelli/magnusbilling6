@@ -209,6 +209,10 @@ class AsteriskAccess
                     } elseif ($key == 'user') {
                         $line .= $key . '=' . $option . "\n";
                         $line .= 'username=' . $option . "\n";
+                    } elseif ($key == 'maxuse') {
+                        if ($option > 0) {
+                            $line .= 'call-limit=' . $option . "\n";
+                        }
                     } else {
                         $line .= $key . '=' . $option . "\n";
                     }

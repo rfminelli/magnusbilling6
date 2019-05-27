@@ -169,6 +169,7 @@ class IvrAgi
             else if ($modelIvr->{$optionName . $option} == '') {
                 $agi->verbose('NUMBER INVALID');
                 $agi->stream_file('prepaid-invalid-digits', '#');
+                $insertCDR = true;
                 continue;
             }
 

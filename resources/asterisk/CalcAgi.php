@@ -746,40 +746,34 @@ class CalcAgi
         }
 
         if ($this->tariffObj[$k]['status'] == 1) {
-            if (AsteriskAccess::groupTrunk($agi, $ipaddress, $maxuse)) {
-                $dialedpeername       = $agi->get_variable("SIPTRANSFER");
-                $this->dialedpeername = $dialedpeername['data'];
+            $dialedpeername       = $agi->get_variable("SIPTRANSFER");
+            $this->dialedpeername = $dialedpeername['data'];
 
-                if ($this->dialedpeername == 'yes') {
-                    $agi->execute("hangup request $this->channel");
-                    $MAGNUS->hangup($agi);
-                }
-                $sql = "UPDATE pkg_trunk SET  call_total = call_total + 1 WHERE id=" . $this->usedtrunk . " LIMIT 1";
-                $agi->exec($sql);
+            if ($this->dialedpeername == 'yes') {
+                $agi->execute("hangup request $this->channel");
+                $MAGNUS->hangup($agi);
+            }
+            $sql = "UPDATE pkg_trunk SET  call_total = call_total + 1 WHERE id=" . $this->usedtrunk . " LIMIT 1";
+            $agi->exec($sql);
 
-                $MAGNUS->startRecordCall($agi);
-                try {
-                    $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param']
-                        , $this->tariffObj[$k]['rc_directmedia'], $timeout);
-                } catch (Exception $e) {
-                    //
-                }
-                if ($MAGNUS->demo == true) {
-                    $answeredtime            = date('s');
-                    $this->real_answeredtime = $answeredtime;
-                    $dialstatus              = 'ANSWER';
-                    $this->dialstatus        = 'ANSWER';
-                } else {
-
-                    $answeredtime            = $agi->get_variable("ANSWEREDTIME");
-                    $this->real_answeredtime = $this->answeredtime = $answeredtime['data'];
-                    $dialstatus              = $agi->get_variable("DIALSTATUS");
-                    $this->dialstatus        = $dialstatus['data'];
-                }
+            $MAGNUS->startRecordCall($agi);
+            try {
+                $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param']
+                    , $this->tariffObj[$k]['rc_directmedia'], $timeout);
+            } catch (Exception $e) {
+                //
+            }
+            if ($MAGNUS->demo == true) {
+                $answeredtime            = date('s');
+                $this->real_answeredtime = $answeredtime;
+                $dialstatus              = 'ANSWER';
+                $this->dialstatus        = 'ANSWER';
             } else {
-                $agi->verbose('THE TRUNK ' . $ipaddress . ' CANNOT BE USED BECOUSE MAXIMUM NUMBER IS REACHED, SEND TO NEXT TRUNK');
-                $this->answeredtime = $answeredtime['data'] = 0;
-                $this->dialstatus   = 'CONGESTION';
+
+                $answeredtime            = $agi->get_variable("ANSWEREDTIME");
+                $this->real_answeredtime = $this->answeredtime = $answeredtime['data'];
+                $dialstatus              = $agi->get_variable("DIALSTATUS");
+                $this->dialstatus        = $dialstatus['data'];
             }
 
         }

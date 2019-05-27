@@ -127,7 +127,7 @@ class TrunkController extends Controller
         if ($_SERVER['HTTP_HOST'] == 'localhost') {
             return;
         }
-        $select = 'trunkcode, user, secret, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, fromdomain,fromuser, register_string,port,transport,encryption,sendrpid';
+        $select = 'trunkcode, user, secret, disallow, allow, directmedia, context, dtmfmode, insecure, nat, qualify, type, host, fromdomain,fromuser, register_string,port,transport,encryption,sendrpid,maxuse';
         $model  = Trunk::model()->findAll(
             array(
                 'select'    => $select,
