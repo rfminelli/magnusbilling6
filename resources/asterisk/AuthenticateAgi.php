@@ -233,50 +233,53 @@ class AuthenticateAgi
         if ($authentication != true) {
             $agi->verbose('try callingcard', 6);
 
-            for ($retries = 0; $retries < 3; $retries++) {
-                $agi->answer();
+            if ($MAGNUS->agiconfig['enable_callingcard'] == 1) {
 
-                if (($retries > 0) && (strlen($prompt) > 0)) {
-                    $agi->verbose($prompt, 3);
-                    $agi->stream_file($prompt, '#');
-                }
-                if ($res < 0) {
-                    $res = -1;
-                    break;
-                }
+                for ($retries = 0; $retries < 3; $retries++) {
+                    $agi->answer();
 
-                $res      = 0;
-                $res_dtmf = $agi->get_data('prepaid-enter-pin-number', 6000, 6);
+                    if (($retries > 0) && (strlen($prompt) > 0)) {
+                        $agi->verbose($prompt, 3);
+                        $agi->stream_file($prompt, '#');
+                    }
+                    if ($res < 0) {
+                        $res = -1;
+                        break;
+                    }
 
-                $agi->verbose('PIN callingcard ' . $res_dtmf["result"], 20);
+                    $res      = 0;
+                    $res_dtmf = $agi->get_data('prepaid-enter-pin-number', 6000, 6);
 
-                $pin = $res_dtmf["result"];
+                    $agi->verbose('PIN callingcard ' . $res_dtmf["result"], 20);
 
-                if (!isset($pin) || strlen($pin) == 0) {
-                    $prompt = "prepaid-no-card-entered";
-                    $agi->verbose('No user entered', 6);
-                    continue;
-                }
+                    $pin = $res_dtmf["result"];
 
-                if (strlen($pin) > 6 || strlen($pin) < 6) {
-                    $agi->verbose($prompt, 6);
-                    $prompt = "prepaid-invalid-digits";
-                    continue;
-                }
+                    if (!isset($pin) || strlen($pin) == 0) {
+                        $prompt = "prepaid-no-card-entered";
+                        $agi->verbose('No user entered', 6);
+                        continue;
+                    }
 
-                $authentication = AuthenticateAgi::pinAuthenticate($MAGNUS, $agi, $authentication, $pin);
+                    if (strlen($pin) > 6 || strlen($pin) < 6) {
+                        $agi->verbose($prompt, 6);
+                        $prompt = "prepaid-invalid-digits";
+                        continue;
+                    }
 
-                if ($authentication == true) {
-                    break;
-                } else {
-
-                    $authentication = AuthenticateAgi::voucherAuthenticate($MAGNUS, $agi, $authentication, $pin);
+                    $authentication = AuthenticateAgi::pinAuthenticate($MAGNUS, $agi, $authentication, $pin);
 
                     if ($authentication == true) {
                         break;
                     } else {
-                        $prompt = "prepaid-auth-fail";
-                        continue;
+
+                        $authentication = AuthenticateAgi::voucherAuthenticate($MAGNUS, $agi, $authentication, $pin);
+
+                        if ($authentication == true) {
+                            break;
+                        } else {
+                            $prompt = "prepaid-auth-fail";
+                            continue;
+                        }
                     }
                 }
             }

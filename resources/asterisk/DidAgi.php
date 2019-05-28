@@ -515,10 +515,16 @@ class DidAgi
     {
         $agi->verbose('parseDialStatus', 25);
         if ($dialstatus == "BUSY") {
-            $agi->stream_file('prepaid-isbusy', '#');
+            if ($this->play_audio == 1) {
+                $agi->stream_file('prepaid-isbusy', '#');
+            } else {
+                $agi->execute((busy), busy);
+            }
             return false;
         } elseif ($dialstatus == "NOANSWER") {
-            $agi->stream_file('prepaid-callfollowme', '#');
+            if ($this->play_audio == 1) {
+                $agi->stream_file('prepaid-callfollowme', '#');
+            }
             return false;
         } elseif ($dialstatus == "CANCEL") {
             return true;
@@ -528,7 +534,9 @@ class DidAgi
         } elseif (($dialstatus == "CHANUNAVAIL") || ($dialstatus == "CONGESTION")) {
             return false;
         } else {
-            $agi->stream_file('prepaid-callfollowme', '#');
+            if ($this->play_audio == 1) {
+                $agi->stream_file('prepaid-callfollowme', '#');
+            }
             return false;
         }
     }

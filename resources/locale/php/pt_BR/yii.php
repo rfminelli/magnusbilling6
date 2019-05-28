@@ -3,6 +3,8 @@ return array(
     /*new '' => '', */
 
     /*MENU CONFIGURATION*/
+    'config_title_enable_callingcard'                                                                                                                                                  => 'Ativar CallingCard',
+    'config_desc_enable_callingcard'                                                                                                                                                   => 'Ativar CallingCard. \n 0 - Desativa \n 1 - Ativa',
     'config_title_MixMonitor_format'                                                                                                                                                   => 'MixMonitor Format',
     'config_desc_MixMonitor_format'                                                                                                                                                    => 'Veja as extensões permitidas em http://www.voip-info.org/wiki/view/MixMonitor',
     'config_title_accept_terms_link'                                                                                                                                                   => 'Link termos do formulario de register',
@@ -32,7 +34,7 @@ return array(
     'config_title_bloc_time_call'                                                                                                                                                      => 'Arredondar tempo',
     'config_desc_bloc_time_call'                                                                                                                                                       => 'Arredonda o tempo da chamada respeitando a tarifa de venda.\n1: Sim\n0: Não\n',
     'config_title_callback-softphone'                                                                                                                                                  => 'Mostrar CallBack no Softphone',
-    'config_desc_callback-softphone'                                                                                                                                                   => 'Ativa o Callback no softphone Android 0 - Disable 1 - Enable',
+    'config_desc_callback-softphone'                                                                                                                                                   => 'Ativa o Callback no softphone Android 0 - Desativa 1 - Ativa',
     'config_title_callback_add_prefix'                                                                                                                                                 => 'Callback - Adicionar prefixo',
     'config_desc_callback_add_prefix'                                                                                                                                                  => 'Adicionar prefixo no CallerID quando a chamada for um callback',
     'config_title_callback_remove_prefix'                                                                                                                                              => 'Callback remover Prefixo',

@@ -3,6 +3,8 @@ return array(
     /*new '' => '', */
 
     /*MENU CONFIGURATION*/
+    'config_title_enable_callingcard'                                                                                                                                                  => 'Activar CallingCard',
+    'config_desc_enable_callingcard'                                                                                                                                                   => 'Activar CallingCard. \n 0 - Desactiva \n 1 - Activa',
     'config_title_MixMonitor_format'                                                                                                                                                   => 'MixMonitor Format',
     'config_desc_MixMonitor_format'                                                                                                                                                    => 'Veja as extensões permitidas em http://www.voip-info.org/wiki/view/MixMonitor',
     'config_title_accept_terms_link'                                                                                                                                                   => 'Link termos do formulario de register',

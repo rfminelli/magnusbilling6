@@ -2,6 +2,8 @@
 return array(
 
     /*MENU CONFIGURATION*/
+    'config_title_enable_callingcard'              => 'Enable CallingCard',
+    'config_desc_enable_callingcard'               => 'Enable CallingCard.\n 0 - Disable \n1 - Enable',
     'config_title_MixMonitor_format'               => 'MixMonitor Format',
     'config_desc_MixMonitor_format'                => 'Record audio extension. See the available extension in http://www.voip-info.org/wiki/view/MixMonitor',
     'config_title_accept_terms_link'               => 'Link to terms on Signup form',
