@@ -108,6 +108,11 @@ class AsteriskAccess
         return $this->asmanager->Command("sip reload");
     }
 
+    public function sipShowPeer($peer)
+    {
+        return $this->asmanager->Command("sip show peer " . $peer);
+    }
+
     public function sipShowPeers()
     {
         return $this->asmanager->Command("sip show peers");

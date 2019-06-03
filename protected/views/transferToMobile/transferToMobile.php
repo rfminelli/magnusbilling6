@@ -96,6 +96,19 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
 	    </div>
 
 
+<?php if (isset($_POST['TransferToMobile']['operator_name']) && ($_POST['TransferToMobile']['operator_name'] == 'SENELEC - Senegal' || $_POST['TransferToMobile']['operator_name'] == 'NAWEC - Gambia' || $_POST['TransferToMobile']['operator_name'] == 'EDM - Mali' || $_POST['TransferToMobile']['operator_name'] == 'EEDC - Nigeria')): ?>
+	<div class="field" id='metric'>
+<?php else: ?>
+	<div class="field" id='metric' style="display:none; border:0">
+<?php endif?>
+
+	<?php echo $form->labelEx($modelTransferToMobile, Yii::t('yii', 'Meter')) ?>
+	<?php echo $form->textField($modelTransferToMobile, 'metric', array('class' => 'input')) ?>
+	<?php echo $form->error($modelTransferToMobile, 'metric') ?>
+	<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'Meter') ?></p>
+</div>
+
+
 <div class="sp-page companies__content" >
       <div class="company__list" id='productList'>
       	<?php $id = 0;?>
@@ -121,7 +134,7 @@ $operators = CHtml::listData($modelSendCreditProducts, 'operator_name', 'operato
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', $buttonName), array(
     'class'   => 'button',
-    'onclick' => "button2(event)",
+    'onclick' => "return button2(event)",
     'id'      => 'secondButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
@@ -160,6 +173,15 @@ $this->endWidget();?>
 	}
 
 	function button2(e) {
+
+		if (document.getElementById("TransferToMobile_metric") && document.getElementById('metric').style.display != 'none'){
+
+			if(document.getElementById("TransferToMobile_metric").value.length < 3) {
+				alert('Please add the Metric number');
+				return false;
+			}
+		}
+
 
 		if (!document.getElementById('amountfiel')) {
 			document.getElementById("sendButton").style.display = 'none';
@@ -203,6 +225,14 @@ $this->endWidget();?>
 	function showProducts(argument) {
 
 		operator = document.getElementById('operatorfield').options[document.getElementById('operatorfield').selectedIndex].text;
+
+		if (operator == 'SENELEC - Senegal' || operator == 'NAWEC - Gambia' || operator== 'EDM - Mali' || operator == 'EEDC - Nigeria'){
+			document.getElementById('metric').style.display = 'inline';
+		}else{
+			document.getElementById('metric').style.display = 'none';
+		}
+
+
 		var http = new XMLHttpRequest()
 		http.onreadystatechange = function() {
        		if (this.readyState == 4 && this.status == 200) {

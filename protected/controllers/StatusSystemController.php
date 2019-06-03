@@ -69,11 +69,15 @@ class StatusSystemController extends Controller
 
             $rx->add($net["rx_bytes"]);
             $tx->add($net["tx_bytes"]);
-            $network = number_format($rx->average() / 1000, 2) . " ";
-            $network .= number_format($tx->average() / 1000, 2);
+            $network = is_numeric($rx->average()) ? number_format($rx->average() / 1000, 2) . " " : 0;
+            $network .= is_numeric($rx->average()) ? number_format($tx->average() / 1000, 2) . " " : 0;
+            break;
         }
-        $memory  = $sysinfo->memory();
+        $memory = $sysinfo->memory();
+
         $network = isset($network) ? explode(' ', $network) : array(0 => 0, 1 => 0);
+
+        $loadavg['avg'][0] = is_numeric($loadavg['avg'][0]) ? $loadavg['avg'][0] : 0;
 
         $status = array(
             'cpuMediaUso' => $loadavg['avg'][0] . '%',
@@ -83,13 +87,13 @@ class StatusSystemController extends Controller
             'ipAddr'      => $sysinfo->ip_addr(),
             'kernel'      => $sysinfo->kernel(),
             'uptime'      => $sysinfo->formtSecundsDay($sysinfo->uptime()),
-            'memTotal'    => number_format($memory["ram"]["total"] / 1024000, 2) . ' GB',
-            'memUsed'     => number_format($memory["ram"]["t_used"] / 1024000, 2) . ' GB',
-            'memFree'     => number_format($memory["ram"]["t_free"] / 1024000, 2) . ' GB',
+            'memTotal'    => number_format(intval($memory["ram"]["total"]) / 1024000, 2) . ' GB',
+            'memUsed'     => number_format(intval($memory["ram"]["t_used"]) / 1024000, 2) . ' GB',
+            'memFree'     => number_format(intval($memory["ram"]["t_free"]) / 1024000, 2) . ' GB',
             'menPercent'  => $memory["ram"]["percent"] . ' %',
-            'memCached'   => number_format($memory["ram"]["cached"] / 1024000, 2) . ' GB',
-            'networkin'   => $network[0] . ' KB/s',
-            'networkout'  => $network[1] . ' KB/s',
+            'memCached'   => number_format(intval($memory["ram"]["cached"]) / 1024000, 2) . ' GB',
+            'networkin'   => is_numeric($network[0]) ? $network[0] . ' KB/s' : '0 KB/s',
+            'networkout'  => is_numeric($network[1]) ? $network[1] . ' KB/s' : '0 KB/s',
         );
 
         echo json_encode(array(
@@ -397,26 +401,26 @@ class sysinfo
                 }
             }
 
-            $results['ram']['t_used']  = $results['ram']['total'] - $results['ram']['t_free'];
-            $results['ram']['percent'] = round(($results['ram']['t_used'] * 100) / $results['ram']['total']);
-            $results['swap']['used']   = $results['swap']['total'] - $results['swap']['free'];
+            $results['ram']['t_used']  = is_numeric($results['ram']['total']) && is_numeric($results['ram']['t_free']) ? $results['ram']['total'] - $results['ram']['t_free'] : 0;
+            $results['ram']['percent'] = is_numeric($results['ram']['total']) && is_numeric($results['ram']['t_used']) ? round(($results['ram']['t_used'] * 100) / $results['ram']['total']) : 0;
+            $results['swap']['used']   = is_numeric($results['swap']['total']) && is_numeric($results['swap']['free']) ? $results['swap']['total'] - $results['swap']['free'] : 0;
 
             // If no swap, avoid divide by 0
             //
             if (trim($results['swap']['total'])) {
-                $results['swap']['percent'] = round(($results['swap']['used'] * 100) / $results['swap']['total']);
+                $results['swap']['percent'] = is_numeric($results['swap']['total']) && is_numeric($results['swap']['used']) ? round(($results['swap']['used'] * 100) / $results['swap']['total']) : 0;
             } else {
                 $results['swap']['percent'] = 0;
             }
 
             // values for splitting memory usage
             if (isset($results['ram']['cached']) && isset($results['ram']['buffers'])) {
-                $results['ram']['app'] = $results['ram']['t_used'] - $results['ram']['cached'] -
-                    $results['ram']['buffers'];
-                $results['ram']['app_percent']     = round(($results['ram']['app'] * 100) / $results['ram']['total']);
-                $results['ram']['buffers_percent'] = round(($results['ram']['buffers'] * 100) /
-                    $results['ram']['total']);
-                $results['ram']['cached_percent'] = round(($results['ram']['cached'] * 100) / $results['ram']['total']);
+                $results['ram']['app'] = is_numeric($results['ram']['t_used']) && is_numeric($results['ram']['cached']) ? $results['ram']['t_used'] - $results['ram']['cached'] -
+                $results['ram']['buffers'] : 0;
+                $results['ram']['app_percent']     = is_numeric($results['ram']['app']) && is_numeric($results['ram']['total']) ? round(($results['ram']['app'] * 100) / $results['ram']['total']) : 0;
+                $results['ram']['buffers_percent'] = is_numeric($results['ram']['buffers']) && is_numeric($results['ram']['total']) ? round(($results['ram']['buffers'] * 100) /
+                    $results['ram']['total']) : 0;
+                $results['ram']['cached_percent'] = is_numeric($results['ram']['cached']) && is_numeric($results['ram']['total']) ? round(($results['ram']['cached'] * 100) / $results['ram']['total']) : 0;
             }
 
             $bufr = $this->rfts('/proc/swaps');

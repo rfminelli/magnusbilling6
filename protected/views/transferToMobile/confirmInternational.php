@@ -11,6 +11,25 @@ $form = $this->beginWidget('CActiveForm', array(
 ));
 ?>
 
+<?php
+
+if (isset($_POST['TransferToMobile']['metric']) && strlen($_POST['TransferToMobile']['metric'])) {
+    $metric_operator_name = Orange2::checkMetric($_POST['TransferToMobile']['metric']);
+
+    if ($metric_operator_name === false) {
+        echo '<div align=center id="container">';
+        echo '<font color=red>The Meter number is invalid. Please try again</font>';
+        echo "<br>";
+        echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
+        echo '</div>';
+
+        exit;
+    }
+}
+
+?>
+
+
 <br/>
 
 
@@ -27,6 +46,20 @@ $form = $this->beginWidget('CActiveForm', array(
 	<div id="aditionalInfoText" class="input" style="border:0; width:650px" ><?php echo $modelSendCreditRates->idProduct->currency_dest . ' ' . $modelSendCreditRates->idProduct->product ?></div>
 	<label>Amount to be collected:</label>
 	<div id="aditionalInfoText" class="input" style="border:0; width:650px" ><?php echo $modelSendCreditRates->idProduct->currency_orig . ' ' . $modelSendCreditRates->sell_price ?></div>
+
+
+<?php if ($_POST['TransferToMobile']['metric'] != ''): ?>
+
+	<label>Meter:</label>
+	<div id="aditionalInfoText" class="input" style="border:0; width:650px" ><?php echo $_POST['TransferToMobile']['metric'] ?></div>
+	<label>Meter owner name:</label>
+	<div id="aditionalInfoText" class="input" style="border:0; width:650px" ><?php echo $metric_operator_name ?></div>
+	<?php echo $form->hiddenField($modelTransferToMobile, 'metric', array('value' => $_POST['TransferToMobile']['metric'])); ?>
+	<?php echo $form->hiddenField($modelTransferToMobile, 'metric_operator_name', array('value' => $metric_operator_name)); ?>
+</div>
+
+<?php endif;?>
+
 </div>
 
 <?php echo $form->hiddenField($modelTransferToMobile, 'method', array('value' => $_POST['TransferToMobile']['method'])); ?>
@@ -40,7 +73,7 @@ $form = $this->beginWidget('CActiveForm', array(
 <div class="controls" id="sendButton">
 <?php echo CHtml::submitButton(Yii::t('yii', 'CONFIRM'), array(
     'class'   => 'button',
-    'onclick' => "button2(event)",
+    'onclick' => "return button2(event)",
     'id'      => 'confirmButton'));
 ?>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
@@ -50,6 +83,7 @@ $form = $this->beginWidget('CActiveForm', array(
 
 </div>
 
+
 <?php
 
 $this->endWidget();?>
@@ -57,8 +91,13 @@ $this->endWidget();?>
 <script type="text/javascript">
 
 	function button2(e) {
+
+
 		document.getElementById("sendButton").style.display = 'none';
 	  	document.getElementById("buttondivWait").innerHTML = "<font color = green>Wait! </font>";
+
+
+
 	}
 
 </script>

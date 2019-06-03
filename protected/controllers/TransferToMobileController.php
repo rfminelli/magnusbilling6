@@ -475,6 +475,8 @@ error_txt=Transaction successful';
 
             if ($modelSendCreditRates->idProduct->provider == 'Ding') {
                 $result = DingConnect::sendCredit($_POST['TransferToMobile']['number'], $modelSendCreditRates->idProduct->send_value, $modelSendCreditRates->idProduct->SkuCode, $this->test);
+            } else if ($modelSendCreditRates->idProduct->provider == 'Orange2') {
+                $result = Orange2::sendCredit($_POST['TransferToMobile']['number'], $modelSendCreditRates, $this->test);
             } else {
                 $result = $this->sendActionTransferToMobile('topup', $product);
             }
@@ -531,6 +533,10 @@ error_txt=Transaction successful';
     public function releaseCredit($result, $status)
     {
 
+        if (preg_match('/Orange2/', $result[1])) {
+            $result = explode("=", $result[1]);
+        }
+
         if ($this->modelTransferToMobile->method == 'international' && $status != 'error') {
             User::model()->updateByPk(Yii::app()->session['id_user'],
                 array(
@@ -560,7 +566,17 @@ error_txt=Transaction successful';
 
         if ($this->modelTransferToMobile->method == 'international') {
 
-            $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - EUR ' . $this->sell_price;
+            if ($result[1] == 'Orange2') {
+
+                $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - EUR ' . $this->sell_price . '. TransactionID =' . $result[2];
+
+                if (isset($_POST['TransferToMobile']['metric']) && strlen($_POST['TransferToMobile']['metric'])) {
+                    $description .= ' - Meter ' . $_POST['TransferToMobile']['metric'];
+                    # code...
+                }
+            } else {
+                $description = 'Send Credit ' . $this->local_currency . ' ' . $this->modelTransferToMobile->product . ' - +' . $this->modelTransferToMobile->number . ' via ' . $this->operator_name . ' - EUR ' . $this->sell_price;
+            }
 
         } else {
             if ($status == 'error') {
@@ -594,6 +610,9 @@ error_txt=Transaction successful';
         $command->execute();
 
         $msg = $this->modelTransferToMobile->method == 'international' ? $result[1] : $result;
+        if ($result[1] == 'Orange2') {
+            $msg = $result[0] . "<br>TransactionID " . $result[2];
+        }
         echo '<div align=center id="container">';
         echo '<font color=green>Success: ' . $msg . '</font>' . "<br><br>";
         echo '<a href="../../index.php/transferToMobile/read">Start new request </a>' . "<br><br>";
@@ -729,10 +748,10 @@ error_txt=Transaction successful';
 
                     if ($this->test == true) {
                         echo $product->id . ' -> ' . $product->currency_dest . ' ' . $product->product . ' = ' . $product->currency_orig . ' ' . trim($modelSendCreditRates[$i]->sell_price) . "<BR>";
-
                     }
                     $values[trim($product->id)] = '<font size=1px>' . $product->currency_dest . '</font> ' . trim($product->product) . ' = <font size=1px>' . $product->currency_orig . '</font> ' . trim($modelSendCreditRates[$i]->sell_price);
                     $i++;
+
                 }
 
                 Yii::app()->session['amounts']      = isset($forceOperatorSelect) ? array() : $values;
