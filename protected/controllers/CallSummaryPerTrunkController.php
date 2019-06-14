@@ -169,7 +169,6 @@ class CallSummaryPerTrunkController extends Controller
 
         }
 
-
         //create a file pointer
         $f = fopen('php://memory', 'w');
 

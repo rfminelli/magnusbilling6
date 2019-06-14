@@ -147,8 +147,7 @@ class CallSummaryDayUserController extends Controller
         $columns      = 'u.username,CONCAT(firstname, " ",lastname),starttime,calledstation,sessiontime,real_sessiontime,buycost,sessionbill,trunkcode ';
         $this->join   = 'JOIN pkg_user u ON t.id_user = u.id ';
         $this->join .= 'LEFT JOIN pkg_trunk r ON t.id_trunk = r.id ';
-        $sql = "SELECT " . $columns . "  INTO OUTFILE '" . $this->magnusFilesDirectory . $nameFileCsv . ".csv' FIELDS TERMINATED BY '\;' LINES TERMINATED BY '\n'
-                FROM pkg_cdr t $this->join WHERE $this->filter";
+        $sql = "SELECT " . $columns . " FROM pkg_cdr t $this->join WHERE $this->filter";
 
         $command = Yii::app()->db->createCommand($sql);
         if (count($this->paramsFilter)) {
@@ -157,16 +156,14 @@ class CallSummaryDayUserController extends Controller
             }
         }
 
-        $command->execute();
-        header('Content-type: application/csv');
-        header('Content-Disposition: inline; filename="' . $this->modelName . '_' . time() . '.csv"');
-        header('Content-Transfer-Encoding: binary');
-        header('Accept-Ranges: bytes');
-        ob_clean();
-        flush();
-        if (readfile($pathCsv)) {
-            unlink($pathCsv);
+        //create a file pointer
+        $f = fopen('php://memory', 'w');
+        foreach ($command->queryAll() as $key => $fields) {
+            $fieldsCsv = array();
+            foreach ($fields as $key => $value) {
+                array_push($fieldsCsv, $value);
+            }
+            fputcsv($f, $fieldsCsv, ';');
         }
-
     }
 }
