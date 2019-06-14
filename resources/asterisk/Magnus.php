@@ -114,7 +114,7 @@ class Magnus
 
         $this->lastapp = isset($agi->request['agi_lastapp']) ? $agi->request['agi_lastapp'] : null;
 
-        if (preg_match('/Local/', $this->channel) && strlen($this->accountcode) < 4) {
+        if (preg_match('/^Local\//', $this->channel) && strlen($this->accountcode) < 4) {
             $sql               = "SELECT * FROM pkg_sip WHERE name = '$this->dnid' LIMIT 1";
             $modelSip          = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
             $this->accountcode = $modelSip->accountcode;
