@@ -687,7 +687,8 @@ error_txt=Transaction successful';
                 //print_r($result);
                 if (preg_match("/Transaction successful/", $result)) {
                     $resultArray = explode("\n", $result);
-                    $operatorid  = trim(end(explode('=', $resultArray[3])));
+                    $tmp         = explode('=', $resultArray[3]);
+                    $operatorid  = trim(end($tmp));
                 } else {
                     //echo "Not foun product from TrasnferRo, try ding";
                     //request provider code to ding and chech if exist products to Ding
