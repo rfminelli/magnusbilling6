@@ -45,6 +45,11 @@ class Start0800CallBackCommand extends ConsoleCommand
 
                 $modelDiddestination = Diddestination::model()->find('id_did = :key', array(':key' => $callback->id_did));
 
+                if (!count($modelDiddestination)) {
+                    CallBack::model()->deleteByPk($callback->id);
+                    continue;
+                }
+
                 $modelDid = $modelDiddestination->idDid;
 
                 //esperar 60 segundos antes de tentar ligar para o cliente.

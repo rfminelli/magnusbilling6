@@ -428,6 +428,43 @@ ulimit -s 240         # The maximum stack size
 ulimit -l unlimited # The maximum size that may be locked into memory.
 ulimit -a           # All current limits are reported.
 
+yum install -y monit
+password=$(awk '{print $1}' /root/passwordMysql)
+
+echo "
+set daemon  60
+set log syslog
+set httpd port 2813 and
+  allow 0.0.0.0/0.0.0.0
+    allow admin:$password
+
+include /etc/monit.d/*
+" > /etc/monitrc
+
+
+echo "check process opensips with pidfile /var/run/opensips.pid 
+  start program = \"/usr/sbin/opensipsctl start\"
+  stop program = \"/usr/sbin/opensipsctl stop\"
+  if 6 restarts within 6 cycles then timeout
+  if cpu > 90% for 5 cycles then restart
+  " > /etc/monit.d/opensips
+
+echo "check process mariadb with pidfile /var/run/mariadb/mariadb.pid
+    start program = \"/bin/systemctl start mariadb\"
+    stop program = \"/bin/systemctl stop mariadb\"
+" > /etc/monit.d/mariadb
+
+firewall-cmd --zone=public --add-port=2813/tcp --permanent
+firewall-cmd --reload
+
+systemctl restart monit
+systemctl enable monit
+
+
+echo 'SystemMaxUse=10M' >> /etc/systemd/journald.conf
+
+systemctl restart systemd-journald
+
 
 clear
 echo ""
