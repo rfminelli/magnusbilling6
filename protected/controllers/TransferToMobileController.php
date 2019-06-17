@@ -50,6 +50,11 @@ class TransferToMobileController extends Controller
         if (isset($_POST['TransferToMobile']['number']) && $_POST['TransferToMobile']['number'] == '5551982464731') {
             $this->test = true;
         }
+
+        if (isset($_POST['TransferToMobile']['number']) && substr($_POST['TransferToMobile']['number'], 0, 2) == '00') {
+            $_POST['TransferToMobile']['number'] = substr($_POST['TransferToMobile']['number'], 2);
+        }
+
         $this->instanceModel = new User;
         $this->abstractModel = User::model();
         parent::init();

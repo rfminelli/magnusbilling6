@@ -1425,6 +1425,19 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.5.8') {
+
+            $sql    = "SELECT * FROM pkg_method_pay WHERE payment_method = 'paghiper'";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+            if (!count($result)) {
+                $sql = "INSERT INTO pkg_method_pay VALUES (NULL, '1', 'Stripe', 'Stripe', 'Global', '0', '0', NULL, '', '', '', '0', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '10', '500', 'payment_method,show_name,id_user,country,active,min,max,client_id,client_secret');";
+                $this->executeDB($sql);
+            }
+            $version = '6.5.9';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
