@@ -17,80 +17,64 @@
  * Magnusbilling.com <info@magnusbilling.com>
  *
  */
-?>
-
-
-<?php
 
 if ($_POST) {
 
-    require_once 'lib/stripe/autoload.php';
+    $url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do';
 
-    \Stripe\Stripe::setApiKey($modelMethodPay->client_id);
-    $error   = '';
-    $success = '';
+    //$url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do';
 
-    $amount = preg_replace("/\.|\,/", '', $_GET['amount']);
+    $fields = array(
+        'ssl_merchant_id'        => $modelMethodPay->username,
+        'ssl_user_id'            => $modelMethodPay->client_id,
+        'ssl_pin'                => $modelMethodPay->client_secret,
+        'ssl_show_form'          => 'false',
+        'ssl_result_format'      => 'ASCII',
+        'ssl_test_mode'          => 'false',
+        'ssl_transaction_type'   => 'ccsale',
+        'ssl_amount'             => $_GET['amount'],
+        'ssl_card_number'        => urlencode($_POST['card-number']),
+        'ssl_exp_date'           => urlencode($_POST['card-exp_date']),
+        'ssl_cvv2cvc2_indicator' => 1,
+        'ssl_cvv2cvc2'           => urlencode($_POST['card-cvc']),
+        'ssl_customer_code'      => urlencode(substr($reference, 8)),
+    );
 
-    try {
-        if (!isset($_POST['stripeToken'])) {
-            throw new Exception("The Stripe Token was not generated correctly");
-        }
+    $fields_string = '';
 
-        \Stripe\Charge::create(array("amount" => floatval($amount),
-            "currency"                            => "usd",
-            "card"                                => $_POST['stripeToken']));
+    foreach ($fields as $key => $value) {$fields_string .= $key . '=' . $value . '&';}
+    rtrim($fields_string, "&");
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    $result = curl_exec($ch);
+
+    curl_close($ch);
+
+    if (preg_match('/ssl_result_message=APPROVED/', $result)) {
         $success = 'Your payment was successful.';
-    } catch (Exception $e) {
-        $error = $e->getMessage();
+    } else {
+        $result = explode('errorMessage=', $result);
+        $error  = $result[1];
     }
+
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+<head>
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <title>Stripe Getting Started Form</title>
-        <script type="text/javascript" src="https://js.stripe.com/v1/"></script>
-<!-- jQuery is used only for this example; it isn't required to use Stripe -->
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-        <script type="text/javascript">
+      </head>
 
-            // this identifies your website in the createToken call below
-            Stripe.setPublishableKey('<?php echo $modelMethodPay->client_secret; ?>');
-            function stripeResponseHandler(status, response) {
-                if (response.error) {
-                    // re-enable the submit button
-                    $('.submit-button').removeAttr("disabled");
-                    // show the errors on the form
-                    $(".payment-errors").html(response.error.message);
-                } else {
-                    var form$ = $("#payment-form");
-                    // token contains id, last4, and card type
-                    var token = response['id'];
-                    // insert the token into the form so it gets submitted to the server
-                    form$.append("<input type='hidden' name='stripeToken' value='" + token + "' />");
-                    // and submit
-                    form$.get(0).submit();
-                }
-            }
-            $(document).ready(function() {
-                $("#payment-form").submit(function(event) {
-                    // disable the submit button to prevent repeated clicks
-                    $('.submit-button').attr("disabled", "disabled");
-                    // createToken returns immediately - the supplied callback submits the form if there are no errors
-                    Stripe.createToken({
-                        number: $('.card-number').val(),
-                        cvc: $('.card-cvc').val(),
-                        exp_month: $('.card-expiry-month').val(),
-                        exp_year: $('.card-expiry-year').val()
-                    }, stripeResponseHandler);
-                    return false; // submit from callback
-                });
-            });
-        </script>
-    </head>
-    <body>
+<body>
 <!-- to display errors returned by createToken -->
         <span class="payment-errors"><center><font color=red size=5 ><?php echo $error ?></font></center> </span>
         <span class="payment-success"><center><font color=green size=7 ><?php echo $success ?></font></center> </span>
@@ -101,11 +85,10 @@ if ($_POST) {
                 <h1>Payment Information : Amount <?php echo $_GET['amount'] ?></h1>
             </div> <!-- end of personal-information -->
 
-          <input id="column-left" type="text" name="first-name" placeholder="First Name"/>
-          <input id="column-right" type="text" name="last-name" placeholder="Surname"/>
-          <input id="input-field" class="card-number" card-numbertautocomplete="off" type="text" name="card-number" placeholder="Card Number" />
-          <input id="column-left" type="text" class="card-expiry-month" placeholder="MM "/>
-          <input id="column-right" type="text" class="card-expiry-year" placeholder="YYYY "/>
+          <input id="column-left" type="text" name="first-name" placeholder="First Name" value="<?php echo $modelUser->firstname ?>" />
+          <input id="column-right" type="text" name="last-name" placeholder="Surname" value="<?php echo $modelUser->lastname ?>"  />
+          <input id="input-field" class="card-number" card-numbertautocomplete="off" type="text" name="card-number" placeholder="Card Number" value="" />
+          <input id="input-field" type="text" class="card-expiry-month" name ="card-exp_date" placeholder="MMYY "/>
           <input id="input-field" class="card-cvc"  type="text" name="card-cvc" placeholder="CCV"/>
 
 
@@ -236,5 +219,5 @@ input[type="submit"]:hover{
 
         </style>
 
-    </body>
+   </body>
 </html>

@@ -267,6 +267,9 @@ class AGI_AsteriskManager
                             $buff               = fgets($this->socket, 4096);
                             $s                  = 0;
                             while (substr($buff, 0, 6) != '--END ' && $s < 30000) {
+                                if ($buff == '') {
+                                    break;
+                                }
                                 $parameters['data'] .= $buff;
                                 $buff = fgets($this->socket, 4096);
                                 $s++;
@@ -364,7 +367,7 @@ class AGI_AsteriskManager
 
         // connect the socket
         $errno        = $errstr        = null;
-        $this->socket = stream_socket_client("tcp://" . $this->server . ":" . $this->port, $errno, $errstr);
+        $this->socket = stream_socket_client("tcp://" . $this->server . ":" . $this->port, $errno, $errstr, 3);
         stream_set_timeout($this->socket, 5);
         if (!$this->socket) {
             restore_error_handler();
