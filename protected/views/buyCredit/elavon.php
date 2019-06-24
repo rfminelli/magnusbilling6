@@ -18,11 +18,60 @@
  *
  */
 
+/*
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
+
+<div id="load" ><?php echo Yii::t('yii', 'Please wait while loading...') ?></div>
+
+<script languaje="JavaScript">
+window.onload = function () {
+var form = document.getElementById("buyForm");
+form.submit();
+};
+</script>
+
+<form method="GET" action="https://www.myvirtualmerchant.com/VirtualMerchant/process.do" target="_parent" id="buyForm">
+<input type="hidden" name="ssl_merchant_id" value="<?php echo $modelMethodPay->username ?>">
+<input type="hidden" name="ssl_user_id" value="<?php echo $modelMethodPay->client_id ?>">
+<input type="hidden" name="ssl_pin" value="<?php echo $modelMethodPay->client_secret ?>">
+<input type="hidden" name="ssl_amount" value="<?php echo $_GET['amount'] ?>">
+<input type="hidden" name="ssl_show_form" value="true">
+<input type="hidden" name="ssl_result_format" value="HTML">
+<input type="hidden" name="ssl_transaction_type" value="ccsale">
+<input type="hidden" name="ssl_test_mode" value="false">
+<!--<input type="hidden" name="ssl_receipt_apprvl_method" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/mbilling/index.php/elevon">-->
+<input type="hidden" name="ssl_receipt_apprvl_method" value="POST">
+<input type="hidden" name="ssl_error_url" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/mbilling/index.php/elevon">
+<input type="hidden" name="ssl_receipt_apprvl_post_url" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/mbilling/index.php/elevon">
+<input type="hidden" name="ssl_customer_code" value="<?php echo substr($reference, 8) ?>">
+</form>
+
+ */
+$error   = '';
+$success = '';
 if ($_POST) {
 
     $url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do';
 
     //$url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do';
+
+    if (strlen($_POST['card-address']) > 1) {
+        $modelUser->address = $_POST['card-address'];
+    }
+    if (strlen($_POST['card-city']) > 1) {
+        $modelUser->city = $_POST['card-city'];
+    }
+    if (strlen($_POST['card-state']) > 1) {
+        $modelUser->state = $_POST['card-state'];
+    }
+    if (strlen($_POST['card-zip']) > 1) {
+        $modelUser->zipcode = $_POST['card-zip'];
+    }
+    try {
+        $modelUser->save();
+    } catch (Exception $e) {
+        //
+    }
 
     $fields = array(
         'ssl_merchant_id'        => $modelMethodPay->username,
@@ -38,6 +87,11 @@ if ($_POST) {
         'ssl_cvv2cvc2_indicator' => 1,
         'ssl_cvv2cvc2'           => urlencode($_POST['card-cvc']),
         'ssl_customer_code'      => urlencode(substr($reference, 8)),
+        'ssl_avs_address'        => urlencode($_POST['card-address']),
+        'ssl_city'               => urlencode($_POST['card-city']),
+        'ssl_state'              => urlencode($_POST['card-state']),
+        'ssl_avs_zip'            => urlencode($_POST['card-zip']),
+        'ssl_country'            => urlencode($_POST['card-country']),
     );
 
     $fields_string = '';
@@ -57,11 +111,13 @@ if ($_POST) {
 
     curl_close($ch);
 
-    if (preg_match('/ssl_result_message=APPROVED/', $result)) {
+    if (preg_match('/ssl_result_message=APPROV/', $result)) {
         $success = 'Your payment was successful.';
+        UserCreditManager::releaseUserCredit($modelUser->id, $_GET['amount'], 'Payment via Elevon', 1, $reference);
+
     } else {
-        $result = explode('errorMessage=', $result);
-        $error  = $result[1];
+        //$result = explode('errorMessage=', $result);
+        $error = print_r($result, true);
     }
 
 }
@@ -90,7 +146,11 @@ if ($_POST) {
           <input id="input-field" class="card-number" card-numbertautocomplete="off" type="text" name="card-number" placeholder="Card Number" value="" />
           <input id="input-field" type="text" class="card-expiry-month" name ="card-exp_date" placeholder="MMYY "/>
           <input id="input-field" class="card-cvc"  type="text" name="card-cvc" placeholder="CCV"/>
-
+          <input id="input-field" class="card-cvc"  type="text" name="card-address" placeholder="address" value="<?php echo $modelUser->address ?>"/>
+          <input id="input-field" class="card-cvc"  type="text" name="card-city" placeholder="city" value="<?php echo $modelUser->city ?>" />
+          <input id="input-field" class="card-cvc"  type="text" name="card-state" placeholder="state" value="<?php echo $modelUser->state ?>" />
+          <input id="input-field" class="card-cvc"  type="text" name="card-zip" placeholder="zip" value="<?php echo $modelUser->zipcode ?>" />
+          <input id="input-field" class="card-cvc"  type="text" name="card-country" placeholder="USA"/>
 
           <input id="input-button" type="submit" class="submit-button" value="Submit Payment"/>
 
