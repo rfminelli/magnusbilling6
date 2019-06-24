@@ -272,9 +272,11 @@ class Magnus
 
         if ($resfindrate == 0) {
             $agi->verbose("The number $this->destination, no exist in the plan $this->id_plan", 3);
-
             $this->executePlayAudio("prepaid-dest-unreachable", $agi);
-
+            if ($this->agiconfig['number_try'] > 1 && ($this->agiconfig['number_try'] > $try_num + 1)) {
+                $try_num++;
+                $this->checkNumber($agi, $CalcAgi, $try_num);
+            }
             return false;
         } else {
             $agi->verbose("NUMBER TARIFF FOUND -> " . $CalcAgi->number_trunk, 10);
@@ -348,9 +350,7 @@ class Magnus
 
         $credit_cur = $credit / $mycur;
 
-        list($units, $cents) = pre_split('/\[\.\]/', sprintf('%01.2f', $credit_cur));
-
-        $agi->verbose("[BEFORE: $credit_cur SPRINTF : " . sprintf('%01.2f', $credit_cur) . "]", 10);
+        list($units, $cents) = explode('.', $credit_cur);
 
         if ($credit > 1) {
             $unit_audio = "credit";
@@ -433,7 +433,7 @@ class Magnus
         $mycur      = 1;
         $credit_cur = $rate / $mycur;
 
-        list($units, $cents) = pre_split('/\[\.\]/', sprintf('%01.3f', $credit_cur));
+        list($units, $cents) = explode('.', $credit_cur);
 
         if (substr($cents, 2) > 0) {
             $point = substr($cents, 2);

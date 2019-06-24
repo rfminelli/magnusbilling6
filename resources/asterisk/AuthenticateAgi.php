@@ -233,7 +233,7 @@ class AuthenticateAgi
         if ($authentication != true) {
             $agi->verbose('try callingcard', 6);
 
-            if ($MAGNUS->agiconfig['enable_callingcard'] == 1) {
+            if ($MAGNUS->config['global']['enable_callingcard'] == 1) {
 
                 for ($retries = 0; $retries < 3; $retries++) {
                     $agi->answer();
