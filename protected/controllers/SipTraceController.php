@@ -36,7 +36,7 @@ class SipTraceController extends Controller
     {
 
         try {
-            $myfile = @fopen($this->log_name, "r")
+            $data = @file_get_contents($this->log_name)
             or die(
                 json_encode(array(
                     'rows'  => [],
@@ -47,9 +47,9 @@ class SipTraceController extends Controller
             exit;
         }
 
-        $result = fread($myfile, filesize($this->log_name));
-        fclose($myfile);
-        $result = explode('U ', $result);
+        $result = htmlentities($data);
+
+        $result = explode("U " . date('Y') . "", $result);
         $packet = [];
         $id     = 1;
         foreach ($result as $key => $value) {
@@ -88,7 +88,7 @@ class SipTraceController extends Controller
                 if (preg_match('/Call-ID:/', $line)) {
                     $callid = trim(substr($line, 8));
                 }if (preg_match('/To:/', $line)) {
-                    $sipto = trim(substr($line, 9, -2));
+                    $sipto = trim(substr($line, 3));
                 }
             }
 
@@ -109,8 +109,8 @@ class SipTraceController extends Controller
                 'toip'      => $toIp,
                 'sipto'     => $sipto,
                 'callid'    => $callid,
-                'head'      => $value,
-                'date'      => $date,
+                'head'      => date('Y') . $value,
+                'date'      => date('Y') . $date,
                 'direction' => $firstPacket == $fromIp ? 'red' : 'green',
             ));
 
@@ -158,7 +158,7 @@ class SipTraceController extends Controller
             }
         }
         try {
-            $myfile = @fopen($this->log_name, "r")
+            $data = @file_get_contents($this->log_name)
             or die(
                 json_encode(array(
                     'rows'  => [],
@@ -169,15 +169,17 @@ class SipTraceController extends Controller
             exit;
         }
 
-        $result = fread($myfile, filesize($this->log_name));
-        fclose($myfile);
-        $result = explode('U ', $result);
+        $result = htmlentities($data);
+
+        $result = explode("U " . date('Y') . "", $result);
+
         $packet = [];
         $id     = 1;
         foreach ($result as $key => $value) {
 
             $callid = '';
-            $lines  = preg_split('/\r\n|\r|\n/', $value);
+
+            $lines = preg_split('/\r\n|\r|\n/', $value);
 
             if (count($lines) < 10) {
                 continue;
@@ -193,14 +195,16 @@ class SipTraceController extends Controller
             }
 
             $fromTo = explode(' ', $lines[0]);
+
             $fromIp = strtok($fromTo[2], ':');
-            $toIp   = strtok($fromTo[4], ':');
+
+            $toIp = strtok($fromTo[4], ':');
 
             foreach ($lines as $key => $line) {
                 if (preg_match('/Call-ID:/', $line)) {
                     $callid = trim(substr($line, 8));
                 }if (preg_match('/To:/', $line)) {
-                    $sipto = trim(substr($line, 9, -2));
+                    $sipto = trim(substr($line, 3));
                 }
             }
 
@@ -340,7 +344,7 @@ class SipTraceController extends Controller
                 'toip'   => $toIp,
                 'sipto'  => $sipto,
                 'callid' => $callid,
-                'head'   => $value,
+                'head'   => date('Y') . html_entity_decode($value),
             ));
 
             $id++;
