@@ -56,7 +56,7 @@ class Util
 
         if ($generate_username == 1) {
             $length = $config['global']['generate_length'] == 0 ? 5 : $config['global']['generate_length'];
-            $prefix = $config['global']['generate_prefix'] == 0 ? '' : $config['global']['generate_prefix'];
+            $prefix = $config['global']['generate_prefix'] == '0' ? '' : $config['global']['generate_prefix'];
             while ($existsUsername) {
                 $randUserName   = $prefix . Util::generatePassword($length, false, false, true, false) . "\n";
                 $countUsername  = User::model()->count('username LIKE :key', array(':key' => $randUserName));
