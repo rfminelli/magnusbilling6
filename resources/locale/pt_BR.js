@@ -490,6 +490,7 @@ Locale.load({
     'gray': 'Cinza',
     'green': 'Verde',
     'group': 'Grupo',
+    'Group': 'Grupo',
     'groupagent': 'Grupo para o Revendedor',
     'groups': 'Grupos',
     'groupThisColumn': 'Agrupar por Esta Coluna',
