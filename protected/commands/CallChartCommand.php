@@ -260,7 +260,7 @@ class CallChartCommand extends ConsoleCommand
 
                     }
 
-                    $sql[] = "(NULL, '$uniqueid', '$peername', $id_user, '$channel', '$trunk', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
+                    $sql[] = "(NULL, '$uniqueid', '$peername', $id_user, '$channel', '" . utf8_encode($trunk) . "', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if ($modelUserCallShop > 0) {
                         if (in_array($modelSip->id_user, $callShopIds)) {
