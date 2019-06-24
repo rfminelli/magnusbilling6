@@ -1,13 +1,11 @@
 ###########
-MagnusBilling 6 (BETA)
+MagnusBilling 6
 ###########
-
-BETA VERSION Probably realease to September 2017
 
 WE LOOKING FOR DEVELOPER TO  GETTING INVOLVE IN THIS AMAZING PROJECT.
 
 
-# MagnusBilling 6 (BETA)
+# MagnusBilling 6
 
 Voip sistem to Asterisk.
 
@@ -17,7 +15,7 @@ Install MangusBilling in your server and read our documentation.
 
 ### Prerequisites
 
-Linux Centos 7 or Debian 8
+Linux Centos 7 or Debian 8 or newer. Recomended Centos 7
 
 
 ### Installing
@@ -61,6 +59,6 @@ We provide several avenues for you to get your system up and running on your own
 
 1. [Youtube Channel](https://www.youtube.com/channel/UCish_6Lxfkh29n4CLVEd90Q)
 2. [Documentation](https://magnusbilling.com) Menu Documentation
-3. [Facebook Group(English)](https://www.facebook.com/groups/1530184480421287/)
-4. [Facebook Grupo(Spanish)](https://www.facebook.com/groups/217242972284136/)
-5. [Facebook Grupo(Português)](https://www.facebook.com/groups/371784470023690)
+3. [Telegram Group(English)](https://t.me/joinchat/NXwoZRPGpG6rPqp3yssLzQ)
+4. [Telegram Grupo(Spanish)](https://t.me/joinchat/NXwoZRXQbjokWrliVGObkQ)
+5. [Telegram Grupo(Português)](https://t.me/joinchat/NXwoZQtJRKN-5e03uY6_XQ)
