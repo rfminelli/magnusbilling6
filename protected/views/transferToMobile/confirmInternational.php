@@ -76,7 +76,9 @@ if (isset($_POST['TransferToMobile']['metric']) && strlen($_POST['TransferToMobi
     'onclick' => "return button2(event)",
     'id'      => 'confirmButton'));
 ?>
+
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
+<input class="button" style="width: 80px;" onclick="window.print();return false;" value="Print">
 </div>
 <div class="controls" id="buttondivWait"></div>
 

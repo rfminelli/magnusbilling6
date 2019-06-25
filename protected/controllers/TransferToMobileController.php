@@ -795,17 +795,26 @@ error_txt=Transaction successful';
 
             $number = explode(" ", $modelRefill->description);
 
-            echo "Mobile No.: " . $number[5] . "<br>";
+            echo "Cellulare.: " . $number[5] . "<br>";
 
-            if (!preg_match('/international/', $modelRefill->description)) {
-                echo 'Product: BDT ' . $number[3] . "<br>";
-                $amount = end($number);
-            } else {
-                echo 'Product: ' . $number[2] . ' ' . $number[3] . "<br>";
-                $amount = substr($number[9], 0, -1);
+            if (preg_match('/Meter/', $modelRefill->description)) {
+                $tmp = explode('Meter', $modelRefill->description);
+                echo 'Meter: ' . $tmp[1] . "<br>";
             }
 
-            echo "Amount Paid: <input type=text' style='text-align: right;' size='10' value='$amount'> <br><br>";
+            $tmp    = explode('EUR ', $modelRefill->description);
+            $tmp    = explode('. T', $tmp[1]);
+            $amount = $tmp[0];
+
+            $tmp      = explode('via ', $modelRefill->description);
+            $operator = strtok($tmp[1], '-');
+            $tmp      = explode('Send Credit ', $modelRefill->description);
+            $tmp      = explode(' -', $tmp[1]);
+            $product  = $tmp[0];
+
+            echo 'Prodotto:  ' . $product . ' ' . $operator . "<br>";
+
+            echo "Importo EUR: <input type=text' style='text-align: right;' size='6' value='$amount'> <br><br>";
 
             echo $config['global']['fm_transfer_print_footer'] . "<br><br>";
 

@@ -170,7 +170,7 @@ class Orange2
         if (preg_match('/Meter not found/', $output)) {
             return false;
         } else if (preg_match('/Unknown/', $output)) {
-            return false;
+            return 'Unknown';
         } else if (preg_match('/customerName/', $output)) {
             $output = explode('{"customerName":"', $output);
 
