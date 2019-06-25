@@ -113,7 +113,7 @@ if ($_POST) {
 
     if (preg_match('/ssl_result_message=APPROV/', $result)) {
         $success = 'Your payment was successful.';
-        UserCreditManager::releaseUserCredit($modelUser->id, $_GET['amount'], 'Payment via Elevon', 1, $reference);
+        UserCreditManager::releaseUserCredit($modelUser->id, $_GET['amount']*0.97, 'Payment via Elevon', 1, $reference);
 
     } else {
         //$result = explode('errorMessage=', $result);
@@ -137,6 +137,7 @@ if ($_POST) {
 
         <form action="" method="POST" id="payment-form">
             <div class="form-container">
+                El sistema descontara el 3% del total de la transaccion por el pago con tarjeta de credito.
             <div class="personal-information">
                 <h1>Payment Information : Amount <?php echo $_GET['amount'] ?></h1>
             </div> <!-- end of personal-information -->
