@@ -477,11 +477,8 @@ class CalcAgi
                 $agi->verbose("Update credit username $MAGNUS->username, " . $MAGNUS->round_precision(abs($cost)), 6);
             }
             $sql = "UPDATE pkg_trunk SET call_answered = call_answered +1, secondusedreal = secondusedreal + $sessiontime
-                        WHERE id=$this->usedtrunk LIMIT 1 ";
-            $agi->exec($sql);
-
-            $sql = "UPDATE pkg_provider SET credit = credit + $buycost
-                        WHERE id=" . $this->tariffObj[$K]['id_provider'] . " LIMIT 1 ";
+                        WHERE id=$this->usedtrunk LIMIT 1 ;
+                    UPDATE pkg_provider SET credit = credit - $buycost WHERE id=" . $this->tariffObj[$K]['id_provider'] . " LIMIT 1;";
             $agi->exec($sql);
 
         }
