@@ -76,21 +76,47 @@ if (isset($_POST['TransferToMobile']['metric']) && strlen($_POST['TransferToMobi
     'onclick' => "return button2(event)",
     'id'      => 'confirmButton'));
 ?>
-
+<a href="javascript:printDiv('printdiv');">Print</a>
 <input class="button" style="width: 80px;" onclick="window.location='../../index.php/transferToMobile/read';" value="Cancel">
-<input class="button" style="width: 80px;" onclick="window.print();return false;" value="Print">
+
+
 </div>
 <div class="controls" id="buttondivWait"></div>
 
 
 </div>
-
+<div style="display:none; border:0" id='printdiv'>
+	Confirm?<br><br>
+	Country: <?php echo $_POST['TransferToMobile']['country'] ?><br>
+	Number: <?php echo $_POST['TransferToMobile']['number'] ?><br>
+	Product:<?php echo $modelSendCreditRates->idProduct->currency_dest . ' ' . $modelSendCreditRates->idProduct->product ?><br>
+	<?php if ($_POST['TransferToMobile']['metric'] != ''): ?>
+		Meter: <?php echo $_POST['TransferToMobile']['metric'] ?><br>
+	<?php endif;?>
+</div>
 
 <?php
 
 $this->endWidget();?>
 
 <script type="text/javascript">
+
+	function printDiv(divName) {
+	     var printContents = document.getElementById(divName).innerHTML;
+	     var originalContents = document.body.innerHTML;
+
+	     document.body.innerHTML = printContents;
+
+	     window.print();
+
+	     setInterval(function(){
+	     	 document.body.innerHTML = originalContents;
+	     }, 3000);
+
+
+
+
+	}
 
 	function button2(e) {
 

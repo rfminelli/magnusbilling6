@@ -785,10 +785,10 @@ error_txt=Transaction successful';
 
             $modelRefill = Refill::model()->findByPk((int) $id_refill, 'id_user = :key', array(':key' => Yii::app()->session['id_user']));
 
-            echo $config['global']['fm_transfer_print_header'] . "<br>";
+            echo $config['global']['fm_transfer_print_header'] . "<br><br>";
 
             echo $modelRefill->idUser->company_name . "<br>";
-
+            echo $modelRefill->idUser->address . ', ' . $modelRefill->idUser->city . "<br>";
             echo "Trx ID: " . $modelRefill->id . "<br>";
 
             echo $modelRefill->date . "<br>";
@@ -814,7 +814,7 @@ error_txt=Transaction successful';
 
             echo 'Prodotto:  ' . $product . ' ' . $operator . "<br>";
 
-            echo "Importo EUR: <input type=text' style='text-align: right;' size='6' value='$amount'> <br><br>";
+            echo "Importo: EUR <input type=text' style='text-align: right;' size='6' value='$amount'> <br><br>";
 
             echo $config['global']['fm_transfer_print_footer'] . "<br><br>";
 
