@@ -139,8 +139,8 @@ class DidAgi
                     $MAGNUS->agiconfig['number_try']      = $MAGNUS->agiconfig['callingcard_number_try'];
                     $MAGNUS->agiconfig['say_rateinitial'] = $MAGNUS->agiconfig['callingcard_say_rateinitial'];
                     $MAGNUS->agiconfig['say_timetocall']  = $MAGNUS->agiconfig['callingcard_say_timetocall'];
-
-                    $MAGNUS->CallerID = is_numeric($MAGNUS->CallerID) ? $MAGNUS->CallerID : $agi->request['agi_calleridname'];
+                    $MAGNUS->accountcode                  = null;
+                    $MAGNUS->CallerID                     = is_numeric($MAGNUS->CallerID) ? $MAGNUS->CallerID : $agi->request['agi_calleridname'];
                     $agi->verbose('CallerID ' . $MAGNUS->CallerID);
                     break;
                 case 4:
@@ -372,6 +372,25 @@ class DidAgi
                         $dialstr = $inst_listdestination['destination'];
 
                         $MAGNUS->startRecordCall($agi, $this->did);
+
+                        if (preg_match('/PUSH/', $dialstr)) {
+
+                            if (file_exists(dirname(__FILE__) . '/push/Push.php')) {
+                                include dirname(__FILE__) . '/push/Push.php';
+
+                                $agi->verbose("there are PUSH on DID custom dial");
+                                $tmp = explode('PUSH/', $dialstr);
+                                foreach ($tmp as $key => $value) {
+                                    if (preg_match('/SIP|LOCAL|AGI/', strtoupper($value))) {
+                                        continue;
+                                    }
+                                    $agi->verbose(print_r($account[0], true));
+                                    Push::send($agi, $account[0], $MAGNUS->CallerID, 0);
+                                }
+                                sleep(4);
+                            }
+                            $dialstr = preg_replace('/PUSH/', 'SIP', $dialstr);
+                        }
 
                         $agi->verbose("DIAL $dialstr", 6);
                         $myres = $MAGNUS->run_dial($agi, $dialstr, $MAGNUS->agiconfig['dialcommand_param_call_2did']);

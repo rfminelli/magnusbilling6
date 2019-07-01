@@ -467,7 +467,6 @@ CREATE TABLE `pkg_cdr` (
   `id_user` int(11) NOT NULL,
   `id_plan` int(11) DEFAULT NULL,
   `id_trunk` int(11) DEFAULT NULL,
-  `id_did` int(11) DEFAULT NULL,
   `id_offer` int(11) DEFAULT '0',
   `id_prefix` int(11) DEFAULT NULL,
   `id_campaign` int(11) DEFAULT NULL,

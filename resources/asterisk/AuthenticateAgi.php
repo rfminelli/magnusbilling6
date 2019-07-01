@@ -198,25 +198,29 @@ class AuthenticateAgi
 
     public static function voucherAuthenticate(&$MAGNUS, &$agi, $authentication, $pin)
     {
-        $agi->verbose('Check voucher Number $pin');
+        $agi->verbose("Check voucher Number $pin");
         //check if the PIN is a valid voucher
         $sql          = "SELECT * FROM pkg_voucher WHERE voucher = '$pin' AND used = 0 LIMIT 1";
         $modelVoucher = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
         if (isset($modelVoucher->id)) {
-            $agi->verbose('Found valid voucher Number $pin');
-
+            $agi->verbose("Found valid voucher Number $pin");
             $fields = "id_user, username, id_group, id_plan, password, credit,
                         active, callingcard_pin, callshop, plan_day, boleto_day, language, prefix_local";
-            $values = "1,'" . Util::getNewUsername() . "', 3,'" . $modelVoucher->id_plan . "',
-                    '" . Util::generatePassword(8, true, true, true, false) . "', '" . $modelVoucher->credit . "',
+
+            $user = $MAGNUS->getNewUsername($agi);
+            $pass = $MAGNUS->generatePassword(8, true, true, true, false);
+
+            $values = "1,'" . $user . "', 3,'" . $modelVoucher->id_plan . "',
+                    '" . $pass . "', '" . $modelVoucher->credit . "',
                     1, '" . $modelVoucher->voucher . "', 0, 0,0, '" . $modelVoucher->language . "',
                     '" . $modelVoucher->prefix_local . "'";
+
             $sql = "INSERT INTO pkg_user ($fields) VALUES ($values)";
             $agi->exec($sql);
             $MAGNUS->id_user = $agi->lastInsertId();
 
             //Marca o voucher como usado
-            $sql = "UPDATE pkg_voucher SET id_user = $id_user, usedate = NOW(), used = 1 WHERE voucher = '$MAGNUS->username' LIMIT 1";
+            $sql = "UPDATE pkg_voucher SET id_user = $MAGNUS->id_user, usedate = NOW(), used = 1 WHERE voucher = '$pin' LIMIT 1";
             $agi->exec($sql);
 
             $sql       = "SELECT *, u.id id, u.id_user id_user FROM pkg_user u INNER JOIN pkg_plan p ON u.id_plan = p.id WHERE id = $MAGNUS->id_user LIMIT 1";

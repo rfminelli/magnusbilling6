@@ -615,7 +615,7 @@ class AsteriskAccess
                     }
 
                     if (strlen($sip->cid_number) > 1) {
-                        $line .= 'callerid=' . $sip->cid_number . "\n";
+                        $line .= 'cid_number=' . $sip->cid_number . "\n";
                     }
 
                     if (strlen($sip->language) > 1) {

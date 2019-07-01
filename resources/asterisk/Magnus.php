@@ -831,4 +831,56 @@ class Magnus
         }
         return "closed";
     }
+
+    public static function getNewUsername($MAGNUS, $agi)
+    {
+        $existsUsername = true;
+
+        $generate_username = $MAGNUS->config['global']['username_generate'];
+        $agi->verbose('getNewUsername ' . $generate_username);
+        if ($generate_username == 1) {
+            $length = $MAGNUS->config['global']['generate_length'] == 0 ? 5 : $MAGNUS->config['global']['generate_length'];
+            $prefix = $MAGNUS->config['global']['generate_prefix'] == '0' ? '' : $MAGNUS->config['global']['generate_prefix'];
+            while ($existsUsername) {
+                $randUserName = $prefix . AuthenticateAgi::generatePassword($length, false, false, true, false) . "\n";
+
+                $sql            = "SELECT count(*) FROM pkg_user WHERE username = '" . $randUserName . "' LIMIT 1";
+                $countUsername  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                $existsUsername = ($countUsername->count > 0);
+            }
+        } else {
+
+            while ($existsUsername) {
+                $randUserName   = mt_rand(10000, 99999);
+                $sql            = "SELECT count(*) as count FROM pkg_user WHERE username = '" . $randUserName . "' LIMIT 1";
+                $countUsername  = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
+                $existsUsername = ($countUsername->count > 0);
+            }
+
+        }
+        return trim($randUserName);
+    }
+
+    public static function generatePassword($tamanho, $maiuscula, $minuscula, $numeros, $codigos)
+    {
+        $maius = "ABCDEFGHIJKLMNOPQRSTUWXYZ";
+        $minus = "abcdefghijklmnopqrstuwxyz";
+        $numer = "123456789";
+        $codig = '!@#%';
+
+        $base = '';
+        $base .= ($maiuscula) ? $maius : '';
+        $base .= ($minuscula) ? $minus : '';
+        $base .= ($numeros) ? $numer : '';
+        $base .= ($codigos) ? $codig : '';
+
+        srand((float) microtime() * 10000000);
+        $password = '';
+        for ($i = 0; $i < $tamanho; $i++) {
+            $password .= substr($base, rand(0, strlen($base) - 1), 1);
+        }
+
+        return $password;
+    }
+
 };
