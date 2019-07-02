@@ -350,7 +350,7 @@ class Mail
         $mail->Port       = $smtp_port;
         $mail->SetFrom($smtp_username);
         $mail->SetLanguage($this->language == 'pt_BR' ? 'br' : $this->language);
-        $mail->Subject = $this->title;
+        $mail->Subject = mb_encode_mimeheader($this->title);
         $mail->AltBody = 'To view the message, please use an HTML compatible email viewer!';
         $mail->MsgHTML($this->message);
         $mail->AddAddress($this->to_email);
