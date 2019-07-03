@@ -285,7 +285,7 @@ class DidAgi
                 else if ($inst_listdestination['voip_call'] == 8) {
 
                     $agi->verbose("Call group $group ", 6);
-                    $sql      = "SELECT * FROM pkg_sip WHERE `group` = '" . $inst_listdestination['destination'] . "'";
+                    $sql      = "SELECT * FROM pkg_sip WHERE sip_group = '" . $inst_listdestination['destination'] . "'";
                     $modelSip = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
                     $agi->verbose("Call group $group ", 6);
                     if (!isset($modelSip[0]->id)) {
