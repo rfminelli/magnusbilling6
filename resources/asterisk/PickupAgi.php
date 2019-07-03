@@ -22,12 +22,13 @@ class PickupAgi
 {
     public function execute(&$agi, &$MAGNUS)
     {
-        $sql      = "SELECT accountcode FROM pkg_sip WHERE name = '" . substr($MAGNUS->dnid, 2) . "' LIMIT 1";
+        $sql = "SELECT * FROM pkg_sip WHERE name = '" . substr($MAGNUS->dnid, 2) . "' OR (alias = '" . substr($MAGNUS->dnid, 2) . "' AND accountcode = '$MAGNUS->accountcode') LIMIT 1";
+
         $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
 
-        if (isset($modelSip->accountcode) && $modelSip->accountcode == $MAGNUS->accountcode) {
+        if (isset($modelSip->accountcode)) {
 
-            $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup extension ' . substr($MAGNUS->dnid, 2), 1);
+            $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup extension ' . $modelSip->name, 1);
 
             $asmanager = new AGI_AsteriskManager();
             $asmanager->connect('localhost', 'magnus', 'magnussolution');
@@ -35,14 +36,10 @@ class PickupAgi
             $calls = $asmanager->command("core show channels concise");
             $asmanager->disconnect();
 
-            $sip      = substr($MAGNUS->dnid, 2);
-            $sql      = "SELECT * FROM pkg_sip WHERE name = '" . $sip . "' LIMIT 1";
-            $modelSip = $agi->query($sql)->fetch(PDO::FETCH_OBJ);
-
             $channelsData = explode("\n", $calls["data"]);
             $channel      = '';
             foreach ($channelsData as $key => $line) {
-                if (preg_match("/^SIP\/($sip)-/", $line) && preg_match("/Ringing/", $line)) {
+                if (preg_match("/^SIP\/($modelSip->name)-/", $line) && preg_match("/Ringing/", $line)) {
                     $channel = explode("!", $line);
                     $channel = $channel[0];
                     break;
@@ -54,7 +51,7 @@ class PickupAgi
             }
 
         } else {
-            $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup from another user extension ' . substr($MAGNUS->dnid, 2), 1);
+            $agi->verbose('Pickup module - SipAccount ' . $MAGNUS->accountcode . ' try pickup from another user extension ' . $modelSip->name, 1);
         }
 
         $MAGNUS->hangup($agi);
