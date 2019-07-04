@@ -50,7 +50,7 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' :
     <input type="hidden" name="amount" value="<?php echo $_GET['amount'] ?>">
     <input type="hidden" name="no_shipping" value="1">
     <input type="hidden" name="return" value="<?php echo $protocol . $_SERVER['HTTP_HOST'] ?>/index.php">
-    <input type="hidden" name="currency_code" value="<?php echo $currency ?>">
+    <input type="hidden" name="currency_code" value="<?php echo strtoupper($currency) ?>">
     <input type="hidden" name="lc" value="<?php echo $modelUser->language ?>">
     <input type="hidden" name="bn" value="PP-BuyNowBF">
     <input type="hidden" name="first_name" value="<?php echo $modelUser->firstname; ?>">
