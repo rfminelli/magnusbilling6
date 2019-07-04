@@ -11,8 +11,9 @@ class SipCallAgi
             $MAGNUS->destination = $MAGNUS->dnid;
         }
 
-        if (file_exists(dirname(__FILE__) . '/push/push.php')) {
-            include dirname(__FILE__) . '/push/push.php';
+        if (file_exists(dirname(__FILE__) . '/push/Push.php')) {
+            include dirname(__FILE__) . '/push/Push.php';
+            Push::send($agi, $MAGNUS->destination, $MAGNUS->CallerID);
         }
 
         $MAGNUS->destination = $MAGNUS->dnid;
