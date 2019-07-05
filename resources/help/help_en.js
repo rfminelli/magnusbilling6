@@ -98,7 +98,7 @@ Help.load({
     'trunk.allow': 'G723 and G729 are not installed by default.',
     'trunk.providertech': 'You need install appropriate drive to use card like dgv extra Dongle.',
     'trunk.status': 'If you deactivate the Trunk, MagnusBilling will try to send it\'s calls to the selected backup Trunk.',
-    'trunk.allow_error': 'If YES all calls but ANSWERED or CANCEL will be sent to the backup trunk.',
+    'trunk.allow_error': 'If YES all calls but ANSWERED and CANCEL will be sent to a backup trunk.',
     'trunk.register': 'Do your trunk needs to REGISTER? Don\' try to register a trunk authenticated via IP.',
     'trunk.register_string': '',
     'trunk.fromuser': 'Many SIP providers require this. Normally it\'s a username.',
