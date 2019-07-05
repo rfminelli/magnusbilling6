@@ -182,7 +182,7 @@ class Mail
                 $this->message    = $modelTemplate->messagehtml;
                 $this->title      = isset($modelTemplate->subject) ? $modelTemplate->subject : null;
                 $this->from_email = isset($modelTemplate->fromemail) ? $modelTemplate->fromemail : null;
-                $this->from_name  = isset($modelTemplate->from_name) ? $modelTemplate->from_name : null;
+                $this->from_name  = isset($modelTemplate->fromname) ? $modelTemplate->fromname : null;
                 $this->language   = isset($modelTemplate->language) ? $modelTemplate->language : null;
             } else {
                 Yii::log("Template Type '$type' cannot be found into the database!", 'info');
@@ -348,7 +348,7 @@ class Mail
         $mail->Username   = $smtp_username;
         $mail->Password   = $smtp_password;
         $mail->Port       = $smtp_port;
-        $mail->SetFrom($smtp_username);
+        $mail->SetFrom($this->from_email,$this->from_name);
         $mail->SetLanguage($this->language == 'pt_BR' ? 'br' : $this->language);
         $mail->Subject = mb_encode_mimeheader($this->title);
         $mail->AltBody = 'To view the message, please use an HTML compatible email viewer!';
