@@ -59,7 +59,7 @@ class ServicesProcess
         $modelServicesUse = ServicesUse::model()->findByPk((int) $id_services);
         if ($modelServicesUse->status == 1) {
 
-            if ($modelServices->idServices->return_credit == 1) {
+            if ($modelServicesUse->idServices->return_credit == 1) {
                 $priceToreturn = ServicesProcess::checkStatus($modelServicesUse);
 
                 if ($priceToreturn > 0) {
