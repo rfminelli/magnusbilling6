@@ -402,7 +402,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill,
-                c.id_user ,
+                IF(c.id_user > 1, 1,0) AS isAgent,
                 sum(agent_bill) AS agent_bill
                 FROM pkg_cdr t
                 LEFT JOIN pkg_user c ON t.id_user = c.id

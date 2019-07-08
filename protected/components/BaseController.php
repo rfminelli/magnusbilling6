@@ -333,10 +333,9 @@ class BaseController extends CController
     public function readCountRecord()
     {
 
-        if (!isset($_GET['filter']) || strlen($_GET['filter']) < 3) {
+        if ((!isset($_GET['filter']) || strlen($_GET['filter']) < 3) && preg_match('/^Call$|^CallFailed$|^CallArchive$/', $this->modelName) && Yii::app()->session['isAdmin'] == true) {
             $sql    = "SHOW TABLE STATUS LIKE  '" . $this->abstractModel->tableName() . "'";
             $result = Yii::app()->db->createCommand($sql)->queryAll();
-
             return $result[0]['Rows'];
         } else {
 
