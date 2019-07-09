@@ -48,9 +48,9 @@ class SipProxyAccountsCommand extends ConsoleCommand
             $sqlproxy = 'TRUNCATE subscriber;';
             $sqlproxy .= "TRUNCATE domain;";
             $sqlproxy .= "INSERT INTO $dbname.domain (domain) VALUES ('" . $remoteProxyIP . "');";
-            $sqlproxy .= "INSERT INTO $dbname.$table (username,domain,ha1,accountcode,trace) VALUES ";
+            $sqlproxy .= "INSERT INTO $dbname.$table (username,domain,ha1,accountcode,trace,cpslimit) VALUES ";
             $sqlproxyadd = 'TRUNCATE address;';
-            $sqlproxyadd .= 'INSERT INTO $dbname.address (grp,ip,port,context_info) VALUES ';
+            $sqlproxyadd .= "INSERT INTO $dbname.address (grp,ip,port,context_info) VALUES ";
 
             $dsn = 'mysql:host=' . $hostname . ';dbname=' . $dbname;
 
@@ -60,9 +60,9 @@ class SipProxyAccountsCommand extends ConsoleCommand
             foreach ($modelSip as $key => $sip) {
 
                 if ($sip->host == 'dynamic') {
-                    $sqlproxy .= " ('" . $sip->defaultuser . "', '$remoteProxyIP','" . md5($sip->defaultuser . ':' . $remoteProxyIP . ':' . $sip->secret) . "', '" . $sip->accountcode . "', '" . $sip->trace . "'),";
+                    $sqlproxy .= " ('" . $sip->defaultuser . "', '$remoteProxyIP','" . md5($sip->defaultuser . ':' . $remoteProxyIP . ':' . $sip->secret) . "', '" . $sip->accountcode . "', '" . $sip->trace . "','" . $sip->idUser->cpslimit . "'),";
                 } else {
-                    $sqlproxyadd .= "('0', '$sip->host','0', '" . $sip->accountcode . '|' . $sip->name . "'),";
+                    $sqlproxyadd .= "('0', '$sip->host','0', '" . $sip->accountcode . '|' . $sip->name . '|' . $sip->idUser->cpslimit . "'),";
                 }
             }
 
@@ -74,7 +74,6 @@ class SipProxyAccountsCommand extends ConsoleCommand
             }
 
             $sqlproxyadd = substr($sqlproxyadd, 0, -1) . ';';
-
             try {
                 $con->createCommand($sqlproxyadd)->execute();
             } catch (Exception $e) {
