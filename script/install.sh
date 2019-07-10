@@ -221,8 +221,8 @@ sleep 1
 cd /usr/src
 rm -rf asterisk*
 clear
-#mv /var/www/html/mbilling/script/asterisk-13.27.0.tar.gz /usr/src/
-wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-13-current.tar.gz
+mv /var/www/html/mbilling/script/asterisk-13.27.0.tar.gz /usr/src/
+#wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-13-current.tar.gz
 tar xzvf asterisk-13-current.tar.gz
 rm -rf asterisk-13-current.tar.gz
 cd asterisk-*
