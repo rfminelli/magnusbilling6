@@ -66,6 +66,13 @@ class SipProxyAccountsCommand extends ConsoleCommand
                 }
             }
 
+            $sql = "ALTER TABLE subscriber ADD  cpslimit INT( 11 ) NOT NULL DEFAULT  '-1'";
+            try {
+                $con->createCommand($sql)->execute();
+            } catch (Exception $e) {
+                //
+            }
+
             $sqlproxy = substr($sqlproxy, 0, -1) . ';';
             try {
                 $con->createCommand($sqlproxy)->execute();
