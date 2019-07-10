@@ -196,6 +196,11 @@ elif  [ ${DIST} = "CENTOS" ]; then
 fi
 
 
+mkdir -p /var/www/html/
+cd /var/www/html
+git clone https://github.com/magnussolution/magnusbilling6.git mbilling
+
+
 echo
 echo '----------- Install PJPROJECT ----------'
 echo
@@ -216,10 +221,9 @@ sleep 1
 cd /usr/src
 rm -rf asterisk*
 clear
-wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-13-current.tar.gz
-cd /usr/src
-tar xzvf asterisk-13-current.tar.gz
-rm -rf asterisk-13-current.tar.gz
+mv /var/www/html/mbilling/script/asterisk-13.27.0.tar.gz /usr/src/
+tar xzvf asterisk-13.27.0.tar.gz
+rm -rf asterisk-13.27.0.tar.gz
 cd asterisk-*
 useradd -c 'Asterisk PBX' -d /var/lib/asterisk asterisk
 mkdir /var/run/asterisk
@@ -460,8 +464,7 @@ sleep 2
 if [ ${DIST} = "DEBIAN" ]; then
     rm -rf /var/www/html/index.html
 fi;
-cd /var/www/html
-git clone https://github.com/magnussolution/magnusbilling6.git mbilling
+
 cd /var/www/html/mbilling/
 rm -rf /var/www/html/mbilling/tmp && mkdir /var/www/html/mbilling/tmp
 mkdir /var/www/html/mbilling/assets
@@ -916,7 +919,7 @@ usedns = warn
 [asterisk-iptables]   
 enabled  = true           
 filter   = asterisk       
-action   = iptables-allports[name=ASTERISK, port=5060, protocol=all]   
+action   = iptables-allports[name=ASTERISK, port=all, protocol=all]   
 logpath  = /var/log/asterisk/messages 
 maxretry = 5  
 bantime = 600
@@ -924,7 +927,7 @@ bantime = 600
 [ast-cli-attck]   
 enabled  = true           
 filter   = asterisk_cli     
-action   = iptables-allports[name=AST_CLI_Attack, port=5060, protocol=all]
+action   = iptables-allports[name=AST_CLI_Attack, port=all, protocol=all]
 logpath  = /var/log/asterisk/messages 
 maxretry = 1  
 bantime = -1
@@ -932,7 +935,7 @@ bantime = -1
 [asterisk-manager]   
 enabled  = true           
 filter   = asterisk_manager     
-action   = iptables-allports[name=AST_MANAGER, port=5038, protocol=all]
+action   = iptables-allports[name=AST_MANAGER, port=all, protocol=all]
 logpath  = /var/log/asterisk/messages 
 maxretry = 1  
 bantime = -1
@@ -940,7 +943,7 @@ bantime = -1
 [ast-hgc-200]
 enabled  = true           
 filter   = asterisk_hgc_200     
-action   = iptables-allports[name=AST_HGC_200, port=5060, protocol=all]
+action   = iptables-allports[name=AST_HGC_200, port=all, protocol=all]
 logpath  = /var/log/asterisk/messages
 maxretry = 20
 bantime = -1

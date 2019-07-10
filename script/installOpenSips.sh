@@ -121,6 +121,7 @@ systemctl restart opensips
 
 mysql -u root -p$(awk '{print $1}' /root/passwordMysql) opensips -e "ALTER TABLE subscriber ADD accountcode VARCHAR( 50 ) NOT NULL"
 mysql -u root -p$(awk '{print $1}' /root/passwordMysql) opensips -e "ALTER TABLE subscriber ADD trace TINYINT(1) NOT NULL DEFAULT '0'"
+mysql -u root -p$(awk '{print $1}' /root/passwordMysql) opensips -e "ALTER TABLE subscriber ADD  cpslimit INT( 11 ) NOT NULL DEFAULT  '-1'"
 
 echo "
 * * * * * /usr/sbin/opensipsctl fifo ds_reload
@@ -459,6 +460,9 @@ firewall-cmd --reload
 
 systemctl restart monit
 systemctl enable monit
+
+
+sed -i -e 's/STARTOPTIONS/STARTOPTIONS -m 2048/g' /usr/sbin/opensipsctl
 
 
 echo 'SystemMaxUse=10M' >> /etc/systemd/journald.conf

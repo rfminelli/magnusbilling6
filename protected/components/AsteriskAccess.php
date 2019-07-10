@@ -133,6 +133,11 @@ class AsteriskAccess
         return @$this->asmanager->Command("core show channels concise");
     }
 
+    public function cdrShowActive()
+    {
+        return @$this->asmanager->Command("cdr show active");
+    }
+
     public function coreShowChannelsVerbose()
     {
         return @$this->asmanager->Command("core show channels verbose");
@@ -381,6 +386,44 @@ class AsteriskAccess
             }
         }
         return $result;
+    }
+
+    public static function getCoreShowCdrChannels()
+    {
+
+        $sql          = "SELECT * FROM pkg_servers WHERE type = 'asterisk' AND status = 1 AND host != 'localhost'";
+        $modelServers = Yii::app()->db->createCommand($sql)->queryAll();
+
+        array_push($modelServers, array(
+            'host'     => 'localhost',
+            'username' => 'magnus',
+            'password' => 'magnussolution',
+        ));
+
+        $channels = array();
+        foreach ($modelServers as $key => $server) {
+
+            $data = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->cdrShowActive();
+
+            if (!isset($data) || !isset($data['data'])) {
+                return;
+            }
+
+            $linesCallsResult = explode("\n", $data['data']);
+
+            if ($linesCallsResult[1] != 'magnus') {
+                return false;
+            }
+            for ($i = 5; $i < count($linesCallsResult) - 1; $i++) {
+                $call = explode("|", $linesCallsResult[$i]);
+                if ($call[6] == '<none>' && $call[7] != 'AGI') {
+                    break;
+                }
+                $call['server'] = $server['host'];
+                $channels[]     = $call;
+            }
+        }
+        return $channels;
     }
 
     public static function getCoreShowChannels()
