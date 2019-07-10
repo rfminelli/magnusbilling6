@@ -230,7 +230,7 @@ class IvrAgi
                 } else if ($optionType == 'group') // CUSTOM
                 {
                     $agi->verbose("Call to group " . $optionValue, 1);
-                    $sql      = "SELECT * FROM pkg_sip WHERE `group` = '$optionValue'";
+                    $sql      = "SELECT * FROM pkg_sip WHERE sip_group = '$optionValue'";
                     $modelSip = $agi->query($sql)->fetchAll(PDO::FETCH_OBJ);
 
                     if (!isset($modelSip[0]->id)) {
