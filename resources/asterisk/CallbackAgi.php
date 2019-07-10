@@ -43,7 +43,7 @@ class CallbackAgi
                 $agi->verbose('$MAGNUS->destination =>' . $MAGNUS->destination);
 
                 /*protabilidade*/
-                $MAGNUS->destination = $MAGNUS->number_translation($agi, $MAGNUS->destination);
+                $MAGNUS->number_translation($agi, $MAGNUS->destination);
 
                 $searchTariff = new SearchTariff();
                 $resfindrate  = $searchTariff->find($MAGNUS, $agi);
@@ -57,7 +57,7 @@ class CallbackAgi
 
                 $CalcAgi->usedratecard = 0;
                 if ($resfindrate != 0) {
-                    $res_all_calcultimeout = $CalcAgi->calculateAllTimeout($MAGNUS, $MAGNUS->credit, $agi);
+                    $res_all_calcultimeout = $CalcAgi->calculateAllTimeout($MAGNUS, $agi);
                     if ($res_all_calcultimeout) {
                         $destination  = $MAGNUS->destination;
                         $providertech = $CalcAgi->tariffObj[0]['rc_providertech'];
@@ -92,7 +92,7 @@ class CallbackAgi
                         fwrite($fp, $call);
                         fclose($fp);
 
-                        $time += time();
+                        $time += time() + 3;
 
                         touch("$arquivo_call", $time);
                         @chown("$arquivo_call", "asterisk");
