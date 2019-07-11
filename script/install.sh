@@ -56,21 +56,6 @@ startup_services()
     fi
 }
 
-if [[ -e /var/www/html/mbilling/index.php ]]; then
-
-    clear
-    echo 
-    echo
-    echo "You alread have MagnusBilling installed!!!!"
-    echo
-    echo "Execute this command to update your MagnusBilling"
-    echo "/var/www/html/mbilling/protected/commands/update.sh"
-    echo 
-    echo
-    exit;
-
-fi
-
 
 set_timezone ()
 { 
@@ -197,6 +182,7 @@ fi
 
 
 mkdir -p /var/www/html/
+rm -rf /var/www/html/mbilling
 cd /var/www/html
 git clone https://github.com/magnussolution/magnusbilling6.git mbilling
 
@@ -223,8 +209,8 @@ rm -rf asterisk*
 clear
 mv /var/www/html/mbilling/script/asterisk-13.27.0.tar.gz /usr/src/
 #wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-13-current.tar.gz
-tar xzvf asterisk-13-current.tar.gz
-rm -rf asterisk-13-current.tar.gz
+tar xzvf asterisk-13.27.0.tar.gz
+rm -rf asterisk-13.27.0.tar.gz
 cd asterisk-*
 useradd -c 'Asterisk PBX' -d /var/lib/asterisk asterisk
 mkdir /var/run/asterisk

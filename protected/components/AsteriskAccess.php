@@ -406,7 +406,7 @@ class AsteriskAccess
             $data = AsteriskAccess::instance($server['host'], $server['username'], $server['password'])->cdrShowActive();
 
             if (!isset($data) || !isset($data['data'])) {
-                return;
+                continue;
             }
 
             $linesCallsResult = explode("\n", $data['data']);
@@ -416,13 +416,17 @@ class AsteriskAccess
             }
             for ($i = 5; $i < count($linesCallsResult) - 1; $i++) {
                 $call = explode("|", $linesCallsResult[$i]);
+                if ($call[4] == 'Down') {
+                    continue;
+                }
                 if ($call[6] == '<none>' && $call[7] != 'AGI') {
-                    break;
+                    continue;
                 }
                 $call['server'] = $server['host'];
                 $channels[]     = $call;
             }
         }
+
         return $channels;
     }
 

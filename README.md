@@ -1,8 +1,8 @@
-###########
+###############
 MagnusBilling 6
-###########
+###############
 
-WE LOOKING FOR DEVELOPER TO  GETTING INVOLVE IN THIS AMAZING PROJECT.
+Do you like this software? Star the project and become a [stargazer](https://github.com/magnussolution/magnusbilling6/stargazers).
 
 
 # MagnusBilling 6
@@ -11,7 +11,10 @@ Voip sistem to Asterisk.
 
 ## Getting Started
 
-Install MangusBilling in your server and read our documentation.
+Video:
+
+* [How to install MagnusBilling](https://www.youtube.com/watch?v=X3cj-dZPZHU)
+* [How to set-up basic configuration and make your first call](https://www.youtube.com/watch?v=7r1XCJnfdZA&t=73s)
 
 ### Prerequisites
 
