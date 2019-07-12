@@ -44,7 +44,7 @@ Please read [CONTRIBUTING.md](https://github.com/magnussolution/magnusbilling6/b
 
 ## Versioning
 
-We are in MagnusBilling version 6.x.x (BETA)
+We are in MagnusBilling version 6.x.x 
 
 ## Authors
 
