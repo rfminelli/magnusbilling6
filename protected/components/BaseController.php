@@ -1347,11 +1347,11 @@ class BaseController extends CController
                                             'condition' => "$field LIKE :$paramName",
                                         );
                                     }
+                                    $this->paramsFilter[$paramName] = "%" . $value . "%";
                                 } else {
-                                    $condition .= " AND $field LIKE :$paramName";
+                                    $condition .= " AND LOWER($field) LIKE :$paramName";
+                                    $this->paramsFilter[$paramName] = "%" . strtolower($value) . "%";
                                 }
-
-                                $this->paramsFilter[$paramName] = "%$value%";
 
                             }
                             break;
