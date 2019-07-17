@@ -101,7 +101,7 @@ class UpdateMysqlCommand extends ConsoleCommand
 			ALTER TABLE `pkg_campaign`  ADD CONSTRAINT `fk_pkg_plan_pkg_campaign` FOREIGN KEY (`id_plan`) REFERENCES `pkg_plan` (`id`);
 			INSERT INTO pkg_configuration VALUES
 				(NULL, 'Link to signup terms', 'accept_terms_link', '', 'Set a link to signup terms', 'global', '1'),
-				(NULL, 'Auto gernerate user in Signup form', 'auto_generate_user_signup', '1', 'Auto gernerate user in Signup form', 'global', '1'),
+				(NULL, 'Auto gernerate user in Signup form', 'auto_generate_user_signup', '1', 'Auto generate user in Signup form', 'global', '1'),
 				(NULL, 'Notificação de  Pagamento de serviços', 'service_daytopay', '5', 'Total Dias anterior ao vencimento que o MagnusBilling avisara o cliente para pagar os serviços', 'global', '1');
 				";
             $this->executeDB($sql);

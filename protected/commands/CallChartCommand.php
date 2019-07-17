@@ -224,7 +224,7 @@ class CallChartCommand extends ConsoleCommand
 
                             switch ($resultDid[0]['voip_call']) {
                                 case 2:
-                                    $trunk = $originate . ' IVR' . $resultDid[0]->idIvr->name;
+                                    $trunk = $originate . ' IVR ' . $resultDid[0]->idIvr->name;
                                     break;
                                 case 3:
                                     $trunk = $originate . ' CallingCard';

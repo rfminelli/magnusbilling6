@@ -100,6 +100,11 @@ class TrunkController extends Controller
     }
     public function setAttributesModels($attributes, $models)
     {
+
+        if ($_SERVER['HTTP_HOST'] == 'localhost') {
+            return $attributes;
+        }
+
         $trunkRegister = AsteriskAccess::instance()->sipShowRegistry();
         $trunkRegister = explode("\n", $trunkRegister['data']);
 
@@ -124,6 +129,7 @@ class TrunkController extends Controller
 
     public function generateSipFile()
     {
+
         if ($_SERVER['HTTP_HOST'] == 'localhost') {
             return;
         }

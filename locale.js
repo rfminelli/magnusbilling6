@@ -25,6 +25,11 @@
         }
     };
     window.h = function(string) {
-        return _constants[string] ? '<a href="#" alt="' + t(_constants[string] || string) + '" class="tooltipHelp" > <img src="./resources/images/help.png" /> </a>&nbsp;&nbsp;&nbsp;' : '';
+        if (_constants[string] && _constants[string].match(/\|http/)) {
+            partOfString = _constants[string].split('|');
+            return '<a href="' + partOfString[1] + '" target="_blank" alt="' + partOfString[0] + '" class="tooltipHelp" > <img src="./resources/images/help.png" /> </a>&nbsp;&nbsp;&nbsp;';
+        } else {
+            return _constants[string] ? '<a href="#" alt="' + _constants[string] + '" class="tooltipHelp" > <img src="./resources/images/help.png" /> </a>&nbsp;&nbsp;&nbsp;' : '';
+        }
     }
 }());

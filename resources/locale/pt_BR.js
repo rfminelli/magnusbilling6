@@ -334,7 +334,7 @@ Locale.load({
     'antireset': 'Anti Resete',
     'apply': 'Aplicar',
     'asterisk': 'Asterisk',
-    'authenticating': 'Autenticando...',
+    'Authenticating': 'Autenticando...',
     'authentication': 'Autenticação',
     'averageCpuUsage': 'Média de uso do CPU',
     'back': 'Voltar',

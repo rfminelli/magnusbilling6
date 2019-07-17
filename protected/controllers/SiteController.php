@@ -41,5 +41,8 @@ class SiteController extends Controller
         ? $this->config['global']['reCaptchaKey']
         : "";
         echo 'window.reCaptchaKey = ' . json_encode($reCaptchaKey) . ';';
+        $upload_max_size = ini_get('upload_max_filesize');
+        echo 'window.uploadFaxFilesize = "' . $upload_max_size . '";';
+        echo 'window.uploadFaxFilesizebites = "' . intval($upload_max_size) . '";';
     }
 }
