@@ -29,7 +29,7 @@ Help.load({
     'sip.defaultuser': 'Username to login on the SIP device.',
     'sip.secret': 'Password to login on the SIP device.',
     'sip.callerid': 'The Caller ID number. Your trunk need accept CLI.',
-    'sip.disallow': 'First disallow all codecs, and select below the codecs available to your user. G729 is not installed by default, because is commercial license.',
+    'sip.disallow': 'First disallow all codecs, and select below the codecs available to your user.',
     'sip.host': 'Dynamic is to allow your user register his account from any IP. If you want authenticate via IP add the user IP here. REMEMBER TO AUTHENTICATE VIA IP -> remove password and set insecure to invite',
     'sip.group': 'Used to incomming call. Is used to ring more than one SIP account. You can create groups with any string.',
     'sip.block_call_reg': 'You can block call with regular expression. For example, you want block all call that start with 9. Use regex ^9 ',
