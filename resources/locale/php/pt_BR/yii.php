@@ -3,6 +3,8 @@ return array(
     /*new '' => '', */
 
     /*MENU CONFIGURATION*/
+    'config_title_signup_admin_email'                                                                                                                                                  => 'Avisar admin/email quando alguem se registrar',
+    'config_desc_signup_admin_email'                                                                                                                                                   => 'Envia um email para o administrador quando alguem se cadastrar no formulário de registro. \n 0 - Desativa \n 1 - Ativa',
     'config_title_enable_callingcard'                                                                                                                                                  => 'Ativar CallingCard',
     'config_desc_enable_callingcard'                                                                                                                                                   => 'Ativar CallingCard. \n 0 - Desativa \n 1 - Ativa',
     'config_title_MixMonitor_format'                                                                                                                                                   => 'MixMonitor Format',

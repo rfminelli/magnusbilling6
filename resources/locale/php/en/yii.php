@@ -2,6 +2,8 @@
 return array(
 
     /*MENU CONFIGURATION*/
+    'config_title_signup_admin_email'              => 'Send email to admin when user signup from form',
+    'config_desc_signup_admin_email'               => 'Send email to administrator email when creation new account from signup page\n 0 - Disable \n1 - Enable',
     'config_title_enable_callingcard'              => 'Enable CallingCard',
     'config_desc_enable_callingcard'               => 'Enable CallingCard.\n 0 - Disable \n1 - Enable',
     'config_title_MixMonitor_format'               => 'MixMonitor Format',
@@ -29,7 +31,7 @@ return array(
     'config_title_base_currency'                   => 'Currency',
     'config_desc_base_currency'                    => 'Currency',
     'config_title_base_language'                   => 'Language',
-    'config_desc_base_language'                    => 'VAllowed values \nen English \nes Espanhol \npt_BR Portugues',
+    'config_desc_base_language'                    => 'Allowed values \nen English \nes Espanhol \npt_BR Portugues',
     'config_title_bloc_time_call'                  => 'Rounding time calls',
     'config_desc_bloc_time_call'                   => 'Round the lead time as charging sales.\n1: Yes\n0: No',
     'config_title_callback-softphone'              => 'Show CallBack tab on Android Softphone',

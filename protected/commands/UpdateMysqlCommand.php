@@ -1454,6 +1454,18 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        //2019-07-18
+        if ($version == '6.6.1') {
+
+            $sql = "
+			INSERT INTO pkg_configuration VALUES
+				(NULL, 'Send email to admin when user signup from form', 'signup_admin_email', '1', 'Send email to administrator email when creation new account from signup page\n 0 - Disable \n1 - Enable', 'global', '1')";
+            $this->executeDB($sql);
+
+            $version = '6.6.2';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 

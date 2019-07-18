@@ -59,6 +59,11 @@ class SignupController extends Controller
             } catch (Exception $e) {
             }
 
+            if ($this->config['global']['signup_admin_email'] == 1) {
+                $mail->setTitle('NEW USER SIGNUP FROM MAGNUSBILLING SIGNUP FORM. USERNAME ');
+                $mail->send($this->config['global']['admin_email']);
+            }
+
             $signup = Signup::model()->findByPk((int) $id);
             $this->render('view', array('signup' => $signup));
         }
