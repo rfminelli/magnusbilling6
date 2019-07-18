@@ -616,10 +616,6 @@ class Magnus
     public function number_translation($agi, $destination)
     {
         #match / replace / if match length
-        #0/54,4/543424/7,15/549342/9
-
-        //$this->prefix_local = "0/54,*/5511/8,15/549342/9";
-
         $regexs = preg_split("/,/", $this->prefix_local);
 
         foreach ($regexs as $key => $regex) {
@@ -633,23 +629,21 @@ class Magnus
 
             $number_prefix = substr($destination, 0, strlen($grab));
 
-            if (strtoupper($this->config['global']['base_country']) == 'BRL' || strtoupper($this->config['global']['base_country']) == 'ARG') {
-                if ($grab == '*' && strlen($destination) == $digit) {
-                    $destination = $replace . $destination;
-                } else if (strlen($destination) == $digit && $number_prefix == $grab) {
-                    $destination = $replace . substr($destination, strlen($grab));
-                } elseif ($number_prefix == $grab) {
-                    $destination = $replace . substr($destination, strlen($grab));
+            if (count($regra) == 2) {
+                if ($number_prefix == $grab) {
+                    $destination = preg_replace('/^' . $grab . '/', $replace, $destination);
+                    break;
                 }
 
-            } else {
+            } else if (strlen($destination) == $digit) {
+                if ($grab == '*' && strlen($destination) == $digit) {
+                    $destination = $replace . $destination;
+                    break;
 
-                if (strlen($destination) == $digit) {
-                    if ($grab == '*' && strlen($destination) == $digit) {
-                        $destination = $replace . $destination;
-                    } else if ($number_prefix == $grab) {
-                        $destination = $replace . substr($destination, strlen($grab));
-                    }
+                } else if ($number_prefix == $grab) {
+                    $destination = $replace . substr($destination, strlen($grab));
+                    break;
+
                 }
             }
         }
