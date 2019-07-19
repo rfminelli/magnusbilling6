@@ -111,7 +111,7 @@ class CampaignController extends Controller
     public function setAttributesModels($attributes, $models)
     {
 
-        for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
+        for ($i = 0; $i < is_array($attributes) && count($attributes); $i++) {
             if (preg_match("/|/", $attributes[$i]['forward_number'])) {
                 $itemOption               = explode("|", $attributes[$i]['forward_number']);
                 $attributes[$i]['type_0'] = $itemOption[0];

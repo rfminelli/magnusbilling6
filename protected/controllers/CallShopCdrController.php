@@ -87,7 +87,7 @@ class CallShopCdrController extends Controller
     {
         $modelCallShop = $this->getSumPrice();
 
-        for ($i = 0; $i < count($attributes) && is_array($attributes); $i++) {
+        for ($i = 0; $i < is_array($attributes) && count($attributes); $i++) {
 
             $attributes[$i]['priceSum'] = round($modelCallShop->price, 2);
 
