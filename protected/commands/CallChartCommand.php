@@ -34,15 +34,6 @@ class CallChartCommand extends ConsoleCommand
     public function run($args)
     {
 
-        $modelUserCallShop = User::model()->count('callshop = 1');
-
-        if ($modelUserCallShop > 0) {
-            $modelUserCallShop = User::model()->findAll('callshop = 1');
-            foreach ($modelUserCallShop as $key => $value) {
-                $callShopIds[] = $value->id;
-            }
-        }
-
         for (;;) {
             try {
                 $calls = AsteriskAccess::getCoreShowCdrChannels();
@@ -67,6 +58,15 @@ class CallChartCommand extends ConsoleCommand
 
     public function user_cdr_show($calls)
     {
+        $modelUserCallShop = User::model()->count('callshop = 1');
+        if ($modelUserCallShop > 0) {
+            $callShopIds       = [];
+            $modelUserCallShop = User::model()->findAll('callshop = 1');
+            foreach ($modelUserCallShop as $key => $value) {
+                $callShopIds[] = $value->id;
+            }
+        }
+
         $total = 0;
 
         if (count($calls) > 0) {
@@ -224,7 +224,7 @@ class CallChartCommand extends ConsoleCommand
 
                             switch ($resultDid[0]['voip_call']) {
                                 case 2:
-                                    $trunk = $originate . ' IVR ' . $resultDid[0]->idIvr->name;
+                                    $trunk = $originate . ' IVR' . $resultDid[0]->idIvr->name;
                                     break;
                                 case 3:
                                     $trunk = $originate . ' CallingCard';
@@ -271,7 +271,7 @@ class CallChartCommand extends ConsoleCommand
 
                 $sql[] = "(NULL,NULL, '$sip_account', $id_user, '$channel', '" . utf8_encode($trunk) . "', '$ndiscado', '" . preg_replace('/\(|\)/', '', $codec) . "', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
-                if ($modelUserCallShop > 0) {
+                if (count($callShopIds)) {
                     if (in_array($modelSip->id_user, $callShopIds)) {
                         $modelSip->status         = 3;
                         $modelSip->callshopnumber = $ndiscado;
@@ -316,6 +316,17 @@ class CallChartCommand extends ConsoleCommand
     public function use_concise()
     {
         for (;;) {
+
+            $modelUserCallShop = User::model()->count('callshop = 1');
+
+            if ($modelUserCallShop > 0) {
+                $callShopIds       = [];
+                $modelUserCallShop = User::model()->findAll('callshop = 1');
+                foreach ($modelUserCallShop as $key => $value) {
+                    $callShopIds[] = $value->id;
+                }
+            }
+
             try {
                 $calls = AsteriskAccess::getCoreShowChannels();
             } catch (Exception $e) {
@@ -545,7 +556,7 @@ class CallChartCommand extends ConsoleCommand
 
                     $sql[] = "(NULL, '$uniqueid', '$peername', $id_user, '$channel', '" . utf8_encode($trunk) . "', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
-                    if ($modelUserCallShop > 0) {
+                    if (count($callShopIds)) {
                         if (in_array($modelSip->id_user, $callShopIds)) {
                             $modelSip->status         = 3;
                             $modelSip->callshopnumber = $ndiscado;
