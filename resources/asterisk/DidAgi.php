@@ -384,10 +384,9 @@ class DidAgi
                                     if (preg_match('/SIP|LOCAL|AGI/', strtoupper($value))) {
                                         continue;
                                     }
-                                    $agi->verbose(print_r($account[0], true));
-                                    Push::send($agi, $account[0], $MAGNUS->CallerID, 0);
+                                    Push::send($agi, strtok($value, ','), $MAGNUS->CallerID, 0);
                                 }
-                                sleep(4);
+                                sleep(5);
                             }
                             $dialstr = preg_replace('/PUSH/', 'SIP', $dialstr);
                         }
