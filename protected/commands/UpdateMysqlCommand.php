@@ -1485,6 +1485,18 @@ class UpdateMysqlCommand extends ConsoleCommand
             $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+        //2019-07-24
+        if ($version == '6.6.2') {
+
+            $sql = "
+            	TRUNCATE pkg_call_chart;
+            	ALTER TABLE `pkg_call_chart` ADD UNIQUE(`date`);";
+            $this->executeDB($sql);
+
+            $version = '6.6.3';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
 
     }
 

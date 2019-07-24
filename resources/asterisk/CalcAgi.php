@@ -590,9 +590,6 @@ class CalcAgi
         }
         $old_destination = $destination;
 
-        $sql = "UPDATE pkg_call_chart SET total = total + 1 WHERE date > '" . date('Y-m-d H:i') . "' LIMIT 1";
-        $agi->exec($sql);
-
         for ($k = 0; $k < count($this->tariffObj); $k++) {
             $destination = $old_destination;
             if ($this->tariffObj[$k]['id_trunk'] != '-1') {

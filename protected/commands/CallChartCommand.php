@@ -18,19 +18,10 @@
  *
  */
 
-/*
-outbound call  -> SIP/94792-000000434|94792      |555182464731  |94792      |Up|(g729)|SIP/tronco-00000044|Dial |2|2
-massive call   -> SIP/tronco-0000003a|MC!teste   |5551982464731 |MC!teste   |Up|(ulaw)|<none>             |AGI  |1|1
-DID call queue -> SIP/addphone-000000|           |9999999999    |           |Up|(g729)|SIP/94792-0000004c |Queue|2|2
-DID call sip   -> SIP/addphone-000000|94792      |9999999999    |           |Up|(g729)|SIP/94792-00000050 |Dial |1|3
-DID call ivr   -> SIP/addphone-000000|           |9999999999    |           |Up|(g729)|<none>             |AGI  |4|5
-
-SIP call       -> SIP/24313-00000017 |24315      |24311         |24315      |Up|(g729)|SIP/24311-00000018 |Dial |1|4
-
- */
-
 class CallChartCommand extends ConsoleCommand
 {
+    private $totalCalls;
+    private $totalUpCalls;
     public function run($args)
     {
 
@@ -67,7 +58,23 @@ class CallChartCommand extends ConsoleCommand
             }
         }
 
-        $total = 0;
+        $modelCallOnlineChart         = new CallOnlineChart();
+        $modelCallOnlineChart->date   = date('Y-m-d H:i:') . '00';
+        $modelCallOnlineChart->answer = 0;
+        $modelCallOnlineChart->total  = 0;
+        try {
+            $modelCallOnlineChart->save();
+            $totalUp    = $this->totalUpCalls    = 0;
+            $totalCalls = $this->totalCalls = 0;
+        } catch (Exception $e) {
+            $modelCallOnlineChart = CallOnlineChart::model()->find('date = :key', array(':key' => date('Y-m-d H:i:') . '00'));
+        }
+
+        if ($modelCallOnlineChart->id > 0) {
+            $callOnlineId = $modelCallOnlineChart->id;
+        } else {
+            $callOnlineId = 0;
+        }
 
         if (count($calls) > 0) {
 
@@ -79,10 +86,6 @@ class CallChartCommand extends ConsoleCommand
 
             $sql = array();
             foreach ($calls as $key => $call) {
-
-                if (preg_match("/Up/", $call[4])) {
-                    $total++;
-                }
 
                 $type    = '';
                 $channel = $call[0];
@@ -98,6 +101,7 @@ class CallChartCommand extends ConsoleCommand
                     echo "return because status is Ringing";
                     continue;
                 }
+
                 $trunk       = null;
                 $sip_account = $call[1];
                 $ndiscado    = $call[2];
@@ -269,6 +273,11 @@ class CallChartCommand extends ConsoleCommand
                     continue;
                 }
 
+                if (preg_match("/Up/", $status)) {
+                    $totalUp++;
+                }
+                $totalCalls++;
+
                 $sql[] = "(NULL,NULL, '$sip_account', $id_user, '$channel', '" . utf8_encode($trunk) . "', '$ndiscado', '" . preg_replace('/\(|\)/', '', $codec) . "', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                 if (count($callShopIds)) {
@@ -281,22 +290,22 @@ class CallChartCommand extends ConsoleCommand
                     }
                 }
             }
-            $total = intval($total / 2);
-            if ($i == 0 || !isset($total1)) {
-                $modelCallOnlineChart         = new CallOnlineChart();
-                $modelCallOnlineChart->date   = date('Y-m-d H:i:s');
-                $modelCallOnlineChart->answer = $total;
-                $modelCallOnlineChart->total  = 0;
-                $modelCallOnlineChart->save();
 
-                $id     = $modelCallOnlineChart->id;
-                $total1 = $total;
-            } else {
-                if ($total > $total1) {
-                    CallOnlineChart::model()->updateByPk($id, array('answer' => $total));
-                }
+            if ($totalUp > $this->totalUpCalls) {
+                $this->totalUpCalls = $totalUp;
+                echo "totalUp é > total1\n";
             }
 
+            if ($totalCalls > $this->totalCalls) {
+                $this->totalCalls = $totalCalls;
+            }
+
+            $modelCallOnlineChart->answer = $this->totalUpCalls;
+            $modelCallOnlineChart->total  = $this->totalCalls;
+            $modelCallOnlineChart->save();
+
+            echo 'totalUp = ' . $totalUp . ' -> totalCalls = ' . $totalCalls . "\n";
+            echo 'this->totalUpCalls = ' . $this->totalUpCalls . ' -> this->totalCalls = ' . $this->totalCalls . "\n";
             CallOnLine::model()->deleteAll();
 
             if (count($sql) > 0) {
@@ -313,6 +322,7 @@ class CallChartCommand extends ConsoleCommand
         sleep(4);
 
     }
+
     public function use_concise()
     {
         for (;;) {
@@ -325,6 +335,24 @@ class CallChartCommand extends ConsoleCommand
                 foreach ($modelUserCallShop as $key => $value) {
                     $callShopIds[] = $value->id;
                 }
+            }
+
+            $modelCallOnlineChart         = new CallOnlineChart();
+            $modelCallOnlineChart->date   = date('Y-m-d H:i:') . '00';
+            $modelCallOnlineChart->answer = 0;
+            $modelCallOnlineChart->total  = 0;
+            try {
+                $modelCallOnlineChart->save();
+                $totalUp    = $this->totalUpCalls    = 0;
+                $totalCalls = $this->totalCalls = 0;
+            } catch (Exception $e) {
+                $modelCallOnlineChart = CallOnlineChart::model()->find('date = :key', array(':key' => date('Y-m-d H:i:') . '00'));
+            }
+
+            if ($modelCallOnlineChart->id > 0) {
+                $callOnlineId = $modelCallOnlineChart->id;
+            } else {
+                $callOnlineId = 0;
             }
 
             try {
@@ -344,10 +372,6 @@ class CallChartCommand extends ConsoleCommand
 
                 $sql = array();
                 foreach ($calls as $key => $call) {
-
-                    if (preg_match("/Up/", $call[4])) {
-                        $total++;
-                    }
 
                     if (isset($_GET['log'])) {
                         echo "<br><br>|" . $call[5] . "|<br>";
@@ -554,6 +578,12 @@ class CallChartCommand extends ConsoleCommand
 
                     }
 
+                    if (preg_match("/Up/", $status)) {
+                        $totalUp++;
+                    }
+
+                    $totalCalls++;
+
                     $sql[] = "(NULL, '$uniqueid', '$peername', $id_user, '$channel', '" . utf8_encode($trunk) . "', '$ndiscado', 'NULL', '$status', '$cdr', 'no','no', '" . $call['server'] . "')";
 
                     if (count($callShopIds)) {
@@ -567,23 +597,24 @@ class CallChartCommand extends ConsoleCommand
                     }
                 }
 
-                $total = intval($total / 2);
-                if ($i == 0 || !isset($total1)) {
-                    $modelCallOnlineChart         = new CallOnlineChart();
-                    $modelCallOnlineChart->date   = date('Y-m-d H:i:s');
-                    $modelCallOnlineChart->answer = $total;
-                    $modelCallOnlineChart->total  = 0;
-                    $modelCallOnlineChart->save();
-
-                    $id     = $modelCallOnlineChart->id;
-                    $total1 = $total;
-                } else {
-                    if ($total > $total1) {
-                        CallOnlineChart::model()->updateByPk($id, array('answer' => $total));
-                    }
+                if ($totalUp > $this->totalUpCalls) {
+                    $this->totalUpCalls = $totalUp;
+                    echo "totalUp é > total1\n";
                 }
 
+                if ($totalCalls > $this->totalCalls) {
+                    $this->totalCalls = $totalCalls;
+                }
+
+                $modelCallOnlineChart->answer = $this->totalUpCalls;
+                $modelCallOnlineChart->total  = $this->totalCalls;
+                $modelCallOnlineChart->save();
+
+                //echo 'totalUp = ' . $totalUp . ' -> totalCalls = ' . $totalCalls . "\n";
+                //echo 'this->totalUpCalls = ' . $this->totalUpCalls . ' -> this->totalCalls = ' . $this->totalCalls . "\n";
                 CallOnLine::model()->deleteAll();
+
+                $totalUp = $totalCalls = 0;
 
                 if (count($sql) > 0) {
                     $result = CallOnLine::model()->insertCalls($sql);
