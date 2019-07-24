@@ -57,7 +57,7 @@ class Servers extends Model
         return array(
             array('host', 'required'),
             array('status, weight', 'numerical', 'integerOnly' => true),
-            array('host', 'length', 'max' => 100),
+            array('host,name', 'length', 'max' => 100),
             array('description', 'length', 'max' => 500),
             array('password, username', 'length', 'max' => 50),
             array('type, port, sip_port', 'length', 'max' => 20),

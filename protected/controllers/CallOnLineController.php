@@ -131,4 +131,40 @@ class CallOnLineController extends Controller
             'msg'     => 'Start Spy',
         ));
     }
+
+    public function setAttributesModels($attributes, $models)
+    {
+
+        if (isset($attributes[0])) {
+            $modelSip     = Sip::model()->findAll();
+            $modelServers = Servers::model()->findAll('type != :key1 AND status = 1 AND host != :key', [':key' => 'localhost', ':key1' => 'sipproxy']);
+
+            if (!isset($modelServers[0])) {
+                array_push($modelServers, array(
+                    'name'     => 'Master',
+                    'host'     => 'localhost',
+                    'type'     => 'mbilling',
+                    'username' => 'magnus',
+                    'password' => 'magnussolution',
+                ));
+            }
+
+            $array = '';
+            foreach ($modelServers as $key => $server) {
+                if ($server->type == 'mbilling') {
+                    $server['host'] = 'localhost';
+                }
+
+                $modelCallOnLine = CallOnLine::model()->count('server = :key', array('key' => $server['host']));
+
+                $modelCallOnLineUp = CallOnLine::model()->count('server = :key AND status = :key1', array('key' => $server['host'], ':key1' => 'Up'));
+                $array .= '<font color="black">' . strtoupper($server['name']) . '</font> <font color="blue">Total:' . $modelCallOnLine . '</font> <font color="green">Up:' . $modelCallOnLineUp . '</font>&ensp;&ensp;|&ensp;&ensp;';
+            }
+
+            $attributes[0]['serverSum'] = $array;
+        }
+
+        return $attributes;
+    }
+
 }
