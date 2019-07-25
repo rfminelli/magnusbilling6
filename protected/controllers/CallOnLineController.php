@@ -151,7 +151,7 @@ class CallOnLineController extends Controller
 
             $array = '';
             foreach ($modelServers as $key => $server) {
-                if ($server->type == 'mbilling') {
+                if ($server['type'] == 'mbilling') {
                     $server['host'] = 'localhost';
                 }
 
