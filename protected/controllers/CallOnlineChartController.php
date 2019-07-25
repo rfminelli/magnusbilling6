@@ -46,13 +46,13 @@ class CallOnlineChartController extends Controller
                 'select' => 'id,  DATE_FORMAT( date, \'%H\' ) date , SUM(total) AS total, SUM(answer) AS answer',
                 'group'  => "DATE_FORMAT( date, '%Y-%m-%d %H' )",
                 'order'  => 'id DESC',
-                'limit'  => 24,
+                'limit'  => 48,
             ));
         } else {
             $modelCallOnlineChart = CallOnlineChart::model()->findAll(array(
                 'select' => 'id, DATE_FORMAT( date, \'%H:%i\' ) date, total, answer',
                 'order'  => 'id DESC',
-                'limit'  => 20,
+                'limit'  => 60,
             ));
         }
         # envia o json requisitado
