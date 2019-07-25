@@ -1508,6 +1508,23 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.6.4') {
+
+            $sql = "
+				CREATE TABLE IF NOT EXISTS `pkg_cdr_summary_ids` (
+					`id` int(11) NOT NULL AUTO_INCREMENT,
+					`day` date NOT NULL,
+					cdr_id int(11) NOT NULL,
+					cdr_falide_id int(11) NOT NULL,
+					PRIMARY KEY (`id`),
+					UNIQUE KEY `day` (`day`)
+				) ENGINE=InnoDB  DEFAULT CHARSET=latin1 ;";
+            $this->executeDB($sql);
+            $version = '6.6.5';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

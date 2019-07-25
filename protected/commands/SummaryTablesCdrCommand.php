@@ -18,18 +18,20 @@
  *
  */
 
-/*
-0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days
-0 8-22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
- */
-
 class SummaryTablesCdrCommand extends CConsoleCommand
 {
     private $con;
     private $signal;
     private $date;
+    private $cdr_id;
+    private $cdr_falide_id;
+    private $month_cdr_id;
+    private $month_cdr_falide_id;
+
     public function run($args)
     {
+
+        $this->set_ids();
 
         if (isset($args[0])) {
             try {
@@ -56,6 +58,60 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             $this->perMonthTrunk();
             $this->perUser();
             $this->perTrunk();
+        }
+
+    }
+
+    private function set_ids()
+    {
+        $sql    = "SELECT cdr_id, cdr_falide_id FROM pkg_cdr_summary_ids WHERE `day` = '" . date('Y-m-d') . "' LIMIT 1";
+        $result = Yii::app()->db->createCommand($sql)->queryAll();
+        if (!isset($result[0]['cdr_id']) || ($result[0]['cdr_id'] == 0 || $result[0]['cdr_falide_id'] == 0)) {
+            $sql       = "SELECT id  FROM pkg_cdr WHERE starttime > '" . date('Y-m-d') . "' ORDER BY id ASC LIMIT 1";
+            $resultCdr = Yii::app()->db->createCommand($sql)->queryAll();
+            if (!isset($resultCdr[0]['id'])) {
+                return;
+            }
+
+            $sql             = "SELECT id  FROM pkg_cdr_failed WHERE starttime > '" . date('Y-m-d') . "' ORDER BY id ASC LIMIT 1";
+            $resultCdrFailed = Yii::app()->db->createCommand($sql)->queryAll();
+            if (!isset($resultCdrFailed[0]['id'])) {
+                return;
+            }
+            $this->cdr_id        = $resultCdr[0]['id'];
+            $this->cdr_falide_id = $resultCdrFailed[0]['id'];
+
+            $sql = "INSERT INTO pkg_cdr_summary_ids (day, cdr_id, cdr_falide_id) VALUES ('" . date('Y-m-d') . "', '" . $this->cdr_id . "', '" . $this->cdr_falide_id . "' )";
+            Yii::app()->db->createCommand($sql)->execute();
+
+        } else {
+            $this->cdr_id        = $result[0]['cdr_id'];
+            $this->cdr_falide_id = $result[0]['cdr_falide_id'];
+        }
+
+        $sql    = "SELECT cdr_id, cdr_falide_id FROM pkg_cdr_summary_ids WHERE `day` = '" . date('Y-m-') . "01' LIMIT 1";
+        $result = Yii::app()->db->createCommand($sql)->queryAll();
+        if (!isset($result[0]['cdr_id']) || ($result[0]['cdr_id'] == 0 || $result[0]['cdr_falide_id'] == 0)) {
+            $sql       = "SELECT id  FROM pkg_cdr WHERE starttime > '" . date('Y-m-') . "01' ORDER BY id ASC LIMIT 1";
+            $resultCdr = Yii::app()->db->createCommand($sql)->queryAll();
+            if (!isset($resultCdr[0]['id'])) {
+                return;
+            }
+
+            $sql             = "SELECT id  FROM pkg_cdr_failed WHERE starttime > '" . date('Y-m-') . "01' ORDER BY id ASC LIMIT 1";
+            $resultCdrFailed = Yii::app()->db->createCommand($sql)->queryAll();
+            if (!isset($resultCdrFailed[0]['id'])) {
+                return;
+            }
+            $this->month_cdr_id        = $resultCdr[0]['id'];
+            $this->month_cdr_falide_id = $resultCdrFailed[0]['id'];
+
+            $sql = "INSERT INTO pkg_cdr_summary_ids (day, cdr_id, cdr_falide_id) VALUES ('" . date('Y-m-') . "01', '" . $this->month_cdr_id . "', '" . $this->month_cdr_falide_id . "' )";
+            Yii::app()->db->createCommand($sql)->execute();
+
+        } else {
+            $this->month_cdr_id        = $result[0]['cdr_id'];
+            $this->month_cdr_falide_id = $result[0]['cdr_falide_id'];
         }
 
     }
@@ -102,7 +158,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill
-                FROM pkg_cdr t WHERE $filter GROUP BY day ORDER BY day DESC";
+                FROM pkg_cdr t WHERE id >= $this->cdr_id GROUP BY day ORDER BY day DESC";
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['day'])) {
@@ -111,10 +167,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['day'] != date('Y-m-d')) {
+                continue;
+            }
             $line .= "('" . $value['day'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "'),";
         }
 
-        $sql = "DELETE FROM pkg_cdr_summary_day WHERE day $this->signal '$this->date' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day WHERE day = '$this->date' ";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "INSERT INTO pkg_cdr_summary_day (day, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill) VALUES " . substr($line, 0, -1) . ";";
@@ -128,7 +187,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $sql = "SELECT DATE(starttime) AS day,
                 count(*) as nbcall_fail
-                FROM pkg_cdr_failed t WHERE $filter  GROUP BY day ORDER BY day DESC";
+                FROM pkg_cdr_failed t WHERE id >= $this->cdr_falide_id  GROUP BY day ORDER BY day DESC ";
         $model = Yii::app()->db->createCommand($sql)->queryAll();
 
         foreach ($model as $key => $value) {
@@ -141,6 +200,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $sql = "UPDATE  pkg_cdr_summary_day SET lucro = sessionbill - buycost";
         Yii::app()->db->createCommand($sql)->execute();
+
     }
 
     public function perDayUser($filter = 1)
@@ -154,8 +214,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill,
                 sum(agent_bill) AS agent_bill
-                FROM pkg_cdr t WHERE $filter GROUP BY day, id_user ORDER BY day DESC";
-
+                FROM pkg_cdr t WHERE id >= $this->cdr_id GROUP BY day, id_user ORDER BY day DESC";
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['day'])) {
@@ -164,10 +223,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['day'] != date('Y-m-d')) {
+                continue;
+            }
             $line .= "('" . $value['day'] . "','" . $value['id_user'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "','" . $value['agent_bill'] . "'),";
         }
 
-        $sql = "DELETE FROM pkg_cdr_summary_day_user WHERE day $this->signal '$this->date' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_user WHERE day = '$this->date' ";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "INSERT INTO pkg_cdr_summary_day_user (day, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill, agent_bill) VALUES " . substr($line, 0, -1) . ";";
@@ -200,7 +262,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill
-                FROM pkg_cdr t WHERE $filter AND id_trunk IS NOT NULL GROUP BY day, id_trunk ORDER BY day DESC";
+                FROM pkg_cdr t WHERE id >= $this->cdr_id AND id_trunk IS NOT NULL GROUP BY day, id_trunk ORDER BY day DESC";
 
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
@@ -210,10 +272,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['day'] != date('Y-m-d')) {
+                continue;
+            }
             $line .= "('" . $value['day'] . "','" . $value['id_trunk'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "'),";
         }
 
-        $sql = "DELETE FROM pkg_cdr_summary_day_trunk WHERE day $this->signal '$this->date' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_trunk WHERE day = '$this->date' ";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "INSERT INTO pkg_cdr_summary_day_trunk (day, id_trunk, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill) VALUES " . substr($line, 0, -1) . ";";
@@ -241,8 +306,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 sum(sessionbill) AS sessionbill
                 FROM pkg_cdr t
                 LEFT JOIN pkg_user c ON t.id_user = c.id
-                WHERE  $filter AND c.id_user > 1  GROUP BY day, c.id_user ORDER BY day DESC";
-
+                WHERE  t.id >= $this->cdr_id AND c.id_user > 1  GROUP BY day, c.id_user ORDER BY day DESC";
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['day'])) {
@@ -251,10 +315,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['day'] != date('Y-m-d')) {
+                continue;
+            }
             $line .= "('" . $value['day'] . "','" . $value['id_user'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "'),";
         }
 
-        $sql = "DELETE FROM pkg_cdr_summary_day_agent WHERE day $this->signal '$this->date' ";
+        $sql = "DELETE FROM pkg_cdr_summary_day_agent WHERE day = '$this->date' ";
         Yii::app()->db->createCommand($sql)->execute();
 
         $sql = "INSERT INTO pkg_cdr_summary_day_agent (day, id_user, sessiontime, aloc_all_calls, nbcall, buycost, sessionbill) VALUES " . substr($line, 0, -1) . ";";
@@ -279,7 +346,8 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill
-                FROM pkg_cdr t WHERE $filter GROUP BY month ORDER BY month DESC";
+                FROM pkg_cdr t WHERE t.id >= $this->month_cdr_id GROUP BY month ORDER BY month DESC";
+
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['month'])) {
@@ -288,6 +356,9 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['month'] != date('Ym')) {
+                continue;
+            }
             $line .= "('" . $value['month'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "'),";
         }
 
@@ -306,6 +377,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $sql = "UPDATE  pkg_cdr_summary_month SET lucro = sessionbill - buycost";
         Yii::app()->db->createCommand($sql)->execute();
+
     }
 
     public function perMonthUser($filter = 1)
@@ -319,7 +391,8 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill,
                 sum(agent_bill) AS agent_bill
-                FROM pkg_cdr t WHERE $filter GROUP BY month, id_user ORDER BY month DESC";
+                FROM pkg_cdr t WHERE  t.id >= $this->month_cdr_id GROUP BY month, id_user ORDER BY month DESC";
+
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['month'])) {
@@ -328,6 +401,10 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['month'] != date('Ym')) {
+                continue;
+            }
+
             $line .= "('" . $value['month'] . "','" . $value['id_user'] . "', '" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "','" . $value['agent_bill'] . "'),";
         }
 
@@ -364,7 +441,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall,
                 sum(buycost) AS buycost,
                 sum(sessionbill) AS sessionbill
-                FROM pkg_cdr t WHERE $filter AND  id_trunk IS NOT NULL GROUP BY month, id_trunk ORDER BY month DESC";
+                FROM pkg_cdr t WHERE t.id >= $this->month_cdr_id AND  id_trunk IS NOT NULL GROUP BY month, id_trunk ORDER BY month DESC";
 
         $result = Yii::app()->db->createCommand($sql)->queryAll();
 
@@ -374,6 +451,9 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $line = '';
         foreach ($result as $key => $value) {
+            if ($value['month'] != date('Ym')) {
+                continue;
+            }
             $line .= "('" . $value['month'] . "','" . $value['id_trunk'] . "','" . $value['sessiontime'] . "','" . $value['aloc_all_calls'] . "','" . $value['nbcall'] . "','" . $value['buycost'] . "','" . $value['sessionbill'] . "'),";
         }
 
@@ -391,6 +471,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
 
         $sql = "UPDATE  pkg_cdr_summary_month_trunk SET lucro = sessionbill - buycost";
         Yii::app()->db->createCommand($sql)->execute();
+
     }
 
     public function perUser($filter = 1)
@@ -407,7 +488,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 FROM pkg_cdr t
                 LEFT JOIN pkg_user c ON t.id_user = c.id
                 GROUP BY t.id_user";
-        $result = Yii::app()->db->createCommand($sql)->queryAll();
+        $result = $this->con->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['id_user'])) {
             return;
@@ -435,7 +516,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
         count(*) as nbcall_fail
         FROM pkg_cdr_failed t LEFT JOIN pkg_user c ON t.id_user = c.id
         GROUP BY t.id_user";
-        $model = Yii::app()->db->createCommand($sql)->queryAll();
+        $model = $this->con->createCommand($sql)->queryAll();
 
         foreach ($model as $key => $value) {
             $sql = "UPDATE pkg_cdr_summary_user SET nbcall_fail =" . $value['nbcall_fail'] . " WHERE id_user = '" . $value['id_user'] . "' ";
@@ -470,7 +551,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 FROM pkg_cdr t
                 LEFT JOIN pkg_trunk c ON t.id_trunk = c.id
                 GROUP BY t.id_trunk";
-        $result = Yii::app()->db->createCommand($sql)->queryAll();
+        $result = $this->con->createCommand($sql)->queryAll();
 
         if (!isset($result[0]['id_trunk'])) {
             return;
@@ -495,7 +576,7 @@ class SummaryTablesCdrCommand extends CConsoleCommand
                 count(*) as nbcall_fail
                 FROM pkg_cdr_failed t LEFT JOIN pkg_user c ON t.id_trunk = c.id
                 GROUP BY t.id_trunk";
-        $model = Yii::app()->db->createCommand($sql)->queryAll();
+        $model = $this->con->createCommand($sql)->queryAll();
 
         foreach ($model as $key => $value) {
             $sql = "UPDATE pkg_cdr_summary_trunk SET nbcall_fail =" . $value['nbcall_fail'] . " WHERE id_trunk = '" . $value['id_trunk'] . "' ";
@@ -509,180 +590,4 @@ class SummaryTablesCdrCommand extends CConsoleCommand
         Yii::app()->db->createCommand($sql)->execute();
     }
 
-    public function dropTables()
-    {
-        echo $sql = "DROP TABLE pkg_cdr_summary_day, pkg_cdr_summary_day_agent, pkg_cdr_summary_day_trunk, pkg_cdr_summary_day_user, pkg_cdr_summary_month, pkg_cdr_summary_month_trunk, pkg_cdr_summary_month_user, pkg_cdr_summary_trunk,  pkg_cdr_summary_user";
-        Yii::app()->db->createCommand($sql)->execute();
-    }
-
-    public function recreateTables()
-    {
-        $this->dropTables();
-        $this->creationTables();
-    }
-
-    public function truncateTables()
-    {
-        $sql = "TRUNCATE pkg_cdr_summary_day;
-                TRUNCATE pkg_cdr_summary_day_agent;
-                TRUNCATE pkg_cdr_summary_day_trunk;
-                TRUNCATE pkg_cdr_summary_day_user;
-                TRUNCATE pkg_cdr_summary_month;
-                TRUNCATE pkg_cdr_summary_month_trunk;
-                TRUNCATE pkg_cdr_summary_month_user;
-                TRUNCATE pkg_cdr_summary_trunk;
-                TRUNCATE pkg_cdr_summary_user;";
-        Yii::app()->db->createCommand($sql)->execute();
-    }
-
-    public function creationTables()
-    {
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    day varchar(10) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    nbcall_fail int(11) DEFAULT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float DEFAULT NULL,
-                    asr float DEFAULT NULL,
-                    PRIMARY KEY (id),
-                    UNIQUE KEY day (day)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_user (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    day varchar(10) NOT NULL,
-                    id_user int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float  NULL DEFAULT '0',
-                    sessionbill float NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    isAgent TINYINT( 1 ) NULL DEFAULT NULL,
-                    agent_bill FLOAT NOT NULL DEFAULT  '0',
-                    PRIMARY KEY (id),
-                    KEY day (day),
-                    KEY id_user (id_user)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_trunk (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    day varchar(10) NOT NULL,
-                    id_trunk int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    PRIMARY KEY (id),
-                    KEY day (day),
-                    KEY id_trunk (id_trunk)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_day_agent (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    day varchar(10) NOT NULL,
-                    id_user int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    PRIMARY KEY (id),
-                    KEY day (day),
-                    KEY id_user (id_user)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    month varchar(20) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    PRIMARY KEY (id),
-                    UNIQUE KEY month (month)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month_user (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    month varchar(20) NOT NULL,
-                    id_user int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    isAgent TINYINT( 1 ) NULL DEFAULT NULL ;
-                    agent_bill FLOAT NOT NULL DEFAULT  '0';
-                    PRIMARY KEY (id),
-                    KEY month (month),
-                    KEY id_user (id_user)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_month_trunk (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    month varchar(20) NOT NULL,
-                    id_trunk int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float NULL DEFAULT '0',
-                    PRIMARY KEY (id),
-                    KEY month (month),
-                    KEY id_trunk (id_trunk)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_user (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    id_user int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    nbcall_fail int(11) DEFAULT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float DEFAULT NULL,
-                    asr float DEFAULT NULL,
-                    isAgent INT( 11 ) NULL DEFAULT NULL ;
-                    agent_bill FLOAT NOT NULL DEFAULT  '0';
-                    PRIMARY KEY (id),
-                    KEY id_user (id_user)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-
-        $sql = "CREATE TABLE IF NOT EXISTS pkg_cdr_summary_trunk (
-                    id int(11) NOT NULL AUTO_INCREMENT,
-                    id_trunk int(11) NOT NULL,
-                    sessiontime bigint(25) NOT NULL,
-                    aloc_all_calls int(11) NOT NULL,
-                    nbcall int(11) NOT NULL,
-                    nbcall_fail int(11) DEFAULT NULL,
-                    buycost float NOT NULL DEFAULT '0',
-                    sessionbill float NOT NULL DEFAULT '0',
-                    lucro float DEFAULT NULL,
-                    asr float DEFAULT NULL,
-                    PRIMARY KEY (id),
-                    KEY id_trunk (id_trunk)
-                    ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0;";
-        Yii::app()->db->createCommand($sql)->execute();
-    }
 }

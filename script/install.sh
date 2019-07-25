@@ -713,7 +713,7 @@ echo "
 0 2 * * * php /var/www/html/mbilling/cron.php Backup
 0 4 * * * /var/www/html/mbilling/protected/commands/verificamemoria
 0 4 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrLast30Days
-0 8-22 * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
+*/2 * * * * php /var/www/html/mbilling/cron.php SummaryTablesCdr processCdrToday
 * * * * * php /var/www/html/mbilling/cron.php cryptocurrency
 " > $CRONPATH
 chmod 600 $CRONPATH
