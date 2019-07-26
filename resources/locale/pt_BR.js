@@ -427,7 +427,7 @@ Locale.load({
     'daily_stop_time': 'Hora do final',
     'date': 'Data',
     'day': 'Dia',
-    'days': 'Dias da Semana',
+    'days': 'Dias',
     'decimalSeparator': ',',
     'deleteText': 'Excluir',
     'description': 'Descrição',

@@ -40,21 +40,28 @@ class CallOnlineChartController extends Controller
     {
         $filter = isset($_GET['filter']) ? json_decode($_GET['filter']) : null;
 
-        if (isset($filter) && $filter[0]->value == 'hour') {
+        $hours = isset($filter[0]) ? $filter[0]->value : 1;
 
-            $modelCallOnlineChart = CallOnlineChart::model()->findAll(array(
-                'select' => 'id,  DATE_FORMAT( date, \'%H\' ) date , SUM(total) AS total, SUM(answer) AS answer',
-                'group'  => "DATE_FORMAT( date, '%Y-%m-%d %H' )",
-                'order'  => 'id DESC',
-                'limit'  => 48,
-            ));
+        $filter = 'date >= date_sub(NOW(), interval ' . $hours . ' hour)';
+
+        if ($hours == 1222) {
+            $dateFormat = 'DATE_FORMAT( date, \'%d %H\' ) date';
+            $group      = "DATE_FORMAT( date, '%Y-%m-%d %H' )";
+        } else if ($hours > 12) {
+            $dateFormat = 'DATE_FORMAT( date, \'%D %l%p\' ) date';
+            $group      = "DATE_FORMAT( date, '%Y-%m-%d %H' )";
         } else {
-            $modelCallOnlineChart = CallOnlineChart::model()->findAll(array(
-                'select' => 'id, DATE_FORMAT( date, \'%H:%i\' ) date, total, answer',
-                'order'  => 'id DESC',
-                'limit'  => 60,
-            ));
+            $dateFormat = 'DATE_FORMAT( date, \'%H:%i\' ) date';
+            $group      = 1;
         }
+
+        $modelCallOnlineChart = CallOnlineChart::model()->findAll(array(
+            'select'    => 'id, ' . $dateFormat . ', total, answer',
+            'order'     => 'id DESC',
+            'group'     => $group,
+            'condition' => $filter,
+        ));
+
         # envia o json requisitado
         echo json_encode(array(
             $this->nameRoot  => $this->getAttributesModels($modelCallOnlineChart, $this->extraValues),
