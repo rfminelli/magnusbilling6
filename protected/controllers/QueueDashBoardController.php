@@ -144,7 +144,8 @@ class QueueDashBoardController extends Controller
     public function setAttributesModels($attributes, $models)
     {
 
-        for ($i = 0; $i < (is_array($attributes) || is_object($attributes)) && count($attributes); $i++) {
+        $pkCount = is_array($attributes) || is_object($attributes) ? $attributes : [];
+        for ($i = 0; $i < count($pkCount); $i++) {
             $duration                   = time() - strtotime($attributes[$i]['time']) - $attributes[$i]['holdtime'];
             $attributes[$i]['duration'] = $duration;
         }

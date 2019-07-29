@@ -193,7 +193,8 @@ class RefillController extends Controller
             'group'     => 'CreditMonth',
         ));
 
-        for ($i = 0; $i < is_array($attributes) && count($attributes); $i++) {
+        $pkCount = is_array($attributes) || is_object($attributes) ? $attributes : [];
+        for ($i = 0; $i < count($pkCount); $i++) {
             $attributes[$i]['sumCredit']      = number_format($modelRefill->credit, 2);
             $attributes[$i]['sumCreditMonth'] = $modelRefillSumm2[0]['sumCreditMonth'];
             $attributes[$i]['CreditMonth']    = substr($modelRefillSumm2[0]['CreditMonth'], 0, 4) . '-' . substr($modelRefillSumm2[0]['CreditMonth'], -2);

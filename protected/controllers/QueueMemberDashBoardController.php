@@ -38,7 +38,8 @@ class QueueMemberDashBoardController extends Controller
     public function setAttributesModels($attributes, $models)
     {
 
-        for ($i = 0; $i < (is_array($attributes) || is_object($attributes)) && count($attributes); $i++) {
+        $pkCount = is_array($attributes) || is_object($attributes) ? $attributes : [];
+        for ($i = 0; $i < count($pkCount); $i++) {
             if (preg_match('/IN CALL|IN USE|ON HOLD/', strtoupper($attributes[$i]['agentStatus']))) {
                 $result                   = Queue::model()->getQueueStatus($attributes[$i]['agentName'], $attributes[$i]['id_queue']);
                 $attributes[$i]['number'] = isset($result[0]['callerId']) ? $result[0]['callerId'] : null;

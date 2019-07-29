@@ -70,13 +70,13 @@ class SummaryTablesCdrCommand extends CConsoleCommand
             $sql       = "SELECT id  FROM pkg_cdr WHERE starttime > '" . date('Y-m-d') . "' ORDER BY id ASC LIMIT 1";
             $resultCdr = Yii::app()->db->createCommand($sql)->queryAll();
             if (!isset($resultCdr[0]['id'])) {
-                return;
+                exit;
             }
 
             $sql             = "SELECT id  FROM pkg_cdr_failed WHERE starttime > '" . date('Y-m-d') . "' ORDER BY id ASC LIMIT 1";
             $resultCdrFailed = Yii::app()->db->createCommand($sql)->queryAll();
             if (!isset($resultCdrFailed[0]['id'])) {
-                return;
+                exit;
             }
             $this->cdr_id        = $resultCdr[0]['id'];
             $this->cdr_falide_id = $resultCdrFailed[0]['id'];
