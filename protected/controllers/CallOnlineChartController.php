@@ -44,19 +44,29 @@ class CallOnlineChartController extends Controller
 
         $filter = 'date >= date_sub(NOW(), interval ' . $hours . ' hour)';
 
-        if ($hours == 1222) {
-            $dateFormat = 'DATE_FORMAT( date, \'%d %H\' ) date';
-            $group      = "DATE_FORMAT( date, '%Y-%m-%d %H' )";
+        $dateFormat = 'DATE_FORMAT( date, \'%D %H:%i\' ) date';
+        $select     = 'id, ' . $dateFormat . ', MAX(total) total, MAX(answer) answer';
+
+        if ($hours == 6) {
+            $group = "UNIX_TIMESTAMP(date) DIV 120";
+        } elseif ($hours == 12) {
+            $group = "UNIX_TIMESTAMP(date) DIV 180";
+        } elseif ($hours == 24) {
+            $group = "UNIX_TIMESTAMP(date) DIV 300";
+        } elseif ($hours == 48) {
+            $group = "UNIX_TIMESTAMP(date) DIV 600";
+        } elseif ($hours == 72) {
+            $group = "UNIX_TIMESTAMP(date) DIV 900";
         } else if ($hours > 12) {
-            $dateFormat = 'DATE_FORMAT( date, \'%D %l%p\' ) date';
-            $group      = "DATE_FORMAT( date, '%Y-%m-%d %H' )";
+            $group = "UNIX_TIMESTAMP(date) DIV 720";
         } else {
             $dateFormat = 'DATE_FORMAT( date, \'%H:%i\' ) date';
+            $select     = 'id, ' . $dateFormat . ', total, answer';
             $group      = 1;
         }
 
         $modelCallOnlineChart = CallOnlineChart::model()->findAll(array(
-            'select'    => 'id, ' . $dateFormat . ', total, answer',
+            'select'    => $select,
             'order'     => 'id DESC',
             'group'     => $group,
             'condition' => $filter,
