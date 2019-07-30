@@ -1525,6 +1525,24 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.6.5') {
+
+            $sql = "UPDATE pkg_configuration SET `config_value` = '1' WHERE config_key = 'username_generate'";
+            $this->executeDB($sql);
+
+            $sql    = "SELECT config_value FROM pkg_configuration WHERE config_key = 'generate_length'";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+
+            if ($result[0]['config_value'] == '0') {
+                $sql = "UPDATE pkg_configuration SET `config_value` = '5' WHERE config_key = 'generate_length'";
+                $this->executeDB($sql);
+            }
+
+            $version = '6.6.7';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)

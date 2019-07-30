@@ -47,7 +47,7 @@ class Util
 
         return $result;
     }
-    public static function getNewUsername()
+    public static function getNewUsername($required = true)
     {
         $existsUsername = true;
 
@@ -62,6 +62,8 @@ class Util
                 $countUsername  = User::model()->count('username LIKE :key', array(':key' => $randUserName));
                 $existsUsername = ($countUsername > 0);
             }
+        } elseif ($required == false) {
+            return;
         } else {
             $randUserName = Util::getNewUsername2();
         }

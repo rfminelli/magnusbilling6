@@ -394,7 +394,7 @@ class UserController extends Controller
     {
         echo json_encode(array(
             $this->nameSuccess => true,
-            'newUsername'      => Util::getNewUsername(),
+            'newUsername'      => Util::getNewUsername(false),
         ));
     }
 
