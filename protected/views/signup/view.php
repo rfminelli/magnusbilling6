@@ -32,7 +32,7 @@ if (isset($_GET['id_user'])) {
 }
 
 if (!isset($_GET['loginkey']) && (isset($smtpResult) && count($smtpResult) > 0)):
-    echo '<font color=red>' . Yii::t('yii', 'Please check you email') . '</font>';
+    echo '<font color=red>' . Yii::t('yii', 'Please check your email') . '</font>';
     echo '</form>';
 else:
 ?>
@@ -52,7 +52,7 @@ else:
 			</div>
 			<div align="left" class="field">
 				<input required class="input" name="loginkey" type="hidden" value="<?php echo $loginkey = isset($_GET['loginkey']) ? $_GET['loginkey'] : null ?>" />
-				<p class="hint"><?php echo Yii::t('yii', 'Enter your loginkey which was sent for Email') ?></p>
+				<p class="hint"><?php echo Yii::t('yii', 'Enter your loginkey which was sent to your Email') ?></p>
 			</div>
 
 			<input name="remote" value="1" type="hidden" />

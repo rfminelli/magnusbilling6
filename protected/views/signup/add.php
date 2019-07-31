@@ -16,7 +16,7 @@
 <div class="field">
 	<?php echo $form->labelEx($signup, Yii::t('yii', 'Plan')) ?>
 	<div class="styled-select">
-	<?php echo $form->dropDownList($signup, 'id_plan', $plans, array('prompt' => Yii::t('yii', 'Select a Plan'))); ?>
+	<?php echo $form->dropDownList($signup, 'id_plan', $plans, array('prompt' => Yii::t('yii', 'Select a plan'))); ?>
 	</div>
 </div>
 <br>
@@ -24,7 +24,7 @@
 	<?php echo $form->hiddenField($signup, 'id_plan', array('value' => $plan[0]->id)); ?>
 
 <?php elseif (count($plan) == 0): ?>
-	<?php exit(Yii::t('yii', 'No have a active Plan'))?>
+	<?php exit(Yii::t('yii', 'No plans available for signup'))?>
 <?php endif;?>
 
 <?php echo $form->hiddenField($signup, 'ini_credit', array('value' => $plan[0]->ini_credit)); ?>
@@ -57,10 +57,10 @@
 </div>
 
 <div class="field">
-	<?php echo $form->labelEx($signup, Yii::t('yii', 'Confirm Your') . Yii::t('yii', 'password')) ?>
+	<?php echo $form->labelEx($signup, Yii::t('yii', 'Confirm your') . Yii::t('yii', 'password')) ?>
 	<?php echo $form->passwordField($signup, 'password2', array('class' => 'input')) ?>
 	<?php echo $form->error($signup, 'password2') ?>
-	<p class="hint"><?php echo Yii::t('yii', 'Confirm Your') . ' ' . Yii::t('yii', 'password') ?></p>
+	<p class="hint"><?php echo Yii::t('yii', 'Confirm your') . ' ' . Yii::t('yii', 'password') ?></p>
 	<p>&nbsp;</p>
 </div>
 <?php else: ?>
@@ -164,7 +164,7 @@
 		<?php echo $form->labelEx($signup, Yii::t('yii', 'verifyCode')); ?>
 		<?php echo $form->textField($signup, 'verifyCode', array('class' => 'input')) ?>
 		<?php echo $form->error($signup, 'verifyCode') ?>
-		<p class="hint"><?php echo Yii::t('yii', 'Enter the verifyCode shown') ?></p>
+		<p class="hint"><?php echo Yii::t('yii', 'Enter the verification code shown') ?></p>
 		<blockquote><blockquote><?php $this->widget('CCaptcha');?> </blockquote></blockquote>
 	</div>
 	<br>
@@ -177,7 +177,7 @@
 	<p class="hint"><?php echo Yii::t('yii', 'Enter your') . ' ' . Yii::t('yii', 'I accept the terms') ?></p>
 </div>
 <br>
-<a href="<?php echo $termsLink ?>" target='_blank'><?php echo Yii::t('yii', 'Terms') ?></a>
+<center><a href="<?php echo $termsLink ?>" target='_blank'><?php echo Yii::t('yii', 'Terms') ?></a></center>
 <br>
 
 <?php echo CHtml::submitButton(Yii::t('yii', 'Save'), array('class' => 'button')); ?>
