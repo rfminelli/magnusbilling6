@@ -461,7 +461,7 @@ class BaseController extends CController
     public function checkActionAccess($values = '', $module, $action)
     {
         if ($action == 'canUpdate' || $action == 'canCreate') {
-            if (isset($values['id']) && !AccessManager::getInstance($module)->$action() && $values['id'] != 0) {
+            if (isset($values['id']) && !AccessManager::getInstance($module)->$action()) {
                 header('HTTP/1.0 401 Unauthorized');
                 die("Access denied to $action in module: $module");
             }
@@ -546,12 +546,25 @@ class BaseController extends CController
 
         $id    = $values[$namePk];
         $model = $id ? $this->loadModel($id, $this->abstractModel) : $this->instanceModel;
+
         if ($model == $this->msgRecordNotFound) {
             $this->success = false;
             $this->nameMsg = $this->msgRecordNotFound;
         } else {
-            $model->attributes = $values;
+            if (!$this->isNewRecord && Yii::app()->session['isClient'] && $model->id_user != Yii::app()->session['id_user']) {
+                exit('try edit invalid id');
+            } else if (!$this->isNewRecord && Yii::app()->session['isAgent']) {
+                if ($this->abstractModel->tableName() == 'pkg_user') {
+                    $modelUser = User::model()->findByPk($values['id']);
+                } else {
+                    $modelUser = User::model()->findByPk($model->id_user);
+                }
+                if ($modelUser->id_user != Yii::app()->session['id_user']) {
+                    exit('try edit invalid id');
+                }
+            }
 
+            $model->attributes = $values;
             try {
                 $this->success = $model->save();
                 $errors        = $model->getErrors();
@@ -910,7 +923,12 @@ class BaseController extends CController
         $arrayPkAlias = explode('.', $this->abstractModel->primaryKey());
         $ids          = array();
         $values       = $this->beforeDestroy($values);
+
         if ((isset($_POST['filter']) && strlen($_POST['filter']) > 0)) {
+
+            if (!Yii::app()->session['isAdmin']) {
+                exit('You only can delete one data per time');
+            }
             $filter = isset($_POST['filter']) ? $_POST['filter'] : null;
             $filter = $filter ? $this->createCondition(json_decode($filter)) : $this->defaultFilter;
 
@@ -978,11 +996,45 @@ class BaseController extends CController
         } else {
             # Se existe a chave 0, indica que existe um array interno (mais de 1 registro selecionado)
             if (array_key_exists(0, $values)) {
+
+                if (!Yii::app()->session['isAdmin']) {
+                    exit('You only can delete one data per time');
+                }
+
                 # percorre o array para excluir o(s) registro(s)
                 foreach ($values as $value) {
                     array_push($ids, $value[$namePk]);
                 }
             } else {
+
+                if (!Yii::app()->session['isAdmin']) {
+
+                    if (Yii::app()->session['isClient']) {
+
+                        $modelCheck = $this->abstractModel->findByPk($values[$namePk]);
+
+                        if (isset($modelCheck->id_user)) {
+                            $modelUser = User::model()->findByPk($modelCheck->id_user);
+                            if (isset($modelUser->id) && $modelUser->id != Yii::app()->session['id_user']) {
+                                exit('try destroy invalid id');
+                            }
+                        }
+
+                    } else if (Yii::app()->session['isAgent']) {
+
+                        if ($this->abstractModel->tableName() == 'pkg_user') {
+                            $modelUser = User::model()->findByPk($values['id']);
+                        } else {
+                            $modelCheck = $this->abstractModel->findByPk($values[$namePk]);
+                            $modelUser  = User::model()->findByPk($modelCheck->id_user);
+                        }
+
+                        if ($modelUser->id_user != Yii::app()->session['id_user']) {
+                            exit('try edit invalid id');
+                        }
+                    }
+                }
+
                 array_push($ids, $values[$namePk]);
             }
         }

@@ -212,6 +212,11 @@
     background-repeat: no-repeat;
     background-position: center;
 }
+.flag-ru {
+    background-image: url(images/flags/ru.png) !important;
+    background-repeat: no-repeat;
+    background-position: center;
+}
 .flag-it {
     background-image: url(images/flags/it.png) !important;
     background-repeat: no-repeat;
