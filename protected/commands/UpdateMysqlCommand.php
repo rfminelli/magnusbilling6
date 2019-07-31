@@ -1543,6 +1543,20 @@ class UpdateMysqlCommand extends ConsoleCommand
             Yii::app()->db->createCommand($sql)->execute();
         }
 
+        if ($version == '6.6.7') {
+
+        	$sql    = "SELECT id FROM pkg_group_user WHERE name = 'Agent' AND id_user_type = '2'";
+            $result = Yii::app()->db->createCommand($sql)->queryAll();
+            if ($result[0]['id'] == '2') {
+                $sql = "UPDATE pkg_group_module SET `show_menu` = '0' WHERE id_group = '2' AND id_module = '2'";
+                $this->executeDB($sql);
+            }
+
+            $version = '6.6.8';
+            $sql     = "UPDATE pkg_configuration SET config_value = '" . $version . "' WHERE config_key = 'version' ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+
     }
 
     public function executeDB($sql)
