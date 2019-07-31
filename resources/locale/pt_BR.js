@@ -1,4 +1,5 @@
 Locale.load({
+    'week': 'semana',
     'Return Credit': 'Retornar Credito',
     'Reprocess': 'Reprocessar',
     'Complete': 'Completo',
@@ -499,6 +500,7 @@ Locale.load({
     'home': 'Home',
     'host': 'Host',
     'hour': 'Hora',
+    'hours': 'horas',
     'hourly': 'Hora',
     'icon': 'Ícone',
     'id': 'br',

@@ -140,7 +140,7 @@ return array(
     /*END CONFIG MENU*/
 
     'Name'                                         => 'Nome',
-    'User or password incorrect.'                  => 'User or password incorrect............',
+    'User or password incorrect.'                  => 'загрузка...',
+    'Loading...'                                   => '',
 
 );
-

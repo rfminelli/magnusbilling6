@@ -248,6 +248,20 @@ cd sngrep
 make && make install 
 clear
 
+if [ ${DIST} = "CENTOS" ]; then
+echo 'set filter.methods INVITE
+set cl.column0 method
+set cl.column1 sipfromuser
+set cl.column1.width 15
+set cl.column2 siptouser
+set cl.column3 src
+set cl.column4 dst
+set cl.column4.width 22
+set cl.column5 starting
+set cl.column6 warning
+set cl.column6.width 0' > /usr/local/etc/sngreprc
+fi
+
 
 chmod -R 777 /tmp
  
