@@ -2,20 +2,20 @@
 return array(
 
     /*MENU CONFIGURATION*/
-    'config_title_signup_admin_email'              => 'Send email to admin when user signup from form',
-    'config_desc_signup_admin_email'               => 'Send email to administrator email when creation new account from signup page\n 0 - Disable \n1 - Enable',
+    'config_title_signup_admin_email'              => 'Sends an email to the admin when a user signsup',
+    'config_desc_signup_admin_email'               => 'Sends an email to the admin when a new account is created from the signup page \n 0 - Disable \n1 - Enable',
     'config_title_enable_callingcard'              => 'Enable CallingCard',
     'config_desc_enable_callingcard'               => 'Enable CallingCard.\n 0 - Disable \n1 - Enable',
     'config_title_MixMonitor_format'               => 'MixMonitor Format',
-    'config_desc_MixMonitor_format'                => 'Record audio extension. See the available extension in http://www.voip-info.org/wiki/view/MixMonitor',
-    'config_title_accept_terms_link'               => 'Link to terms on Signup form',
-    'config_desc_accept_terms_link'                => 'Link to terms on Signup form',
-    'config_title_admin_email'                     => 'Administrator email',
-    'config_desc_admin_email'                      => 'Email for receive notifications',
-    'config_title_admin_received_email'            => 'Send copy for admin email',
-    'config_desc_admin_received_email'             => 'Send copy for admin email',
+    'config_desc_MixMonitor_format'                => 'Audio recording extension. See the available extensions in http://www.voip-info.org/wiki/view/MixMonitor',
+    'config_title_accept_terms_link'               => 'Link to the terms shown in the signup form',
+    'config_desc_accept_terms_link'                => 'Link to the terms shown in the signup form',
+    'config_title_admin_email'                     => 'Admin email',
+    'config_desc_admin_email'                      => 'Email to receive notifications',
+    'config_title_admin_received_email'            => 'Send a copy to the admin email',
+    'config_desc_admin_received_email'             => 'Send a copy to the admin email',
     'config_title_agent_limit_refill'              => 'Agent refill limit',
-    'config_desc_agent_limit_refill'               => 'Limit to agent refill yours customers.',
+    'config_desc_agent_limit_refill'               => 'Value * Agent credit balance = maximum balance of all the agents users(sum).',
     'config_title_amd'                             => 'AGI - Use amd macro',
     'config_desc_amd'                              => 'Use amd. Set to CM(amd)',
     'config_title_answer_call'                     => 'AGI - Answer Call',
@@ -120,7 +120,7 @@ return array(
     'config_desc_show_filed_help'                  => 'Show fields help\n 0 - Disable \n1 - Enable',
     'config_title_show_playicon_cdr'               => 'Show Play icon on CDR',
     'config_desc_show_playicon_cdr'                => 'Show Play icon on CDR menu. Set to 1 for show the icon',
-    'config_title_signup_auto_pass'                => 'Generate password automatically on Signup Form',
+    'config_title_signup_auto_pass'                => 'Generate password automatically in the signup form',
     'config_desc_signup_auto_pass'                 => 'Set the number of caracter to password. EX: if you have pass with 10 digits, set it to 10. Minimo value 6',
     'config_title_social_media_network'            => 'Social Media Network to show in customer panel',
     'config_desc_social_media_network'             => 'Social Media Network to show in customer panel',
@@ -141,7 +141,7 @@ return array(
 
     /*END CONFIG MENU*/
 
-    'Name'                                         => 'Nome',
+    'Name'                                         => 'Name',
     'User or password incorrect.'                  => 'User or password incorrect............',
 
 );
