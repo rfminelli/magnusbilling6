@@ -115,28 +115,36 @@ class SignupController extends Controller
 
             $signup->attributes   = $_POST['Signup'];
             $signup->company_name = isset($_POST['Signup']['company_name']) ? $_POST['Signup']['company_name'] : '';
-            $success              = $signup->save();
 
-            //add the new user to SuperLogica
-            $this->createUserinSuperLogica();
+            $modelPlan = Plan::model()->findByPk((int) $_POST['Signup']['id_plan']);
 
-            if ($success) {
-                $modelSip              = new Sip();
-                $modelSip->id_user     = $signup->id;
-                $modelSip->accountcode = $signup->username;
-                $modelSip->name        = $signup->username;
-                $modelSip->allow       = 'g729,gsm';
-                $modelSip->host        = 'dynamic';
-                $modelSip->insecure    = 'no';
-                $modelSip->defaultuser = $signup->username;
-                $modelSip->secret      = $password;
-                $modelSip->callerid    = $signup->phone;
-                $modelSip->cid_number  = $signup->phone;
-                $modelSip->save();
+            if($modelPlan->signup != 1){
+                //error if invalid plan(tampered data)
+                $signup->addError('id_plan', Yii::t('yii', 'Invalid plan used to signup'));
+            }else{
+                $success              = $signup->save();
 
-                AsteriskAccess::instance()->generateSipPeers();
+                //add the new user to SuperLogica
+                $this->createUserinSuperLogica();
 
-                $this->redirect(array('view', 'id' => $signup->id, 'username' => $signup->username, 'password' => $signup->password, 'id_user' => $_POST['Signup']['id_user']));
+                if ($success) {
+                    $modelSip              = new Sip();
+                    $modelSip->id_user     = $signup->id;
+                    $modelSip->accountcode = $signup->username;
+                    $modelSip->name        = $signup->username;
+                    $modelSip->allow       = 'g729,gsm';
+                    $modelSip->host        = 'dynamic';
+                    $modelSip->insecure    = 'no';
+                    $modelSip->defaultuser = $signup->username;
+                    $modelSip->secret      = $password;
+                    $modelSip->callerid    = $signup->phone;
+                    $modelSip->cid_number  = $signup->phone;
+                    $modelSip->save();
+
+                    AsteriskAccess::instance()->generateSipPeers();
+
+                    $this->redirect(array('view', 'id' => $signup->id, 'username' => $signup->username, 'password' => $signup->password, 'id_user' => $_POST['Signup']['id_user']));
+                }
             }
 
         }
