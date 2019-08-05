@@ -1743,7 +1743,7 @@ class BaseController extends CController
         $this->order = preg_replace("/idPhonebookname/", 'b.name', $this->order);
         $this->order = preg_replace("/idUserusername/", 't.id_user', $this->order);
         $this->order = preg_replace("/idDiddid/", 't.id_did', $this->order);
-
+        $this->order = preg_replace("/^id /", 't.id ', $this->order);
     }
 
     public function extraFilter($filter)
